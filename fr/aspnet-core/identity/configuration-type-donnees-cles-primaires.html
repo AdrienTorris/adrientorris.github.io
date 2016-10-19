@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr-FR" xml:lang="fr" xmlns="http://www.w3.org/1999/xhtml">
 	<head>
+		<meta charset="utf-8">
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-		<title>Modifier le type de données des clés primaires dans ASP.NET Core Identity</title>
+		<title>Modifier le type de donn&eacute;es des cl&eacute;s primaires dans ASP.NET Core Identity</title>
 		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="language" content="fr" />
 		<meta name="keywords" content="ASP.NET Core,Identity,ASP.NET,Microsoft,primary key,primary key unique identifier" />
-		<meta name="description" content="Comment modifier le type de données des clés primaires dans ASP.NET Core Identity." />
+		<meta name="description" content="Comment modifier le type de donn&eacute;es des cl&eacute;s primaires dans ASP.NET Core Identity." />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
 		<meta name="generator" content="SiteUp! 0.1" />
@@ -28,14 +29,14 @@
 				</div>
 			</header>
 			<div id="post_ctn">
-				<h1>Modifier le type de données des clés primaires dans ASP.NET Core Identity</h1>
-				<p>Par défaut, toutes les clés primaires dans ASP.NET Core Identity sont des chaînes de caractères; pour être plus précis, il s'agit de Guid convertis en chaînes de caractères. Comme le signale Rick Anderson sur plusieurs échanges concernant ce sujet, cela s'explique parfaitement par le fait que Microsoft ne veut pas s'imiscer dans la logique métier des applications, or une chaîne de caractères est un champs très faiblement typé. Que les identifiants uniques des objets d'une application soient des nombres entier, ou d'un autre type de données ne les regarde pas.</p>
-				<p>Cela dit, beaucoup d'applications utilisent plutôt des nombres entiers ou des Guid pour leurs clés primaires, et par soucis de simplicité, de confort d'écriture et par soucis de cohérence, on aime aligner Identity sur ce comportement. Si cela pouvait être légèrement lourd sur les précédentes versions d'Identity, cette manipulation est devenue très simple à mettre en place sur la dernière version.</p>
-				<p>Voilà comment s'y prendre :</p>
+				<h1>Modifier le type de donn&eacute;es des cl&eacute;s primaires dans ASP.NET Core Identity</h1>
+				<p>Par d&eacute;faut, toutes les cl&eacute;s primaires dans ASP.NET Core Identity sont des chaînes de caract&egrave;res; pour &ecirc;tre plus pr&eacute;cis, il s'agit de Guid convertis en chaînes de caract&egrave;res. Comme le signale Rick Anderson sur plusieurs &eacute;changes concernant ce sujet, cela s'explique parfaitement par le fait que Microsoft ne veut pas s'imiscer dans la logique m&eacute;tier des applications, or une chaîne de caract&egrave;res est un champs tr&egrave;s faiblement typ&eacute;. Que les identifiants uniques des objets d'une application soient des nombres entier, ou d'un autre type de donn&eacute;es ne les regarde pas.</p>
+				<p>Cela dit, beaucoup d'applications utilisent plut&ocirc;t des nombres entiers ou des Guid pour leurs cl&eacute;s primaires, et par soucis de simplicit&eacute;, de confort d'&eacute;criture et par soucis de coh&eacute;rence, on aime aligner Identity sur ce comportement. Si cela pouvait &ecirc;tre l&eacute;g&egrave;rement lourd sur les pr&eacute;c&eacute;dentes versions d'Identity, cette manipulation est devenue tr&egrave;s simple &agrave; mettre en place sur la derni&egrave;re version.</p>
+				<p>Voil&agrave; comment s'y prendre :</p>
 				<ul class="steps">
 					<li>
 						<span class="step_number">1</span>
-						Surcharger les objets utilisateur et rôle, en leur passant le type de données souhaité pour leurs clés primaires (ici un Guid)
+						Surcharger les objets utilisateur et r&ocirc;le, en leur passant le type de donn&eacute;es souhait&eacute; pour leurs cl&eacute;s primaires (ici un Guid)
 						<pre><code class="csharp">
 public class ApplicationUser : IdentityUser&#60;Guid&#62;
 {
@@ -48,7 +49,7 @@ public class ApplicationRole : IdentityRole&#60;Guid&#62;
 					</li>
 					<li>
 						<span class="step_number">2</span>
-						Créer la classe pour le contexte, héritant du contexte Identity, en précisant là-encore le type de données souhaité pour les clés primaires :
+						Cr&eacute;er la classe pour le contexte, h&eacute;ritant du contexte Identity, en pr&eacute;cisant l&agrave;-encore le type de donn&eacute;es souhait&eacute; pour les cl&eacute;s primaires :
 						<pre><code class="csharp">
 public class ApplicationDbContext : IdentityDbContext&#60;ApplicationUser, ApplicationRole, Guid&#62;
 {
@@ -69,7 +70,7 @@ public class ApplicationDbContext : IdentityDbContext&#60;ApplicationUser, Appli
 				    </li>
 					<li>
 						<span class="step_number">3</span>
-						Dans le point d'entrée de l'application (startup.cs), déclarer le service Identity avec les objets héritant des classes de base Identity et déclarant le type de données à utiliser :
+						Dans le point d'entr&eacute;e de l'application (startup.cs), d&eacute;clarer le service Identity avec les objets h&eacute;ritant des classes de base Identity et d&eacute;clarant le type de donn&eacute;es &agrave; utiliser :
 						<pre><code class="csharp">
 public void ConfigureServices(IServiceCollection services)
 {
@@ -84,7 +85,7 @@ public void ConfigureServices(IServiceCollection services)
 						</code></pre>
 					</li>
 				</ul><br />
-				<p>Si ces modifications n'impactent pas le modèle de base de données, les clés primaires restant de type nvarchar(450), les identifiants des objets user et role au sein de l'application seront bien du type demandé, vous évitant ainsi de les caster à chaque utlisation :</p>
+				<p>Si ces modifications n'impactent pas le mod&egrave;le de base de donn&eacute;es, les cl&eacute;s primaires restant de type nvarchar(450), les identifiants des objets user et role au sein de l'application seront bien du type demand&eacute;, vous &eacute;vitant ainsi de les caster &agrave; chaque utlisation :</p>
 <pre><code class="csharp">
 [HttpGet]
 public async Task&#60;IActionResult&#62; Test()
@@ -95,7 +96,7 @@ public async Task&#60;IActionResult&#62; Test()
 }
 </code></pre>
 				<div id="crdny">
-					posté <!--par Adrien Torris, -->le 16/10/2016
+					post&eacute; <!--par Adrien Torris, -->le 16/10/2016
 				</div>
 				<div id="tags_wrapper">
 					<ul>
