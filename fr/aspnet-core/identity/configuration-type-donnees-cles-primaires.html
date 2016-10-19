@@ -1,0 +1,146 @@
+<html lang="fr">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Modifier le type de données des clés primaires dans ASP.NET Core Identity</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="language" content="fr" />
+		<meta name="keywords" content="ASP.NET Core,Identity,ASP.NET,Microsoft,primary key,primary key unique identifier" />
+		<meta name="description" content="Comment modifier le type de données des clés primaires dans ASP.NET Core Identity." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<meta name="generator" content="SiteUp! 0.1" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/aspnet-core/identity/configuration-type-donnees-cles-primaires.html" hreflang="fr-fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/aspnet-core/identity/configure-primary-keys-datatype.html" hreflang="en-en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div id="main_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2>
+					<ul id="flags_wrapper">
+						<li class="cur"><img src="/wwwroot/images/french.png" alt="" title="" /></li>
+						<li><a href="https://adrientorris.github.io/aspnet-core/identity/configure-primary-keys-datatype.html" title="Configure the data type of the primary keys using ASP.NET Core Identity"><img src="/wwwroot/images/english.jpg" alt="" title="" /></a></li>
+					</ul>
+				</div>
+			</header>
+			<div id="post_ctn">
+				<h1>Modifier le type de données des clés primaires dans ASP.NET Core Identity</h1>
+				<p>Par défaut, toutes les clés primaires dans ASP.NET Core Identity sont des chaînes de caractères; pour être plus précis, il s'agit de Guid convertis en chaînes de caractères. Comme le signale Rick Anderson sur plusieurs échanges concernant ce sujet, cela s'explique parfaitement par le fait que Microsoft ne veut pas s'imiscer dans la logique métier des applications, or une chaîne de caractères est un champs très faiblement typé. Que les identifiants uniques des objets d'une application soient des nombres entier, ou d'un autre type de données ne les regarde pas.</p>
+				<p>Cela dit, beaucoup d'applications utilisent plutôt des nombres entiers ou des Guid pour leurs clés primaires, et par soucis de simplicité, de confort d'écriture et par soucis de cohérence, on aime aligner Identity sur ce comportement. Si cela pouvait être légèrement lourd sur les précédentes versions d'Identity, cette manipulation est devenue très simple à mettre en place sur la dernière version.</p>
+				<p>Voilà comment s'y prendre :</p>
+				<ul class="steps">
+					<li>
+						<span class="step_number">1</span>
+						Surcharger les objets utilisateur et rôle, en leur passant le type de données souhaité pour leurs clés primaires (ici un Guid)
+						<pre><code class="csharp">
+public class ApplicationUser : IdentityUser&#60;Guid&#62;
+{
+}
+
+public class ApplicationRole : IdentityRole&#60;Guid&#62;
+{
+}
+						</code></pre>
+					</li>
+					<li>
+						<span class="step_number">2</span>
+						Créer la classe pour le contexte, héritant du contexte Identity, en précisant là-encore le type de données souhaité pour les clés primaires :
+						<pre><code class="csharp">
+public class ApplicationDbContext : IdentityDbContext&#60;ApplicationUser, ApplicationRole, Guid&#62;
+{
+    public ApplicationDbContext(DbContextOptions&#60;ApplicationDbContext&#62; options)
+        : base(options)
+    {
+    }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+        // Customize the ASP.NET Identity model and override the defaults if needed.
+        // For example, you can rename the ASP.NET Identity table names and more.
+        // Add your customizations after calling base.OnModelCreating(builder);
+    }
+}
+						</code></pre>
+				    </li>
+					<li>
+						<span class="step_number">3</span>
+						Dans le point d'entrée de l'application (startup.cs), déclarer le service Identity avec les objets héritant des classes de base Identity et déclarant le type de données à utiliser :
+						<pre><code class="csharp">
+public void ConfigureServices(IServiceCollection services)
+{
+    // ...
+	
+	services.AddIdentity&#60;ApplicationUser, ApplicationRole&#62;()
+		.AddEntityFrameworkStores&#60;ApplicationDbContext, Guid&#62;()
+		.AddDefaultTokenProviders();
+	
+	// ...
+}
+						</code></pre>
+					</li>
+				</ul><br />
+				<p>Si ces modifications n'impactent pas le modèle de base de données, les clés primaires restant de type nvarchar(450), les identifiants des objets user et role au sein de l'application seront bien du type demandé, vous évitant ainsi de les caster à chaque utlisation :</p>
+<pre><code class="csharp">
+[HttpGet]
+public async Task&#60;IActionResult&#62; Test()
+{
+    ApplicationUser user = await _userManager.GetUserAsync(HttpContext.User);
+    Guid userId = user.Id; // Aucun cast ici, il s'agit bien d'un guid
+    throw new NotImplementedException();
+}
+</code></pre>
+				<div id="crdny">
+					posté <!--par Adrien Torris, -->le 16/10/2016
+				</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>ASP.NET Core</li>
+						<li>Identity</li>
+					</ul>
+				</div>
+            </div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<!-- SyntaxHighlighter -->
+		<!--<link type="text/css" rel="stylesheet" href="../wwwroot/lib/SyntaxHighlighter/3.0.83/styles/shCore.css"/>
+		<link type="text/css" rel="stylesheet" href="../wwwroot/lib/SyntaxHighlighter/3.0.83/styles/shThemeDefault.css"/>
+		<script type="text/javascript" src="../wwwroot/lib/SyntaxHighlighter/3.0.83/scripts/shCore.js"></script>
+		<script type="text/javascript" src="../wwwroot/lib/SyntaxHighlighter/3.0.83/scripts/shBrushXml.js"></script>
+		<script type="text/javascript" src="../wwwroot/lib/SyntaxHighlighter/3.0.83/scripts/shBrushJScript.js"></script>
+		<script type="text/javascript" src="../wwwroot/lib/SyntaxHighlighter/3.0.83/scripts/shBrushSql.js"></script>
+		<script type="text/javascript" src="../wwwroot/lib/SyntaxHighlighter/3.0.83/scripts/shBrushCSharp.js"></script>
+		<script type="text/javascript">SyntaxHighlighter.all();</script>
+		<script type="text/javascript">
+		$(document).ready(function(){
+			$('div.number8').hide();
+			setTimeout(
+  function() 
+  {
+    $('div.number8').hide();
+  }, 500);
+		});
+		</script>-->
+		<!-- <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.7.0/styles/default.min.css" />
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.7.0/highlight.min.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script> -->
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css"/>
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-85948839-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+	</body>
+</html>

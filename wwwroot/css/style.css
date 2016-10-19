@@ -1,0 +1,26 @@
+@import url(https://fonts.googleapis.com/css?family=Istok+Web|Open+Sans);
+html,body{padding:0px;margin:0px;text-align:center;background-color:#f6f6f6;font-size:15px;font-family:'Istok Web', Arial, Helvetica, sans-serif;}
+div#main_ctn{width:100%;max-width:940px;margin:0px auto;text-align:left;}
+div#main_ctn > header{font-family: 'Open Sans', Georgia, serif;font-size: 16px;line-height: 1.75;color: #2b2b2b;}
+div#main_ctn > header > div#header-content{display: table;width: 100%;position: relative;padding: 40px 0;margin-bottom: 40px;border-bottom: 1px solid #e6e6e6;}
+div#main_ctn > header > div#header-content > a{width:50%;float:left;font-size:40px;text-decoration:none;color: #2b2b2b;font-weight:700;}
+div#main_ctn > header > div#header-content > h2{width:80%;float:left;}
+div#main_ctn > header > div#header-content > ul#flags_wrapper{width:20%;float:right;padding:0px;margin:0px;padding-top:28px;}
+div#main_ctn > header > div#header-content > ul#flags_wrapper > li{float:right;list-style:none;margin-left:10px;}
+div#main_ctn > header > div#header-content > ul#flags_wrapper > li > img{}
+div#main_ctn > header > div#header-content > ul#flags_wrapper > li.cur > img{opacity:0.3;}
+div#main_ctn > header > div#header-content > ul#flags_wrapper > li > a{}
+div#main_ctn > header > div#header-content > ul#flags_wrapper > li > a > img{}
+div#main_ctn > div#post_ctn{padding:25px 0px;}
+div#main_ctn > div#post_ctn > h1{font-size: 68px;font-weight: normal;min-height: 80px;line-height: 80px;margin-bottom: 40px;margin-left: 0px;margin-right: 0px;margin-top: 40px;text-align:center;font-family:'Istok Web', Arial, Helvetica, sans-serif;}
+div#main_ctn > div#post_ctn > p{}
+div#main_ctn > div#post_ctn > div.video-wrapper{position: relative;width:100%;height:auto;padding-bottom: 56.25%; /* 16:9 */padding-top: 25px;height: 0;}
+div#main_ctn > div#post_ctn > div.video-wrapper > iframe{position: absolute;top: 0;left: 0;width: 100%;height: 100%;}
+div#main_ctn > div#post_ctn > ul.steps{padding:15px 45px;}
+div#main_ctn > div#post_ctn > div#crdny{padding:40px 0px 25px 0px;text-align:right;font-style:italic;}
+div#main_ctn > div#post_listing{}
+div#main_ctn > div#post_listing > div.post_listing_e{width:100%;padding:10px 0px;clear:both;}
+div#main_ctn > footer{padding:40px 0px 15px 0px;font-size:60%;}
+/* SyntaxHighlighter */
+div.toolbar{display:none !important;visibility:hidden !important;}
+div.syntaxhighlighter.csharp {padding:8px 0px;}
