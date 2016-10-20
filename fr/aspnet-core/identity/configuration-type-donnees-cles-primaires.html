@@ -18,7 +18,7 @@
 		<link href="/wwwroot/css/style.css" rel="stylesheet" />
 	</head>
 	<body>
-		<div id="main_ctn">
+		<div id="main_ctn" class="post_ctn">
 			<header>
 				<div id="header-content">
 					<h2>Blog</h2>
@@ -28,6 +28,14 @@
 					</ul>
 				</div>
 			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/fr/index.html" title="">Accueil</a></li>
+					<li>ASP.NET Core</li>
+					<li>Identity</li>
+					<li class="active"><a href="https://adrientorris.github.io/fr/aspnet-core/identity/configuration-type-donnees-cles-primaires.html" title="">Modifier le type de donn&eacute;es des cl&eacute;s primaires dans ASP.NET Core Identity</a></li>
+				</ul>
+			</div>
 			<div id="post_ctn">
 				<h1>Modifier le type de donn&eacute;es des cl&eacute;s primaires dans ASP.NET Core Identity</h1>
 				<p>Par d&eacute;faut, toutes les cl&eacute;s primaires dans ASP.NET Core Identity sont des cha&icirc;nes de caract&egrave;res; pour &ecirc;tre plus pr&eacute;cis, il s'agit de Guid convertis en cha&icirc;nes de caract&egrave;res. Comme le signale Rick Anderson sur plusieurs &eacute;changes concernant ce sujet, cela s'explique parfaitement par le fait que Microsoft ne veut pas s'imiscer dans la logique m&eacute;tier des applications, or une cha&icirc;ne de caract&egrave;res est un champs tr&egrave;s faiblement typ&eacute;. Que les identifiants uniques des objets d'une application soient des nombres entier, ou d'un autre type de donn&eacute;es ne les regarde pas.</p>

@@ -16,7 +16,7 @@
 		<link href="/wwwroot/css/style.css" rel="stylesheet" />
 	</head>
 	<body>
-		<div id="main_ctn">
+		<div id="main_ctn" class="post_ctn">
 			<header>
 				<div id="header-content">
 					<h2>Blog</h2>
@@ -26,6 +26,14 @@
 					</ul>
 				</div>
 			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>ASP.NET Core</li>
+					<li>Identity</li>
+					<li class="active"><a href="https://adrientorris.github.io/aspnet-core/identity/unicite-adresses-mails.html" title="Configure unicity of user's mail addresses using ASP.NET Core Identity">Configure unicity of user's mail addresses using ASP.NET Core Identity</a></li>
+				</ul>
+			</div>
 			<div id="post_ctn">
 				<h1>Configure unicity of user's mail addresses using ASP.NET Core Identity</h1>
 				<p>By default, ASP.NET Core Identity doesn't require mail addresses unicity for the users, so several users can have the same mail. To change this behavior, this is very simple. You have just to configure the policy you want in your application's startup class.</p>

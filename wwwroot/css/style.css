@@ -11,6 +11,17 @@ div#main_ctn > header > div#header-content > ul#flags_wrapper > li > img{}
 div#main_ctn > header > div#header-content > ul#flags_wrapper > li.cur > img{opacity:0.3;}
 div#main_ctn > header > div#header-content > ul#flags_wrapper > li > a{}
 div#main_ctn > header > div#header-content > ul#flags_wrapper > li > a > img{}
+div#main_ctn.home_ctn{}
+div#main_ctn.post_ctn{}
+div#main_ctn.post_ctn > header > div#header-content{padding: 10px 0;margin-bottom: 10px;}
+div#main_ctn > div#arianne_wrapper{width:100%;height:30px;}
+div#main_ctn > div#arianne_wrapper > ul{margin:0px;padding:10px 0px;}
+div#main_ctn > div#arianne_wrapper > ul > li{list-style:none;float:left;font-size:11px;padding-right:5px;}
+div#main_ctn > div#arianne_wrapper > ul > li:after{content:" \2192 ";}
+div#main_ctn > div#arianne_wrapper > ul > li > a{}
+div#main_ctn > div#arianne_wrapper > ul > li.active{}
+div#main_ctn > div#arianne_wrapper > ul > li.active:after{content:"";}
+div#main_ctn > div#arianne_wrapper > ul > li.active > a{}
 div#main_ctn > div#post_ctn{padding:25px 0px;}
 div#main_ctn > div#post_ctn > h1{font-size: 68px;font-weight: normal;min-height: 80px;line-height: 80px;margin-bottom: 40px;margin-left: 0px;margin-right: 0px;margin-top: 40px;text-align:center;font-family:'Istok Web', Arial, Helvetica, sans-serif;}
 div#main_ctn > div#post_ctn > p{}

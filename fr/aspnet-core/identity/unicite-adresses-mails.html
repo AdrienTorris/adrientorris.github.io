@@ -12,12 +12,12 @@
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
 		<meta name="generator" content="SiteUp! 0.1" />
-		<link rel="alternate" href="https://adrientorris.github.io/fr/aspnet-core/identity/configuration-politique-mots-de-passe.html" hreflang="fr-fr" />
-		<link rel="alternate" href="https://adrientorris.github.io/aspnet-core/identity/configure-password-policy.html" hreflang="en-en" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/aspnet-core/identity/unicite-adresses-mails.html" hreflang="fr-fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/aspnet-core/identity/configure-mail-unicity.html" hreflang="en-en" />
 		<link href="/wwwroot/css/style.css" rel="stylesheet" />
 	</head>
 	<body>
-		<div id="main_ctn">
+		<div id="main_ctn" class="post_ctn">
 			<header>
 				<div id="header-content">
 					<h2>Blog</h2>
@@ -27,6 +27,14 @@
 					</ul>
 				</div>
 			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/fr/index.html" title="">Accueil</a></li>
+					<li>ASP.NET Core</li>
+					<li>Identity</li>
+					<li class="active"><a href="https://adrientorris.github.io/fr/aspnet-core/identity/unicite-adresses-mails.html" title="">Unicicit&eacute; des adresses mail avec ASP.NET Core Identity</a></li>
+				</ul>
+			</div>
 			<div id="post_ctn">
 				<h1>Unicicit&eacute; des adresses mail avec ASP.NET Core Identity</h1>
 				<p>Par d&eacute;faut ASP.NET Core Identity ne requiert pas l'unicicit&eacute; des adresses mails des utilisateurs, c'est-&agrave;-dire qu'une m&ecirc;me adresse email peut servir &agrave; plusieurs comptes. Ce comportement est rarement celui attendu dans une application, mais ce comportement est tr&egrave;s facile &agrave; modifier. Comme tout ce qui concerne la configuration d'ASP.NET Core Identity, c'est dans la classe de d&eacute;marrage de l'application qu'il faut intervenir pour configurer le comportement souhait&eacute;.</p>
