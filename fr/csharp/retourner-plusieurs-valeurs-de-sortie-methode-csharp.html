@@ -22,8 +22,8 @@
 				<div id="header-content">
 					<h2>Blog</h2>
 					<ul id="flags_wrapper">
-						<li class="cur"><img src="wwwroot/images/french.png" alt="" title="" /></li>
-						<li><a href="https://adrientorris.github.io/csharp/return-multiple-values-from-function.html" title=""><img src="wwwroot/images/english.jpg" alt="" title="" /></a></li>
+						<li class="cur"><img src="/wwwroot/images/french.png" alt="" title="" /></li>
+						<li><a href="https://adrientorris.github.io/csharp/return-multiple-values-from-function.html" title=""><img src="/wwwroot/images/english.jpg" alt="" title="" /></a></li>
 					</ul>
 				</div>
 			</header>
@@ -41,7 +41,7 @@
 					<li>
 				<span class="step_number">1</span>
 				<h2>Utiliser une classe</h2>
-				Cette m&eacute;thode, probablement la plus courante, est d'utiliser une classe comme valeur de retour. Vous êtes ainsi totalement libre de retourner ce que bon vous semble, puisque c'est vous qui d&eacute;finissez enti&egrave;rement l'objet qui sera retourn&eacute;.</p>
+				Cette m&eacute;thode, probablement la plus courante, est d'utiliser une classe comme valeur de retour. Vous &ecirc;tes ainsi totalement libre de retourner ce que bon vous semble, puisque c'est vous qui d&eacute;finissez enti&egrave;rement l'objet qui sera retourn&eacute;.</p>
 <pre><code class="csharp">
 public sealed class MyReturnContainer
 {
@@ -86,7 +86,7 @@ public class AnotherClassSomewhereInYourCode
 					<span class="step_number">2</span>
 					<h2>Utiliser les param&egrave;tres de sortie (out)</h2>
 					<p>Les param&egrave;tres de sortie permettent de d&eacute;clarer qu'une m&eacute;thode a une, ou plusieurs valeurs de sortie en plus de sa valeur de retour.</p>
-					<p>Un param&egrave;tre out indique au compilateur que l'objet ne sera initialis&eacute; qu'&agrave; l'int&eacute;rieur de la fonction, un param&egrave;tre out ne peut donc être qu'une valeur de sortie car sa valeur ne peut pas être initialis&eacute;e en amont. D'autre part, une m&eacute;thode ayant des param&egrave;tres out devra obligatoirement leur attribuer une valeur &agrave; tous. Une m&eacute;thode ayant des param&egrave;tres out non-assign&eacute;s engendrera une erreur de compilation.</p>
+					<p>Un param&egrave;tre out indique au compilateur que l'objet ne sera initialis&eacute; qu'&agrave; l'int&eacute;rieur de la fonction, un param&egrave;tre out ne peut donc &ecirc;tre qu'une valeur de sortie car sa valeur ne peut pas &ecirc;tre initialis&eacute;e en amont. D'autre part, une m&eacute;thode ayant des param&egrave;tres out devra obligatoirement leur attribuer une valeur &agrave; tous. Une m&eacute;thode ayant des param&egrave;tres out non-assign&eacute;s engendrera une erreur de compilation.</p>
 <pre><code class="csharp">
 Guid myGuid = Guid.Empty;
 string myString = string.Empty;
@@ -103,7 +103,7 @@ bool ret = GetMultipleValues(out myGuid, out myString, out myInt);
 
 Console.WriteLine(myString); // "string value"
 </code></pre>
-					<p>A noter qu'un param&egrave;tre out peut être nullable.</p>
+					<p>A noter qu'un param&egrave;tre out peut &ecirc;tre nullable.</p>
 <pre><code class="csharp">
 public bool TryCreateSomething(string param1, string param2, bool param3, out Guid? id){
 	id = null;
@@ -111,7 +111,7 @@ public bool TryCreateSomething(string param1, string param2, bool param3, out Gu
 	return true;
 }
 </code></pre>
-					<p>Enfin, avec C# 7.0, les param&egrave;tres se sortie n'ont plus &agrave; être d&eacute;clar&eacute;es avant leur passage en param&egrave;tres mais peuvent l'être &agrave; la vol&eacute;e, comme ceci :</p>
+					<p>Enfin, avec C# 7.0, les param&egrave;tres se sortie n'ont plus &agrave; &ecirc;tre d&eacute;clar&eacute;es avant leur passage en param&egrave;tres mais peuvent l'&ecirc;tre &agrave; la vol&eacute;e, comme ceci :</p>
 <pre><code class="csharp">
 public void PrintCoordinates(Point p)
 {
@@ -127,7 +127,7 @@ public void PrintCoordinates(Point p)
 						<h3>Inconv&eacute;nients :</h3>
 						<ul>
 							<li>Ne supporte pas l'asynchronisme</li>
-							<li>Obligation d'assigner une valeur, même nulle</li>
+							<li>Obligation d'assigner une valeur, m&ecirc;me nulle</li>
 						</ul>
 					</p>
 				</li>
@@ -135,8 +135,8 @@ public void PrintCoordinates(Point p)
 					<span class="step_number">3</span>
 					<h2>Utiliser les param&egrave;tres de sortie par r&eacute;f&eacute;rence (ref)</h2>
 					<p>Passer un ou plusieurs param&egrave;tres par r&eacute;f&eacute;rence a pour effet que toute modification de valeur qui sera effectu&eacute;e au sein d'une m&eacute;thode sera r&eacute;percut&eacute;e sur la variable d'origine, en dehors de la m&eacute;thode.</p>
-					<p>Contrairement aux param&egrave;tres de sortie (out), tout param&egrave;tre pass&eacute; en r&eacute;f&eacute;rence &agrave; une m&eacute;thode doit être pr&eacute;alablement initialis&eacute; mais ne doit pas forcemment voir une valeur lui être assign&eacute;e par cette même m&eacute;thode.</p>
-					<p>Un param&egrave;tre ref ayant une valeur avant-même l'ex&eacute;cution d'une m&eacute;thode, on dit que c'est un param&egrave;tre double-sens (two-ways), car sa valeur peut être utilis&eacute;e au sein d'une m&eacute;thode, même si cette derni&egrave;re ne lui a encore rien assign&eacute;.</p>
+					<p>Contrairement aux param&egrave;tres de sortie (out), tout param&egrave;tre pass&eacute; en r&eacute;f&eacute;rence &agrave; une m&eacute;thode doit &ecirc;tre pr&eacute;alablement initialis&eacute; mais ne doit pas forcemment voir une valeur lui &ecirc;tre assign&eacute;e par cette m&ecirc;me m&eacute;thode.</p>
+					<p>Un param&egrave;tre ref ayant une valeur avant-m&ecirc;me l'ex&eacute;cution d'une m&eacute;thode, on dit que c'est un param&egrave;tre double-sens (two-ways), car sa valeur peut &ecirc;tre utilis&eacute;e au sein d'une m&eacute;thode, m&ecirc;me si cette derni&egrave;re ne lui a encore rien assign&eacute;.</p>
 <pre><code class="csharp">
 string message = "Hello";
 
@@ -193,7 +193,7 @@ class TupleExample
 }
 </code></pre>
 					<p>Techniquement, un Tuple est une classe qui fournit des m&eacute;thodes statiques pour cr&eacute;er des instances.</p>
-					<p>Si cet objet s'av&egrave;re extrêmement pratique et utile dans bon nombre de cas, il est &agrave; noter qu'il est tout de même &agrave; utiliser avec parcimonie, n'&eacute;tant pas toujours facile &agrave; maintenir dans le temps. En effet, il est parfois difficile lorsqu'on repasse sur une m&eacute;thode 2 ans apr&egrave;s l'avoir &eacute;crite, de se souvenir &agrave; quoi correspondent les propri&eacute;t&eacute;s Item4, Item5 et Item6 ... Cela dit, il semble que ce ne sera pas une limitation encore longtemps, comme l'atteste cette <a href="https://github.com/dotnet/roslyn/issues/347" title="" target="_Blank">issue GitHub</a>. Qui plus est, si vous d&eacute;cidez d'ajouter un param&egrave;tre en deuxi&egrave;me position, alors les noms de tous les param&egrave;tres suivants seront impact&eacute;s.</p>
+					<p>Si cet objet s'av&egrave;re extr&ecirc;mement pratique et utile dans bon nombre de cas, il est &agrave; noter qu'il est tout de m&ecirc;me &agrave; utiliser avec parcimonie, n'&eacute;tant pas toujours facile &agrave; maintenir dans le temps. En effet, il est parfois difficile lorsqu'on repasse sur une m&eacute;thode 2 ans apr&egrave;s l'avoir &eacute;crite, de se souvenir &agrave; quoi correspondent les propri&eacute;t&eacute;s Item4, Item5 et Item6 ... Cela dit, il semble que ce ne sera pas une limitation encore longtemps, comme l'atteste cette <a href="https://github.com/dotnet/roslyn/issues/347" title="" target="_Blank">issue GitHub</a>. Qui plus est, si vous d&eacute;cidez d'ajouter un param&egrave;tre en deuxi&egrave;me position, alors les noms de tous les param&egrave;tres suivants seront impact&eacute;s.</p>
 					<p>
 						<h3>Avantages :</h3>
 						<ul>
@@ -228,7 +228,7 @@ class KeyValuePairExample
 					<p>
 						<h3>Avantages :</h3>
 						<ul>
-							<li>Facilit&eacute; d'utilisation (classe impl&eacute;mentant d&eacute;j&agrave; certaines m&eacute;thodes de requêtage, et autres)</li>
+							<li>Facilit&eacute; d'utilisation (classe impl&eacute;mentant d&eacute;j&agrave; certaines m&eacute;thodes de requ&ecirc;tage, et autres)</li>
 							<li>Supporte l'asynchronisme</li>
 							<li>Unicicit&eacute; des coupes cl&eacute;/valeur (en cas de dictionnaire)</li>
 						</ul>
