@@ -171,7 +171,7 @@ class TupleExample
     {
         // Instanciation d'un Tuple &agrave; 3 param&egrave;tres
 		
-        Tuple<int, string, bool> tuple = new Tuple<int, string, bool>(10, "string value", true);
+        Tuple&#60;int, string, bool&#62; tuple = new Tuple&#60;int, string, bool&#62;(10, "string value", true);
 		
         // Acc&egrave;s aux propri&eacute;t&eacute;s du Tuple cr&eacute;&eacute;
 		
@@ -217,11 +217,11 @@ class KeyValuePairExample
 {
     static void Main()
     {
-        KeyValuePair<int, string> kvp = GetKeyValuePair();
+        KeyValuePair&#60;int, string&#62; kvp = GetKeyValuePair();
     }
 	
-	KeyValuePair<int, string> GetKeyValuePair(){
-		return new KeyValuePair<int, string>(1, "string value");
+	KeyValuePair&#60;int, string&#62; GetKeyValuePair(){
+		return new KeyValuePair&#60;int, string&#62;(1, "string value");
 	}
 }
 </code></pre>
@@ -240,7 +240,7 @@ class KeyValuePairExample
 				</li>
 				<li>
 					<span class="step_number">6</span>
-					<h2>Utiliser une structure (struct)</h2>
+					<h2>Utiliser une structure (<span class="thnclwrd">struct</span>)</h2>
 					<p>Les structures sont des alternatives aux classes, et sont de type valeur, contrairement aux classes qui sont de type r&eacute;f&eacute;rence. Si les structures ont bien plus de limitations que les classes, elles sont bien plus performantes, raison pour laquelle il est pr&eacute;f&eacute;rable d'utiliser des structures quand vous le pouvez, surtout si la structure de donn&eacute;es en question aura un volume d'instanciations important.</p>
 					<p>Principales limitations des structures par rapport aux classes :
 						<ul>
