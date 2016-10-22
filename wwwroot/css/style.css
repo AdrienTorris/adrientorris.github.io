@@ -1,6 +1,6 @@
 @import url(https://fonts.googleapis.com/css?family=Istok+Web|Open+Sans);
 html,body{padding:0px;margin:0px;text-align:center;background-color:#f6f6f6;font-size:15px;font-family:'Istok Web', Arial, Helvetica, sans-serif;}
-div#main_ctn{width:100%;max-width:940px;margin:0px auto;text-align:left;}
+div#main_ctn{width:100%;max-width:940px;margin:0px auto;text-align:left;padding:0px 10px;}
 div#main_ctn > header{font-family: 'Open Sans', Georgia, serif;font-size: 16px;line-height: 1.75;color: #2b2b2b;}
 div#main_ctn > header > div#header-content{display: table;width: 100%;position: relative;padding: 40px 0;margin-bottom: 40px;border-bottom: 1px solid #e6e6e6;}
 div#main_ctn > header > div#header-content > a{width:50%;float:left;font-size:40px;text-decoration:none;color: #2b2b2b;font-weight:700;}
