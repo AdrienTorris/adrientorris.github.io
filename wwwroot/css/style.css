@@ -35,3 +35,5 @@ div#main_ctn > footer{padding:40px 0px 15px 0px;font-size:60%;}
 /* SyntaxHighlighter */
 div.toolbar{display:none !important;visibility:hidden !important;}
 div.syntaxhighlighter.csharp {padding:8px 0px;}
+
+span.thnclwrd{font-style:italic;letter-spacing:1.3em;}
