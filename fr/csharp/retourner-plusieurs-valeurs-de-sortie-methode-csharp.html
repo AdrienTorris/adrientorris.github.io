@@ -3,12 +3,12 @@
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 		<meta charset="iso-8859-1" />
-		<title>Retourner plusieurs valeurs d'une méthode en C#</title>
+		<title>Retourner plusieurs valeurs d'une m&eacute;thode en C#</title>
 		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="language" content="fr" />
 		<meta name="keywords" content="" />
-		<meta name="description" content="Retourner plusieurs valeurs d'une méthode en C#" />
+		<meta name="description" content="Retourner plusieurs valeurs d'une m&eacute;thode en C#" />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
 		<meta name="generator" content="SiteUp! 0.1" />
@@ -31,17 +31,17 @@
 				<ul>
 					<li><a href="https://adrientorris.github.io/fr/index.html" title="">Accueil</a></li>
 					<li>C#</li>
-					<li class="active"><a href="https://adrientorris.github.io/fr/csharp/retourner-plusieurs-valeurs-de-sortie-methode-csharp.html" title="Retourner plusieurs valeurs d'une méthode en C#">Retourner plusieurs valeurs d'une méthode en C#</a></li>
+					<li class="active"><a href="https://adrientorris.github.io/fr/csharp/retourner-plusieurs-valeurs-de-sortie-methode-csharp.html" title="Retourner plusieurs valeurs d'une m&eacute;thode en C#">Retourner plusieurs valeurs d'une m&eacute;thode en C#</a></li>
 				</ul>
 			</div>
 			<div id="post_ctn">
-				<h1>Méthode renvoyant plusieurs valeurs en C#</h1>
-				<p>Il y a plusieurs manières en C# d'implémenter une méthode renvoyant plusieurs valeurs. En voici quelque-unes, avec autant d'information que possible.</p>
+				<h1>M&eacute;thode renvoyant plusieurs valeurs en C#</h1>
+				<p>Il y a plusieurs mani&egrave;res en C# d'impl&eacute;menter une m&eacute;thode renvoyant plusieurs valeurs. En voici quelque-unes, avec autant d'information que possible.</p>
 				<ul>
 					<li>
 				<span class="step_number">1</span>
 				<h2>Utiliser une classe</h2>
-				Cette méthode, probablement la plus courante, est d'utiliser une classe comme valeur de retour. Vous êtes ainsi totalement libre de retourner ce que bon vous semble, puisque c'est vous qui définissez entièrement l'objet qui sera retourné.</p>
+				Cette m&eacute;thode, probablement la plus courante, est d'utiliser une classe comme valeur de retour. Vous êtes ainsi totalement libre de retourner ce que bon vous semble, puisque c'est vous qui d&eacute;finissez enti&egrave;rement l'objet qui sera retourn&eacute;.</p>
 <pre><code class="csharp">
 public sealed class MyReturnContainer
 {
@@ -72,21 +72,21 @@ public class AnotherClassSomewhereInYourCode
 				<p>
 					<h3>Avantages :</h3>
 					<ul>
-						<li>Flexibilité totale</li>
+						<li>Flexibilit&eacute; totale</li>
 						<li>Supporte l'asynchronisme</li>
 					</ul>
-					<h3>Inconvénients :</h3>
+					<h3>Inconv&eacute;nients :</h3>
 					<ul>
-						<li>Les classes sont de type référence (moins performant que le type valeur)</li>
-						<li>Si la classe n'a pas de vrai sens métier ou n'est utilisée qu'une seule fois, cela peut alourdir votre modèle inutilement</li>
+						<li>Les classes sont de type r&eacute;f&eacute;rence (moins performant que le type valeur)</li>
+						<li>Si la classe n'a pas de vrai sens m&eacute;tier ou n'est utilis&eacute;e qu'une seule fois, cela peut alourdir votre mod&egrave;le inutilement</li>
 					</ul>
 				</p>
 				</li>
 				<li>
 					<span class="step_number">2</span>
-					<h2>Utiliser les paramètres de sortie (out)</h2>
-					<p>Les paramètres de sortie permettent de déclarer qu'une méthode a une, ou plusieurs valeurs de sortie en plus de sa valeur de retour.</p>
-					<p>Un paramètre out indique au compilateur que l'objet ne sera initialisé qu'à l'intérieur de la fonction, un paramètre out ne peut donc être qu'une valeur de sortie car sa valeur ne peut pas être initialisée en amont. D'autre part, une méthode ayant des paramètres out devra obligatoirement leur attribuer une valeur à tous. Une méthode ayant des paramètres out non-assignés engendrera une erreur de compilation.</p>
+					<h2>Utiliser les param&egrave;tres de sortie (out)</h2>
+					<p>Les param&egrave;tres de sortie permettent de d&eacute;clarer qu'une m&eacute;thode a une, ou plusieurs valeurs de sortie en plus de sa valeur de retour.</p>
+					<p>Un param&egrave;tre out indique au compilateur que l'objet ne sera initialis&eacute; qu'&agrave; l'int&eacute;rieur de la fonction, un param&egrave;tre out ne peut donc être qu'une valeur de sortie car sa valeur ne peut pas être initialis&eacute;e en amont. D'autre part, une m&eacute;thode ayant des param&egrave;tres out devra obligatoirement leur attribuer une valeur &agrave; tous. Une m&eacute;thode ayant des param&egrave;tres out non-assign&eacute;s engendrera une erreur de compilation.</p>
 <pre><code class="csharp">
 Guid myGuid = Guid.Empty;
 string myString = string.Empty;
@@ -103,7 +103,7 @@ bool ret = GetMultipleValues(out myGuid, out myString, out myInt);
 
 Console.WriteLine(myString); // "string value"
 </code></pre>
-					<p>A noter qu'un paramètre out peut être nullable.</p>
+					<p>A noter qu'un param&egrave;tre out peut être nullable.</p>
 <pre><code class="csharp">
 public bool TryCreateSomething(string param1, string param2, bool param3, out Guid? id){
 	id = null;
@@ -111,7 +111,7 @@ public bool TryCreateSomething(string param1, string param2, bool param3, out Gu
 	return true;
 }
 </code></pre>
-					<p>Enfin, avec C# 7.0, les paramètres se sortie n'ont plus à être déclarées avant leur passage en paramètres mais peuvent l'être à la volée, comme ceci :</p>
+					<p>Enfin, avec C# 7.0, les param&egrave;tres se sortie n'ont plus &agrave; être d&eacute;clar&eacute;es avant leur passage en param&egrave;tres mais peuvent l'être &agrave; la vol&eacute;e, comme ceci :</p>
 <pre><code class="csharp">
 public void PrintCoordinates(Point p)
 {
@@ -122,9 +122,9 @@ public void PrintCoordinates(Point p)
 					<p>
 						<h3>Avantages :</h3>
 						<ul>
-							<li>Flexibilité</li>
+							<li>Flexibilit&eacute;</li>
 						</ul>
-						<h3>Inconvénients :</h3>
+						<h3>Inconv&eacute;nients :</h3>
 						<ul>
 							<li>Ne supporte pas l'asynchronisme</li>
 							<li>Obligation d'assigner une valeur, même nulle</li>
@@ -133,10 +133,10 @@ public void PrintCoordinates(Point p)
 				</li>
 				<li>
 					<span class="step_number">3</span>
-					<h2>Utiliser les paramètres de sortie par référence (ref)</h2>
-					<p>Passer un ou plusieurs paramètres par référence a pour effet que toute modification de valeur qui sera effectuée au sein d'une méthode sera répercutée sur la variable d'origine, en dehors de la méthode.</p>
-					<p>Contrairement aux paramètres de sortie (out), tout paramètre passé en référence à une méthode doit être préalablement initialisé mais ne doit pas forcemment voir une valeur lui être assignée par cette même méthode.</p>
-					<p>Un paramètre ref ayant une valeur avant-même l'exécution d'une méthode, on dit que c'est un paramètre double-sens (two-ways), car sa valeur peut être utilisée au sein d'une méthode, même si cette dernière ne lui a encore rien assigné.</p>
+					<h2>Utiliser les param&egrave;tres de sortie par r&eacute;f&eacute;rence (ref)</h2>
+					<p>Passer un ou plusieurs param&egrave;tres par r&eacute;f&eacute;rence a pour effet que toute modification de valeur qui sera effectu&eacute;e au sein d'une m&eacute;thode sera r&eacute;percut&eacute;e sur la variable d'origine, en dehors de la m&eacute;thode.</p>
+					<p>Contrairement aux param&egrave;tres de sortie (out), tout param&egrave;tre pass&eacute; en r&eacute;f&eacute;rence &agrave; une m&eacute;thode doit être pr&eacute;alablement initialis&eacute; mais ne doit pas forcemment voir une valeur lui être assign&eacute;e par cette même m&eacute;thode.</p>
+					<p>Un param&egrave;tre ref ayant une valeur avant-même l'ex&eacute;cution d'une m&eacute;thode, on dit que c'est un param&egrave;tre double-sens (two-ways), car sa valeur peut être utilis&eacute;e au sein d'une m&eacute;thode, même si cette derni&egrave;re ne lui a encore rien assign&eacute;.</p>
 <pre><code class="csharp">
 string message = "Hello";
 
@@ -151,10 +151,10 @@ Console.WriteLine(message); // "Hi there !"
 					<p>
 						<h3>Avantages :</h3>
 						<ul>
-							<li>Flexibilité</li>
+							<li>Flexibilit&eacute;</li>
 							<li>Double-sens</li>
 						</ul>
-						<h3>Inconvénients :</h3>
+						<h3>Inconv&eacute;nients :</h3>
 						<ul>
 							<li>Ne supporte pas l'asynchronisme</li>
 						</ul>
@@ -163,17 +163,17 @@ Console.WriteLine(message); // "Hi there !"
 				<li>
 					<span class="step_number">4</span>
 					<h2>Les Tuple</h2>
-					<p>Apparus avec le Framework .NET 4.0, les Tuple permettent de créer des objets sur-mesures et complexes sans pour autant avoir à déclarer une classe. Ils peuvent contenir autant de paramètres que vous le souhaitez (le framework .NET pends en charge jusqu'à 7 éléments, mais vous pouvez outrepasser cette limitation en imbriquant des Tuple dans la propriété Rest d'un Tuple), de tout type. A leur utilisation, ces paramètres seront nommés Item<i>X</i>, <i>X</i> étant leur position (Item1 pour le premier paramètre, Item2 pour le deuxième, etc).</p>
+					<p>Apparus avec le Framework .NET 4.0, les Tuple permettent de cr&eacute;er des objets sur-mesures et complexes sans pour autant avoir &agrave; d&eacute;clarer une classe. Ils peuvent contenir autant de param&egrave;tres que vous le souhaitez (le framework .NET pends en charge jusqu'&agrave; 7 &eacute;l&eacute;ments, mais vous pouvez outrepasser cette limitation en imbriquant des Tuple dans la propri&eacute;t&eacute; Rest d'un Tuple), de tout type. A leur utilisation, ces param&egrave;tres seront nomm&eacute;s Item<i>X</i>, <i>X</i> &eacute;tant leur position (Item1 pour le premier param&egrave;tre, Item2 pour le deuxi&egrave;me, etc).</p>
 <pre><code class="csharp">
 class TupleExample
 {
     static void Main()
     {
-        // Instanciation d'un Tuple à 3 paramètres
+        // Instanciation d'un Tuple &agrave; 3 param&egrave;tres
 		
         Tuple<int, string, bool> tuple = new Tuple<int, string, bool>(10, "string value", true);
 		
-        // Accès aux propriétés du Tuple créé
+        // Acc&egrave;s aux propri&eacute;t&eacute;s du Tuple cr&eacute;&eacute;
 		
         if (tuple.Item1 == 10)
         {
@@ -192,26 +192,26 @@ class TupleExample
     }
 }
 </code></pre>
-					<p>Techniquement, un Tuple est une classe qui fournit des méthodes statiques pour créer des instances.</p>
-					<p>Si cet objet s'avère extrêmement pratique et utile dans bon nombre de cas, il est à noter qu'il est tout de même à utiliser avec parcimonie, n'étant pas toujours facile à maintenir dans le temps. En effet, il est parfois difficile lorsqu'on repasse sur une méthode 2 ans après l'avoir écrite, de se souvenir à quoi correspondent les propriétés Item4, Item5 et Item6 ... Cela dit, il semble que ce ne sera pas une limitation encore longtemps, comme l'atteste cette <a href="https://github.com/dotnet/roslyn/issues/347" title="" target="_Blank">issue GitHub</a>. Qui plus est, si vous décidez d'ajouter un paramètre en deuxième position, alors les noms de tous les paramètres suivants seront impactés.</p>
+					<p>Techniquement, un Tuple est une classe qui fournit des m&eacute;thodes statiques pour cr&eacute;er des instances.</p>
+					<p>Si cet objet s'av&egrave;re extrêmement pratique et utile dans bon nombre de cas, il est &agrave; noter qu'il est tout de même &agrave; utiliser avec parcimonie, n'&eacute;tant pas toujours facile &agrave; maintenir dans le temps. En effet, il est parfois difficile lorsqu'on repasse sur une m&eacute;thode 2 ans apr&egrave;s l'avoir &eacute;crite, de se souvenir &agrave; quoi correspondent les propri&eacute;t&eacute;s Item4, Item5 et Item6 ... Cela dit, il semble que ce ne sera pas une limitation encore longtemps, comme l'atteste cette <a href="https://github.com/dotnet/roslyn/issues/347" title="" target="_Blank">issue GitHub</a>. Qui plus est, si vous d&eacute;cidez d'ajouter un param&egrave;tre en deuxi&egrave;me position, alors les noms de tous les param&egrave;tres suivants seront impact&eacute;s.</p>
 					<p>
 						<h3>Avantages :</h3>
 						<ul>
-							<li>Evite d'alourdir le modèle inutilement</li>
-							<li>Flexibilité totale</li>
+							<li>Evite d'alourdir le mod&egrave;le inutilement</li>
+							<li>Flexibilit&eacute; totale</li>
 							<li>Supporte l'asynchronisme</li>
 						</ul>
-						<h3>Inconvénients :</h3>
+						<h3>Inconv&eacute;nients :</h3>
 						<ul>
-							<li>Dénomination abstraite des propriétés</li>
-							<li>Maintenabilité</li>
-							<li>Performance (type référence)</li>
+							<li>D&eacute;nomination abstraite des propri&eacute;t&eacute;s</li>
+							<li>Maintenabilit&eacute;</li>
+							<li>Performance (type r&eacute;f&eacute;rence)</li>
 						</ul>
 					</p>
 				</li>
 				<li>
 					<span class="step_number">5</span>
-					<h2>Utiliser une entrée de dictionnaire (KeyValuePair)</h2>
+					<h2>Utiliser une entr&eacute;e de dictionnaire (KeyValuePair)</h2>
 <pre><code class="csharp">
 class KeyValuePairExample
 {
@@ -228,26 +228,26 @@ class KeyValuePairExample
 					<p>
 						<h3>Avantages :</h3>
 						<ul>
-							<li>Facilité d'utilisation (classe implémentant déjà certaines méthodes de requêtage, et autres)</li>
+							<li>Facilit&eacute; d'utilisation (classe impl&eacute;mentant d&eacute;j&agrave; certaines m&eacute;thodes de requêtage, et autres)</li>
 							<li>Supporte l'asynchronisme</li>
-							<li>Unicicité des coupes clé/valeur (en cas de dictionnaire)</li>
+							<li>Unicicit&eacute; des coupes cl&eacute;/valeur (en cas de dictionnaire)</li>
 						</ul>
-						<h3>Inconvénients :</h3>
+						<h3>Inconv&eacute;nients :</h3>
 						<ul>
-							<li>Performance (moins performant qu'un Tuple de 2 paramètres, ou qu'une structure)</li>
+							<li>Performance (moins performant qu'un Tuple de 2 param&egrave;tres, ou qu'une structure)</li>
 						</ul>
 					</p>
 				</li>
 				<li>
 					<span class="step_number">6</span>
 					<h2>Utiliser une structure (struct)</h2>
-					<p>Les structures sont des alternatives aux classes, et sont de type valeur, contrairement aux classes qui sont de type référence. Si les structures ont bien plus de limitations que les classes, elles sont bien plus performantes, raison pour laquelle il est préférable d'utiliser des structures quand vous le pouvez, surtout si la structure de données en question aura un volume d'instanciations important.</p>
+					<p>Les structures sont des alternatives aux classes, et sont de type valeur, contrairement aux classes qui sont de type r&eacute;f&eacute;rence. Si les structures ont bien plus de limitations que les classes, elles sont bien plus performantes, raison pour laquelle il est pr&eacute;f&eacute;rable d'utiliser des structures quand vous le pouvez, surtout si la structure de donn&eacute;es en question aura un volume d'instanciations important.</p>
 					<p>Principales limitations des structures par rapport aux classes :
 						<ul>
-							<li>Héritage impossible</li>
-							<li>Toutes les propriétés doivent avoir une valeur</li>
-							<li>Les constructeurs sans paramètres sont impossibles (il avaient été ajouté dans C# 6 mais retirés depuis, et ne sont à priori pas à l'étude pour C# 7)</li>
-							<li>Tout constructeur doit assigner une valeur à chaque propriété de la structure (sinon la valeur par défaut du type sera assignée)</li>
+							<li>H&eacute;ritage impossible</li>
+							<li>Toutes les propri&eacute;t&eacute;s doivent avoir une valeur</li>
+							<li>Les constructeurs sans param&egrave;tres sont impossibles (il avaient &eacute;t&eacute; ajout&eacute; dans C# 6 mais retir&eacute;s depuis, et ne sont &agrave; priori pas &agrave; l'&eacute;tude pour C# 7)</li>
+							<li>Tout constructeur doit assigner une valeur &agrave; chaque propri&eacute;t&eacute; de la structure (sinon la valeur par d&eacute;faut du type sera assign&eacute;e)</li>
 						</ul>
 					</p>
 <pre><code class="csharp">
@@ -273,18 +273,18 @@ public struct Point
 						<h3>Avantages :</h3>
 						<ul>
 							<li>Type valeur (performance++)</li>
-							<li>Simplicité</li>
+							<li>Simplicit&eacute;</li>
 							<li>Supporte l'asynchronisme</li>
 						</ul>
-						<h3>Inconvénients :</h3>
+						<h3>Inconv&eacute;nients :</h3>
 						<ul>
-							<li>Rigidité de l'objet</li>
+							<li>Rigidit&eacute; de l'objet</li>
 						</ul>
 					</p>
 				</li>
 				</ul>
 				<div id="crdny">
-					posté le 09/10/2016
+					post&eacute; le 22/10/2016
 				</div>
 				<div id="tags_wrapper">
 					<ul>
@@ -294,8 +294,8 @@ public struct Point
 				</div>
 				<div id="refs_wrapper">
 					<ul>
-						<li><a href="https://msdn.microsoft.com/fr-fr/library/s1ax56ch(v=vs.90).aspx" title="Types valeur (Référence C#)" target="_Blank">Types valeur (Référence C#)</a></li>
-						<li><a href="https://msdn.microsoft.com/fr-fr/library/490f96s2(v=vs.90).aspx" title="Types référence (Référence C#)" target="_Blank">Types référence (Référence C#)</a></li>
+						<li><a href="https://msdn.microsoft.com/fr-fr/library/s1ax56ch(v=vs.90).aspx" title="Types valeur (R&eacute;f&eacute;rence C#)" target="_Blank">Types valeur (R&eacute;f&eacute;rence C#)</a></li>
+						<li><a href="https://msdn.microsoft.com/fr-fr/library/490f96s2(v=vs.90).aspx" title="Types r&eacute;f&eacute;rence (R&eacute;f&eacute;rence C#)" target="_Blank">Types r&eacute;f&eacute;rence (R&eacute;f&eacute;rence C#)</a></li>
 						<!--<li><a href="" title="" target="_Blank"></a></li>
 						<li><a href="" title="" target="_Blank"></a></li>
 						<li><a href="" title="" target="_Blank"></a></li>-->
