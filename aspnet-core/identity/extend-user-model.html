@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>How to extend ASP.NET Core Identity user</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="language" content="en" />
+		<meta name="keywords" content="ASP.NET Core,Identity,ASP.NET Core security,ASP.NET Core Identity" />
+		<meta name="description" content="How to extend ASP.NET Core Identity user" />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<meta name="generator" content="SiteUp! 0.1" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/aspnet-core/identity/unicite-adresses-mails.html" hreflang="fr-fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/aspnet-core/identity/extend-user-model.html" hreflang="en-en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2>
+					<ul id="flags_wrapper">
+						<li><a href="https://adrientorris.github.io/fr/aspnet-core/identity/unicite-adresses-mails.html" title=""><img src="/wwwroot/images/french.png" alt="" title="" /></a></li>
+						<li class="cur"><img src="/wwwroot/images/english.jpg" alt="" title="" /></li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>ASP.NET Core</li>
+					<li>Identity</li>
+					<li class="active"><a href="https://adrientorris.github.io/aspnet-core/identity/extend-user-model.html" title="How to extend ASP.NET Core Identity user">How to extend ASP.NET Core Identity user</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn">
+				<h1>How to extend ASP.NET Core Identity user</h1>
+				<p>ASP.NET Core Identity has a default implementation that you can easily extend to provide your needs, like add a first name and a last name to the users (we will not create new tables here).</p>
+				<ul class="steps">
+					<li>
+						<span class="step_number">1</span>
+						First step to do that, implement the identity user, and add the properties you need
+<pre><code class="csharp">
+// Add profile data for application users by adding properties to the ApplicationUser class
+
+public class ApplicationUser : IdentityUser
+{
+    public string FirstName { get; set; }
+	
+    public string LastName { get; set; }
+}
+</code></pre>
+					</li>
+					<li>
+						<span class="step_number">2</span>
+						SignInManager<TUser> is a class responsible for signing users into your application. Internally, this class uses a IUserClaimsPrincipalFactory<TUser> to generate a ClaimsPrincipal from your user. To add claims to this factory (by default, IUserClaimsPrincipalFactory<TUser> manages only two claims : username and user's identifier), you have to create you own implementation of IUserClaimsPrincipalFactory<TUser> by inheriting the default one :
+<pre><code class="csharp">
+public class AppClaimsPrincipalFactory : UserClaimsPrincipalFactory<ApplicationUser, IdentityRole>
+{
+    public AppClaimsPrincipalFactory(
+        UserManager<ApplicationUser> userManager
+        , RoleManager<IdentityRole> roleManager
+        , IOptions<IdentityOptions> optionsAccessor) : base(userManager, roleManager, optionsAccessor)
+    { }
+
+    public async override Task<ClaimsPrincipal> CreateAsync(ApplicationUser user)
+    {
+        var principal = await base.CreateAsync(user);
+
+        if (!string.IsNullOrWhiteSpace(user.FirstName))
+        {
+            ((ClaimsIdentity)principal.Identity).AddClaims(new[] {
+        new Claim(ClaimTypes.GivenName, user.FirstName)
+    });
+        }
+
+        if (!string.IsNullOrWhiteSpace(user.LastName))
+        {
+            ((ClaimsIdentity)principal.Identity).AddClaims(new[] {
+         new Claim(ClaimTypes.Surname, user.LastName),
+    });
+        }
+
+        return principal;
+    }
+}
+</code></pre>
+					</li>
+					<li>
+						<span class="step_number">3</span>
+						Finally, you have to register the custom factory you just created in your application startup class, after adding Identity service.
+<pre><code class="csharp">
+public void ConfigureServices(IServiceCollection services)
+{
+	// [...]
+
+	services.AddDbContext<SecurityDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Security")));
+
+	services.AddIdentity<ApplicationUser, IdentityRole>()
+		.AddEntityFrameworkStores<SecurityDbContext>()
+		.AddDefaultTokenProviders();
+		
+	services.AddScoped<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<ApplicationUser>, AppClaimsPrincipalFactory>();
+
+	// [...]
+}
+</code></pre>
+					</li>
+				</ul>		
+				<div id="crdny">
+					30/10/2016
+				</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>ASP.NET Core</li>
+						<li>Identity</li>
+					</ul>
+				</div>
+				<div id="refs_wrapper">
+					<ul>
+						<li><a href="https://docs.asp.net/en/latest/security/authentication/identity.html" title="Introduction to Identity" target="_Blank">Introduction to Identity</a></li>
+					</ul>
+				</div>
+            </div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-85948839-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+	</body>
+</html>
