@@ -11,7 +11,7 @@
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
 		<meta name="generator" content="SiteUp! 0.1" />
-		<link rel="alternate" href="https://adrientorris.github.io/fr/aspnet-core/identity/unicite-adresses-mails.html" hreflang="fr-fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/aspnet-core/identity/etendre-identity-user.html" hreflang="fr-fr" />
 		<link rel="alternate" href="https://adrientorris.github.io/aspnet-core/identity/extend-user-model.html" hreflang="en-en" />
 		<link href="/wwwroot/css/style.css" rel="stylesheet" />
 	</head>
@@ -40,7 +40,7 @@
 				<ul class="steps">
 					<li>
 						<span class="step_number">1</span>
-						First step to do that, implement the identity user, and add the properties you need
+						First step to do that, implement the identity user, and add the properties you need.<br />You also have to create the columns in your database, with the same names than the properties.
 <pre><code class="csharp">
 // Add profile data for application users by adding properties to the ApplicationUser class
 
@@ -54,17 +54,18 @@ public class ApplicationUser : IdentityUser
 					</li>
 					<li>
 						<span class="step_number">2</span>
-						SignInManager<TUser> is a class responsible for signing users into your application. Internally, this class uses a IUserClaimsPrincipalFactory<TUser> to generate a ClaimsPrincipal from your user. To add claims to this factory (by default, IUserClaimsPrincipalFactory<TUser> manages only two claims : username and user's identifier), you have to create you own implementation of IUserClaimsPrincipalFactory<TUser> by inheriting the default one :
+						SignInManager<TUser> is a class responsible for signing users into your application. Internally, this class uses a IUserClaimsPrincipalFactory&#60;TUser&#62; to generate a ClaimsPrincipal from your user. To add claims to this factory (by default, IUserClaimsPrincipalFactory<TUser> manages only two claims : username and user's identifier), you have to create you own implementation of IUserClaimsPrincipalFactory<TUser> by inheriting the default one :
 <pre><code class="csharp">
-public class AppClaimsPrincipalFactory : UserClaimsPrincipalFactory<ApplicationUser, IdentityRole>
+public class AppClaimsPrincipalFactory : UserClaimsPrincipalFactory&#60;ApplicationUser, IdentityRole&#62;
 {
     public AppClaimsPrincipalFactory(
-        UserManager<ApplicationUser> userManager
-        , RoleManager<IdentityRole> roleManager
-        , IOptions<IdentityOptions> optionsAccessor) : base(userManager, roleManager, optionsAccessor)
+        UserManager&#60;ApplicationUser&#62; userManager
+        , RoleManager&#60;IdentityRole&#62; roleManager
+        , IOptions&#60;IdentityOptions&#62; optionsAccessor)
+	: base(userManager, roleManager, optionsAccessor)
     { }
 
-    public async override Task<ClaimsPrincipal> CreateAsync(ApplicationUser user)
+    public async override Task&#60;ClaimsPrincipal&#62; CreateAsync(ApplicationUser user)
     {
         var principal = await base.CreateAsync(user);
 
@@ -95,13 +96,13 @@ public void ConfigureServices(IServiceCollection services)
 {
 	// [...]
 
-	services.AddDbContext<SecurityDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Security")));
+	services.AddDbContext&#60;SecurityDbContext&#62;(options =&#62; options.UseSqlServer(Configuration.GetConnectionString("Security")));
 
-	services.AddIdentity<ApplicationUser, IdentityRole>()
-		.AddEntityFrameworkStores<SecurityDbContext>()
+	services.AddIdentity&#60;ApplicationUser, IdentityRole&#62;()
+		.AddEntityFrameworkStores&#60;SecurityDbContext&#62;()
 		.AddDefaultTokenProviders();
 		
-	services.AddScoped<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<ApplicationUser>, AppClaimsPrincipalFactory>();
+	services.AddScoped&#60;Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory&#60;ApplicationUser&#62;, AppClaimsPrincipalFactory&#62;();
 
 	// [...]
 }
