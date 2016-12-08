@@ -10,7 +10,7 @@
 		<meta name="description" content="What to do when updating Microsoft.NETCore.App to v1.1.0 causes -2147450749 (0x80008083)" />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
-		<meta name="generator" content="SiteUp! 0.1" />
+		<meta name="generator" content="No404! 0.1" />
 		<link rel="alternate" href="https://adrientorris.github.io/aspnet-core/updating-netcore-app-to-1-1-0-causes-2147450749.html" hreflang="en-en" />
 		<link href="/wwwroot/css/style.css" rel="stylesheet" />
 	</head>
@@ -19,10 +19,6 @@
 			<header>
 				<div id="header-content">
 					<h2>Blog</h2>
-					<ul id="flags_wrapper">
-						<li><a href="#" title=""><img src="/wwwroot/images/french.png" alt="" title="" /></a></li>
-						<li class="cur"><img src="/wwwroot/images/english.jpg" alt="" title="" /></li>
-					</ul>
 				</div>
 			</header>
 			<div id="arianne_wrapper">
@@ -36,7 +32,7 @@
 				<h1>Updating Microsoft.NETCore.App to v1.1.0 causes -2147450749 (0x80008083)</h1>
 				<p>If you updating your .NET Core application (web application or console application), maybe you will have a fatal crash with the error : <b>The program '[20132] dotnet.exe' has exited with code -2147450749 (0x80008083)</b>.</p>
 				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/updating-microsoft-netcore-app-to-v1-1-0-causes-2147450749-0x80008083.png" title="" /></div>
-				<p>So solution is to install the <span class="thnclwrd">.NET Core 1.1 SDK</span> from <a href="https://www.microsoft.com/net/download/core" title="" target="_Blank">https://www.microsoft.com/net/download/core</a></p>.
+				<p>The solution is to install the <span class="thnclwrd">.NET Core 1.1 SDK</span> from <a href="https://www.microsoft.com/net/download/core" title="" target="_Blank">https://www.microsoft.com/net/download/core</a></p>.
 				<p>Note: To have the version of .NET Command Line (CLI) Tools of your project, you the command <span class="thnclwrd">dotnet --info</span> from the Package Manager Console.</p>
 				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/package-manager-console-dotnet-info-command.png" title="" /></div>
 				<p>If the <span class="thnclwrd">dotnet --info</span> command gives you <i>.NET Command Line Tools (1.0.0-preview2-003131)</i>, you don't have the <span class="thnclwrd">.NET Core 1.1 SDK</span> installed. <span class="thnclwrd">.NET Core 1.1 SDK</span> CLI version is <i>.NET Command Line Tools (1.0.0-preview2-1-003177)</i>.<br />This versioning can be quite confusing because this command doesn't give you the version of the .NET Core framework your are using but the version of the .NET Command Line Tools you are using, which is the tool used for building .NET Core apps and libraries.</p>
