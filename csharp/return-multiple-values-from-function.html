@@ -34,8 +34,271 @@
 				</ul>
 			</div>
 			<div id="post_ctn">
+            </div>
+			<div id="post_ctn">
 				<h1>Return multiple values from a function in C#</h1>
-				<p>Soon ...</p>
+				<p>Il y a plusieurs mani&egrave;res en C# d'impl&eacute;menter une m&eacute;thode renvoyant plusieurs valeurs. En voici quelque-unes, avec autant d'information que possible sur chacunes d'entre-elles.</p>
+				<ul>
+					<li>
+				<span class="step_number">1</span>
+				<h2>Using class</h2>
+				Ce proc&eacute;d&eacute;, probablement le plus courant, est d'utiliser une classe comme valeur de retour. Vous &ecirc;tes ainsi totalement libre de retourner ce que bon vous semble, puisque c'est vous qui d&eacute;finissez enti&egrave;rement l'objet qui sera retourn&eacute;.</p>
+<pre><code class="csharp">
+public sealed class MyReturnContainer
+{
+	public Guid GuidValue { get; }
+	
+	public string StringValue { get; }
+	
+	public int IntValue { get; }
+	
+	public MyReturnContainer(Guid g, string s, int i){
+		GuidValue = g;
+		StringValue = s;
+		IntValue = i;
+	}
+}
+</code></pre>
+<pre><code class="csharp">
+public class AnotherClassSomewhereInYourCode
+{
+	public AnotherClassSomewhereInYourCode()
+	{ }
+	
+	public MyReturnContainer GetMultipleValues(){
+		return new MyReturnContainer(Guid.NewGuid(), "string value", 1);
+	}
+}
+</code></pre>
+				<p>
+					<h3>Benefits :</h3>
+					<ul>
+						<li>Flexibilit&eacute; totale</li>
+						<li>Supporte l'asynchronisme</li>
+					</ul>
+					<h3>Cons of returning a class :</h3>
+					<ul>
+						<li>Les classes sont de type r&eacute;f&eacute;rence (moins performant que le type valeur)</li>
+						<li>Si la classe n'a pas de vrai sens m&eacute;tier ou n'est utilis&eacute;e qu'une seule fois, cela peut alourdir votre mod&egrave;le inutilement</li>
+					</ul>
+				</p>
+				</li>
+				<li>
+					<span class="step_number">2</span>
+					<h2>Utiliser les param&egrave;tres de sortie (<span class="thnclwrd">out</span>)</h2>
+					<p>Les param&egrave;tres de sortie permettent de d&eacute;clarer qu'une m&eacute;thode a une, ou plusieurs valeurs de sortie en plus de sa valeur de retour.</p>
+					<p>Un param&egrave;tre <span class="thnclwrd">out</span> indique au compilateur que l'objet ne sera initialis&eacute; qu'&agrave; l'int&eacute;rieur de la fonction, un param&egrave;tre out ne peut donc &ecirc;tre qu'une valeur de sortie car sa valeur ne peut pas &ecirc;tre initialis&eacute;e en amont. D'autre part, une m&eacute;thode ayant des param&egrave;tres <span class="thnclwrd">out</span> devra obligatoirement leur attribuer une valeur &agrave; tous. Une m&eacute;thode ayant des param&egrave;tres out non-assign&eacute;s engendrera une erreur de compilation.</p>
+<pre><code class="csharp">
+Guid myGuid = Guid.Empty;
+string myString = string.Empty;
+int myInt = 0;
+
+public bool GetMultipleValues(out Guid g, out string s, out int i){
+	g = Guid.NewGuid();
+	s = "string value";
+	i = 1;
+	return true;
+}
+
+bool ret = GetMultipleValues(out myGuid, out myString, out myInt);
+
+Console.WriteLine(myString); // "string value"
+</code></pre>
+					<p>A noter qu'un param&egrave;tre <span class="thnclwrd">out</span> peut &ecirc;tre nullable.</p>
+<pre><code class="csharp">
+public bool TryCreateSomething(string param1, string param2, bool param3, out Guid? id){
+	id = null;
+	// do something
+	return true;
+}
+</code></pre>
+					<p>Enfin, avec C# 7.0, les param&egrave;tres se sortie n'ont plus &agrave; &ecirc;tre d&eacute;clar&eacute;es avant leur passage en param&egrave;tres mais peuvent l'&ecirc;tre &agrave; la vol&eacute;e, comme ceci :</p>
+<pre><code class="csharp">
+public void PrintCoordinates(Point p)
+{
+    p.GetCoordinates(out int x, out int y);
+    Console.WriteLine($"({x}, {y})");
+}
+</code></pre>
+					<p>
+						<h3>Benefits :</h3>
+						<ul>
+							<li>Flexibilit&eacute;</li>
+						</ul>
+						<h3>Inconv&eacute;nients :</h3>
+						<ul>
+							<li>Ne supporte pas l'asynchronisme</li>
+							<li>Obligation d'assigner une valeur, m&ecirc;me nulle</li>
+						</ul>
+					</p>
+				</li>
+				<li>
+					<span class="step_number">3</span>
+					<h2>Utiliser les param&egrave;tres de sortie par r&eacute;f&eacute;rence (<span class="thnclwrd">ref</span>)</h2>
+					<p>Passer un ou plusieurs param&egrave;tres par r&eacute;f&eacute;rence a pour effet que toute modification de valeur qui sera effectu&eacute;e au sein d'une m&eacute;thode sera r&eacute;percut&eacute;e sur la variable d'origine, en dehors de la m&eacute;thode.</p>
+					<p>Contrairement aux param&egrave;tres de sortie (<span class="thnclwrd">out</span>), tout param&egrave;tre pass&eacute; en r&eacute;f&eacute;rence &agrave; une m&eacute;thode doit &ecirc;tre pr&eacute;alablement initialis&eacute; mais ne doit pas forcemment voir une valeur lui &ecirc;tre assign&eacute;e par cette m&ecirc;me m&eacute;thode.</p>
+					<p>Un param&egrave;tre <span class="thnclwrd">ref</span> ayant une valeur avant-m&ecirc;me l'ex&eacute;cution d'une m&eacute;thode, on dit que c'est un param&egrave;tre double-sens (two-ways), car sa valeur peut &ecirc;tre utilis&eacute;e au sein d'une m&eacute;thode, m&ecirc;me si cette derni&egrave;re ne lui a encore rien assign&eacute;.</p>
+<pre><code class="csharp">
+string message = "Hello";
+
+public void AlterMyMessage(ref string message){
+	message = "Hi there !";
+}
+
+Console.WriteLine(message); // "Hello"
+AlterMyMessage(ref message);
+Console.WriteLine(message); // "Hi there !"
+</code></pre>
+					<p>
+						<h3>Benefits :</h3>
+						<ul>
+							<li>Flexibilit&eacute;</li>
+							<li>Double-sens</li>
+						</ul>
+						<h3>Inconv&eacute;nients :</h3>
+						<ul>
+							<li>Ne supporte pas l'asynchronisme</li>
+						</ul>
+					</p>
+				</li>
+				<li>
+					<span class="step_number">4</span>
+					<h2>Les Tuple</h2>
+					<p>Apparus avec le Framework .NET 4.0, les <span class="thnclwrd">Tuple</span> permettent de cr&eacute;er des objets sur-mesures et complexes sans pour autant avoir &agrave; d&eacute;clarer une classe. Ils peuvent contenir autant de param&egrave;tres que vous le souhaitez (le framework .NET pends en charge jusqu'&agrave; 7 &eacute;l&eacute;ments, mais vous pouvez outrepasser cette limitation en imbriquant des <span class="thnclwrd">Tuple</span> dans la propri&eacute;t&eacute; <span class="thnclwrd">Rest</span> d'un <span class="thnclwrd">Tuple</span>), de tout type. A leur utilisation, ces param&egrave;tres seront nomm&eacute;s Item<i>X</i>, <i>X</i> &eacute;tant leur position (Item1 pour le premier param&egrave;tre, Item2 pour le deuxi&egrave;me, etc).</p>
+<pre><code class="csharp">
+class TupleExample
+{
+    static void Main()
+    {
+        // Instanciation d'un Tuple &agrave; 3 param&egrave;tres
+		
+        Tuple&#60;int, string, bool&#62; tuple = new Tuple&#60;int, string, bool&#62;(10, "string value", true);
+		
+        // Acc&egrave;s aux propri&eacute;t&eacute;s du Tuple cr&eacute;&eacute;
+		
+        if (tuple.Item1 == 10)
+        {
+            Console.WriteLine(tuple.Item1);
+        }
+		
+        if (tuple.Item2 == "string")
+        {
+            Console.WriteLine(tuple.Item2);
+        }
+		
+        if (tuple.Item3)
+        {
+            Console.WriteLine(tuple.Item3);
+        }
+    }
+}
+</code></pre>
+					<p>Techniquement, un <span class="thnclwrd">Tuple</span> est une classe qui fournit des m&eacute;thodes statiques pour cr&eacute;er des instances.</p>
+					<p>Si cet objet s'av&egrave;re extr&ecirc;mement pratique et utile dans bon nombre de cas, il est &agrave; noter qu'il est tout de m&ecirc;me &agrave; utiliser avec parcimonie, n'&eacute;tant pas toujours facile &agrave; maintenir dans le temps. En effet, il est parfois difficile lorsqu'on repasse sur une m&eacute;thode 2 ans apr&egrave;s l'avoir &eacute;crite, de se souvenir &agrave; quoi correspondent les propri&eacute;t&eacute;s Item4, Item5 et Item6 ... Cela dit, il semble que ce ne sera pas une limitation encore longtemps, comme l'atteste cette <a href="https://github.com/dotnet/roslyn/issues/347" title="" target="_Blank">issue GitHub</a>. Qui plus est, si vous d&eacute;cidez d'ajouter un param&egrave;tre en deuxi&egrave;me position, alors les noms de tous les param&egrave;tres suivants seront impact&eacute;s.</p>
+					<p>
+						<h3>Benefits :</h3>
+						<ul>
+							<li>Evite d'alourdir le mod&egrave;le inutilement</li>
+							<li>Flexibilit&eacute; totale</li>
+							<li>Supporte l'asynchronisme</li>
+						</ul>
+						<h3>Inconv&eacute;nients :</h3>
+						<ul>
+							<li>D&eacute;nomination abstraite des propri&eacute;t&eacute;s</li>
+							<li>Maintenabilit&eacute;</li>
+							<li>Performance (type r&eacute;f&eacute;rence)</li>
+						</ul>
+					</p>
+				</li>
+				<li>
+					<span class="step_number">5</span>
+					<h2>Utiliser une entr&eacute;e de dictionnaire (KeyValuePair)</h2>
+<pre><code class="csharp">
+class KeyValuePairExample
+{
+    static void Main()
+    {
+        KeyValuePair&#60;int, string&#62; kvp = GetKeyValuePair();
+    }
+	
+	KeyValuePair&#60;int, string&#62; GetKeyValuePair(){
+		return new KeyValuePair&#60;int, string&#62;(1, "string value");
+	}
+}
+</code></pre>
+					<p>
+						<h3>Benefits :</h3>
+						<ul>
+							<li>Facilit&eacute; d'utilisation (classe impl&eacute;mentant d&eacute;j&agrave; certaines m&eacute;thodes de requ&ecirc;tage, et autres)</li>
+							<li>Supporte l'asynchronisme</li>
+							<li>Unicicit&eacute; des coupes cl&eacute;/valeur (en cas de dictionnaire)</li>
+						</ul>
+						<h3>Cons of returning a KeyValuePair :</h3>
+						<ul>
+							<li>Performance (moins performant qu'un Tuple de 2 param&egrave;tres, ou qu'une structure)</li>
+						</ul>
+					</p>
+				</li>
+				<li>
+					<span class="step_number">6</span>
+					<h2>Utiliser une structure (<span class="thnclwrd">struct</span>)</h2>
+					<p>Les structures sont des alternatives aux classes, et sont de type valeur, contrairement aux classes qui sont de type r&eacute;f&eacute;rence. Si les structures ont bien plus de limitations que les classes, elles sont bien plus performantes, raison pour laquelle il est pr&eacute;f&eacute;rable d'utiliser des structures quand vous le pouvez, surtout si la structure de donn&eacute;es en question aura un volume d'instanciations important.</p>
+					<p>Principales limitations des structures par rapport aux classes :
+						<ul>
+							<li>H&eacute;ritage impossible</li>
+							<li>Toutes les propri&eacute;t&eacute;s doivent avoir une valeur</li>
+							<li>Les constructeurs sans param&egrave;tres sont impossibles (il avaient &eacute;t&eacute; ajout&eacute; dans C# 6 mais retir&eacute;s depuis, et ne sont &agrave; priori pas &agrave; l'&eacute;tude pour C# 7)</li>
+							<li>Tout constructeur doit assigner une valeur &agrave; chaque propri&eacute;t&eacute; de la structure (sinon la valeur par d&eacute;faut du type sera assign&eacute;e)</li>
+						</ul>
+					</p>
+<pre><code class="csharp">
+public struct Point 
+{
+   public int x, y;
+   
+   // Constructor:
+   public Point(int x, int y) 
+   {
+      this.x = x;
+      this.y = y;
+   }
+   
+   // Override the ToString method:
+   public override string ToString()
+   {
+      return(String.Format("({0},{1})", x, y));   
+   }
+}
+</code></pre>
+					<p>
+						<h3>Benefits :</h3>
+						<ul>
+							<li>Type valeur (performance++)</li>
+							<li>Simplicit&eacute;</li>
+							<li>Supporte l'asynchronisme</li>
+						</ul>
+						<h3>Cons of returning a structure :</h3>
+						<ul>
+							<li>Rigidit&eacute; de l'objet</li>
+						</ul>
+					</p>
+				</li>
+				</ul>
+				<div id="crdny">
+					22/10/2016
+				</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>C#</li>
+						<li>Csharp</li>
+					</ul>
+				</div>
+				<div id="refs_wrapper">
+					<ul>
+						<li><a href="https://msdn.microsoft.com/fr-fr/library/s1ax56ch(v=vs.90).aspx" title="Types valeur (R&eacute;f&eacute;rence C#)" target="_Blank">Types valeur (R&eacute;f&eacute;rence C#)</a></li>
+						<li><a href="https://msdn.microsoft.com/fr-fr/library/490f96s2(v=vs.90).aspx" title="Types r&eacute;f&eacute;rence (R&eacute;f&eacute;rence C#)" target="_Blank">Types r&eacute;f&eacute;rence (R&eacute;f&eacute;rence C#)</a></li>
+					</ul>
+				</div>
             </div>
 			<footer>
 			</footer>
