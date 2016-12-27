@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Add custom configuration file in a ASP.NET Core Web Application using options and configuration objects</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="language" content="en" />
+		<meta name="keywords" content="ASP.NET Core,ASP.NET Core web application,ASP.NET Core Configuration,appsettings.json" />
+		<meta name="description" content="How to add a custom configuration file in a ASP.NET Core Web Application using options and configuration objects" />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<meta name="generator" content="No404! 0.1" />
+		<link rel="alternate" href="https://adrientorris.github.io/aspnet-core/add-custom-configuration-file-using-options-and-configuration-objects.html" hreflang="en-en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>ASP.NET Core</li>
+					<li class="active"><a href="https://adrientorris.github.io/aspnet-core/add-custom-configuration-file-using-options-and-configuration-objects.html" title="Add custom configuration file using options and configuration objects">Add custom configuration file using options and configuration objects</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn">
+				<h1>Add custom configuration file using options and configuration objects</h1>
+				<p>It can be usefull to have multiple configuration files, and it follows some develoment best practices like the Interface Segregation Principle or the Separation of Concerns. Moreover, it allows you to have the behavior you want on each configuration file.</p>
+				<p>It's very simple and asy to do this using options and configuration objects.</p>
+				<p>The first step is to add a file in your project, here <span class="thnclwrd">customSettings.json</span>, with the content :</p>
+<pre><code class="json">
+&#123;
+  "CustomSection1": &#123;
+    "Hi": "Hi!",
+    "Hello": "Hello!"
+  &#125;,
+  "CustomSection2": &#123;
+    "Bye": "Bye!"
+  &#125;
+&#125;
+</code></pre>
+				<p>Create the model of the configuration settings you want to add :</p>
+<pre><code class="csharp">
+namespace WebApplication1.Models.CustomSettings
+&#123;
+    public class CustomSection1
+    &#123;
+        public string Hi { get; set; }
+        public string Hello { get; set; }
+    &#125;
+
+    public class CustomSection2
+    {
+        public string Bye { get; set; }
+    }
+&#125;
+</code></pre>
+				<p>Then, use the configuration provider you want (the <span class="thnclwrd">JSON</span> one here), and add your class to the service container and bound to configuration :</p>
+<pre><code class="csharp">
+    public class Startup
+    {
+        public Startup(IHostingEnvironment env)
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddJsonFile($"customSettings.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables();
+
+            if (env.IsDevelopment())
+            {
+                // This will push telemetry data through Application Insights pipeline faster, allowing you to view results immediately.
+                builder.AddApplicationInsightsSettings(developerMode: true);
+            }
+            Configuration = builder.Build();
+        }
+
+        public IConfigurationRoot Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            // Add framework services.
+            services.AddApplicationInsightsTelemetry(Configuration);
+
+            services.Configure&#60;CustomSection1&#62;(options =&#62; Configuration.GetSection("CustomSection1").Bind(options));
+            services.Configure&#60;CustomSection2&#62;(options =&#62; Configuration.GetSection("CustomSection2").Bind(options));
+
+            services.AddMvc();
+        }
+</code></pre>
+				<p>Work is done ! You can now access your settings from your controllers using <span class="thnclwrd">Dependency Injection</span> on <span class="thnclwrd">IOptions<TOptions></span> :</p>
+<pre><code class="csharp">
+    public class HomeController : Controller
+    {
+        private readonly CustomSection1 _customSection1;
+
+        private readonly CustomSection2 _customSection2;
+
+        public HomeController(
+            IOptions&#60;CustomSection1&#62; customSection1
+            , IOptions&#60;CustomSection2&#62; customSection2)
+        {
+            _customSection1 = customSection1.Value;
+            _customSection2 = customSection2.Value;
+        &#125;
+</code></pre>
+				<div id="crdny">December 27, 2016</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>ASP.NET Core</li>
+						<li>ASP.NET Core Configuration</li>
+					</ul>
+				</div>
+				<div id="refs_wrapper">
+					<ul>
+						<li><a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration" title="Official documentation about Configuration" target="_blank">Configuration Docs</a></li>
+					</ul>
+				</div>
+            </div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-85948839-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+	</body>
+</html>
