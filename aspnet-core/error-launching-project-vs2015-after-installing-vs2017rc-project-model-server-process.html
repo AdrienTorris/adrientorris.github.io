@@ -33,7 +33,7 @@
 				<p>After installing Visual Studio 2017 RC, I couldn't open any ASP.NET Core project with Visual Studio 2015, projects I never opened with Visual Studio 2017. I had the error :</p>
 				<p><i>The following error occurred attempting to run the project model server process 1.0.0-preview4-004223</i></p>
 				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/error-launching-project-vs2015-after-installing-vs2017rc-project-model-server-process.png" title="Error when opening a project with Visual Studio 2015 after installing Visual Studio 2017 RC : The following error occurred attempting to run the project model server process 1.0.0-preview4-004223" /></div>
-				<p>Iy you have a <span class="thnclwrd">global.json</span> file at the root of your solution, add the version of the <span class="thnclwrd">.NETCORE SDK</span> framework you want to use. If your solution doesn't have any <span class="thnclwrd">global.json</span>, add one at the root of the web application project and configure it to targeting a previous version of the <span class="thnclwrd">.NET Core SDK</span>. In my case, <span class="thnclwrd">global.json</span> looks like this :</p>
+				<p>If you have a <span class="thnclwrd">global.json</span> file at the root of your solution, add the version of the <span class="thnclwrd">.NETCORE SDK</span> framework you want to use. If your solution doesn't have any <span class="thnclwrd">global.json</span>, add one at the root of the web application project and configure it to targeting a previous version of the <span class="thnclwrd">.NET Core SDK</span>. In my case, <span class="thnclwrd">global.json</span> looks like this :</p>
 <pre><code class="json">
 {
   "sdk": {
