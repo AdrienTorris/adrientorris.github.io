@@ -32,10 +32,22 @@
 				<h1>Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure</h1>
 				<p>If you are using Visual Studio 2017 RC to develop an ASP.NET Core web application, you maybe will have this stressful problem, which will unload your web application project after updating this project to target the framework <b>.NETCoreApp1.1</b>. This loading project will appear after rebuild your project, and close the Visual Studio 2017 RC instance (you can have some other little issues before closing your VS instance).</p>
 				<p>When you will re-open your project with Visual Studio, your asp.net core web application will be not load and you will have this error message from visual studio :</p>
-				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/update-asp-net-core-web-app-to-netcoreapp1-1-project-loading-failure.png" title="" /></div>
+				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/update-asp-net-core-web-app-to-netcoreapp1-1-project-loading-failure.png" title="Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure" alt="Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure" /></div>
 				<p>In the log file, you will have something like this :</p>
 <pre><code class="csharp">
-
+=====================
+12/01/2017 13:16:45
+Recoverable
+System.AggregateException: One or several errors occured. ---> System.ArgumentNullException: The value cannot be null.
+Name of parameter : key
+   Microsoft.VisualStudio.ProjectSystem.VS.Implementation.Package.TreeService.EnsureNotFaultedTree(IProjectVersionedValue`1 appliedValue)
+   Microsoft.VisualStudio.ProjectSystem.VS.Implementation.Package.TreeService.<PublishTreeAsync>d__66.MoveNext()
+   --- Fin de la trace de la pile d'exception interne ---
+---> (Exception interne #0) System.ArgumentNullException: The value cannot be null.
+Name of parameter : key
+   Microsoft.VisualStudio.ProjectSystem.VS.Implementation.Package.TreeService.EnsureNotFaultedTree(IProjectVersionedValue`1 appliedValue)
+   Microsoft.VisualStudio.ProjectSystem.VS.Implementation.Package.TreeService.<PublishTreeAsync>d__66.MoveNext()<---
+===================
 </code></pre>
 				<p>The solution is simple, and takes just a few seconds to complete. There is the steps to follow :</p>
 				<ul>
