@@ -35,8 +35,8 @@
 				<p>C# 6.0 already improved the <b>expession body</b> feature. With this improvement, a read-only property like this :</p>
 <pre><code class="csharp">
 public string ExampleText
-{
-	get { return "this is my text"; }
+&#123;
+	get &#123; return "this is my text"; }
 }
 </pre></code>
 				<p>can be rewritten in a shorter way : </p>
@@ -49,31 +49,31 @@ public string ExampleText => "this is my text";
 				<p>If you have a constructor who doesn't need complex implementation, you can now reduce him to only one line.</p>
 				<b>C# 6</b>
 <pre><code class="csharp">
-private bool Initialized = false;
+private bool Initialized &#61; false;
 
 public MyClass()
-{
-	Initialized = true;
-}
+&#123;
+	Initialized &#61; true;
+&#125;
 </pre></code>
 				<b>C# 7</b>
 <pre><code class="csharp">
-private bool Initialized = false;
+private bool Initialized &#61; false;
 
-public MyClass() => Initialized = false;
+public MyClass() &#61;&#62; Initialized &#61; true;
 </pre></code>
 				<h2>Expression-Bodied Destructors</h2>
 				<p>The same is true for destructors :</p>
 				<b>C# 6</b>
 <pre><code class="csharp">
 public ~MyClass()
-{
-	Console.WriteLine($"{nameof(Resource}'s destructor called");
-}
+&#123;
+	Console.WriteLine(&#36;"{nameof(MyClass)}'s destructor called");
+&#125;
 </pre></code>
 				<b>C# 7</b>
 <pre><code class="csharp">
-public ~MyClass() => Console.WriteLine($"{nameof(Resource}'s destructor called");
+public ~MyClass() &#61;&#62; Console.WriteLine(&#36;"{nameof(MyClass)}'s destructor called");
 </pre></code>
 				<h2>Expression-Bodied Property Accessors</h2>
 				<p>This feature was available with C# 6 but only for read-only properties, but with C# 7, you can now write your setters in the same compact way than the getters.</p>
@@ -82,19 +82,19 @@ public ~MyClass() => Console.WriteLine($"{nameof(Resource}'s destructor called")
 <pre><code class="csharp">
 private string _exampleText;
 public string ExampleText
-{
-	get { return _exampleText; }
-	set { _exampleText = value; }
-}
+&#123;
+	get &#123; return _exampleText; &#125;
+	set &#123; _exampleText = value; &#125;
+&#125;
 </pre></code>
 				<b>C# 7</b>
 <pre><code class="csharp">
 private string _exampleText;
 public string ExampleText
-{
-	get => _exampleText;
-	set => _exampleText = value;
-}
+&#123;
+	get &#61;&#62; _exampleText;
+	set &#61;&#62; _exampleText &#61; value;
+&#125;
 </pre></code>
 				<h2>Summary</h2>
 				<p>It's clear that Microsoft wants to continue with productivity enhancements for the next version of C#, such a good thing. The less words you have in your code, the less time you spend to write, read and understand it.</p>
