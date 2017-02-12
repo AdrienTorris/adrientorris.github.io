@@ -36,7 +36,7 @@
 				</p>
 				<h2>Create new ASP.NET Core web application</h2>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/001.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-001.png" title="" />
 				</div>
 				<p>
 	-> Choose an empty project to start from zero
@@ -44,10 +44,10 @@
 	-> Don't enable the docker container support (I will make a next tutorial on Docker)
 				</p>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/002.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-002.png" title="" />
 				</div>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/003.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-003.png" title="" />
 				</div>
 				<h2>Create the MVC folder structure</h2>
 				<p>
@@ -57,16 +57,16 @@
 	-> Some sub-folder in wwwroot
 				</p>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/004.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-004.png" title="" />
 				</div>
 				<h2>Create a folder where put the typescript files</h2>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/005.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-005.png" title="" />
 				</div>
 				<h2>Add TypeScript compiler configuration file</h2>
 				<!-- https://angular.io/docs/ts/latest/guide/typescript-configuration.html -->
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/006.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-006.png" title="" />
 				</div>
 				<p>You will have a file with this content :</p>
 <pre><code class="json">
@@ -112,7 +112,7 @@
 </code></pre>
 				<h2>Add a NPM configuration file</h2>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/007.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-007.png" title="" />
 				</div>
 <pre><code class="json">
 {
@@ -185,7 +185,7 @@
 </code></pre>
 				<p>If you open your web application in the folder explorer, you can now see a node_modules folder with some external dependencies in there :</p>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/008.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-008.png" title="" />
 				</div>
 				<h2>Add Gulp</h2>
 				<p>Add gulp.config.js</p>
@@ -222,7 +222,7 @@ module.exports = function () {
 </code></pre>
 				<p>Add the gulp configuration file</p>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/009.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-009.png" title="" />
 				</div>
 <pre><code class="javascript">
 /*
@@ -327,14 +327,14 @@ gulp.task("default", ["clean", "dependencies"]);
 </code></pre>
 				<p>You can see now a task "default" in the task explorator</p>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/010.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-010.png" title="" />
 				</div>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/011.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-011.png" title="" />
 				</div>
 				<p>You can see that the dependencies has been added in the lib folder.</p>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/012.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-012.png" title="" />
 				</div>
 				<h2>Add TypeScript declarations file</h2>
 				<!-- https://angular.io/docs/ts/latest/guide/typescript-configuration.html -->
@@ -350,7 +350,7 @@ gulp.task("default", ["clean", "dependencies"]);
 				<h2>Add Bower</h2>
 				<p>Add bower to add jquery and boostrap dependencies</p>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/013.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-013.png" title="" />
 				</div>
 				<h2>Create TypeScript app files</h2>
 				<p>Create the main file to bootstrap your application</p>
@@ -457,15 +457,15 @@ export class HomeComponent implements OnInit {
 }
 </code></pre>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/014.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-014.png" title="" />
 				</div>
 				<p>If you build your solution, you can see that your outpout app folder has been populated with some javascript files generated by your TypeScript files.</p>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/015.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-015.png" title="" />
 				</div>
 				<p>If you launch your website, you will have something like this :</p>
 				<div class="pic_wrapper">
-					<img src="/wwwroot/images/aspnet-core/016.png" title="" />
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-016.png" title="" />
 				</div>
 				<p>No trace in the console and not the content in our typescript templates. Why ? Cause we have to tell our website startup that we want to load our typescript application.</p>
 				<h2>Configure your web app to dispay your angular application</h2>
