@@ -554,35 +554,35 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerF
 </code></pre>
 				<p>Set up the content of your Index.cshtml view to load the ui dependencies your need, and load your Angular application.</p>
 <pre><code class="html">
-<!DOCTYPE html>
-<html>
-<head>
-    <base href="/">
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+&#60;!DOCTYPE html&#62;
+&#60;html&#62;
+&#60;head&#62;
+    &#60;base href="/"&#62;
+    &#60;meta charset="utf-8" /&#62;
+    &#60;meta name="viewport" content="width=device-width, initial-scale=1.0" /&#62;
 
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
-    <link rel="stylesheet" href="~/css/site.css" />
+    &#60;link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" /&#62;
+    &#60;link rel="stylesheet" href="~/css/site.css" /&#62;
 
-    <script src="~/lib/jquery/dist/jquery.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+    &#60;script src="~/lib/jquery/dist/jquery.js"&#62;&#60;/script&#62;
+    &#60;script src="~/lib/bootstrap/dist/js/bootstrap.js"&#62;&#60;/script&#62;
 
-    <script src="~/lib/core-js/client/shim.js"></script>
-    <script src="~/lib/zone.js/dist/zone.js"></script>
-    <script src="~/lib/reflect-metadata/Reflect.js"></script>
-    <script src="~/lib/systemjs/dist/system.src.js"></script>
+    &#60;script src="~/lib/core-js/client/shim.js"&#62;&#60;/script&#62;
+    &#60;script src="~/lib/zone.js/dist/zone.js"&#62;&#60;/script&#62;
+    &#60;script src="~/lib/reflect-metadata/Reflect.js"&#62;&#60;/script&#62;
+    &#60;script src="~/lib/systemjs/dist/system.src.js"&#62;&#60;/script&#62;
 
-    <script src="~/js/systemjs.config.js"></script>
-    <script>
+    &#60;script src="~/js/systemjs.config.js"&#62;&#60;/script&#62;
+    &#60;script&#62;
       System.import('app').catch(function(err){ console.error(err); });
-    </script>
-</head>
-<body>
-    <div class="container">
+    &#60;/script&#62;
+&#60;/head&#62;
+&#60;body&#62;
+    &#60;div class="container"&#62;
         &#60;no404-bo-app&#62;Loading...&#60;/no404-bo-app&#62;
-    </div>
-</body>
-</html>
+    &#60;/div&#62;
+&#60;/body&#62;
+&#60;/html&#62;
 </code></pre>
 				<h2>And it's work !</h2>
 				<p>If you launch your application now, you can see that all is working and your Angular 2 application is correctly loaded.</p>
