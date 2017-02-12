@@ -469,29 +469,120 @@ export class HomeComponent implements OnInit {
 				</div>
 				<p>No trace in the console and not the content in our typescript templates. Why ? Cause we have to tell our website startup that we want to load our typescript application.</p>
 				<h2>Configure your web app to dispay your angular application</h2>
-				<p></p>
+				<p>Add the Nuget dependencies you need : </p><ul>
+				<li><i>Microsoft.AspNetCore.StaticFiles</i> : allow your web application to deal with static files</li>
+				<li><i>Microsoft.Extensions.Logging.Debug</i> : </li></ul>
+				<div class="pic_wrapper">
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-017.png" title="" />
+				</div>
 <pre><code class="csharp">
+// This method gets called by the runtime. Use this method to add services to the container.
+// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+public void ConfigureServices(IServiceCollection services)
+{
+    services
+               .AddMvc()
+               .AddJsonOptions(options => options.SerializerSettings.ContractResolver =
+                   new DefaultContractResolver());
+}
+
+// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+{
+    loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+    loggerFactory.AddDebug();
+
+    app.UseCors(
+        builder => builder.AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials())
+        .UseStaticFiles();
+
+    app.UseMvc(routes =>
+    {
+        routes.MapRoute(
+            name: "default",
+            template: "{controller=Home}/{action=Index}/{id?}");
+    });
+}
 </code></pre>
-				<h2></h2>
-				<p></p>
-<pre><code class="csharp">
+				<h2>Add the Home controller with the view</h2>
+				<p>Add HomeController and Index.cshtml in the home folder of the Views.</p>
+				<p>Add systemjs.config.js javascript file in your js folder of the wwwroot folder.</p>
+<pre><code class="javascript">
+(function (global) {
+    System.config({
+        paths: {
+            'npm:': 'lib/'
+        },
+        map: {
+            app: 'app',
+            '@angular/core': 'npm:@angular/core/bundles/core.umd.js',
+            '@angular/common': 'npm:@angular/common/bundles/common.umd.js',
+            '@angular/compiler': 'npm:@angular/compiler/bundles/compiler.umd.js',
+            '@angular/platform-browser': 'npm:@angular/platform-browser/bundles/platform-browser.umd.js',
+            '@angular/platform-browser-dynamic': 'npm:@angular/platform-browser-dynamic/bundles/platform-browser-dynamic.umd.js',
+            '@angular/http': 'npm:@angular/http/bundles/http.umd.js',
+            '@angular/router': 'npm:@angular/router/bundles/router.umd.js',
+            '@angular/forms': 'npm:@angular/forms/bundles/forms.umd.js',
+            'rxjs': 'npm:rxjs',
+            'angular-in-memory-web-api': 'npm:angular-in-memory-web-api/bundles/in-memory-web-api.umd.js'
+        },
+        packages: {
+            app: {
+                main: './main.js',
+                defaultExtension: 'js'
+            },
+            rxjs: {
+                defaultExtension: 'js'
+            },
+            'angular2-in-memory-web-api': {
+                main: './index.js',
+                defaultExtension: 'js'
+            }
+        }
+    });
+})(this);
 </code></pre>
-				<h2></h2>
-				<p></p>
-<pre><code class="csharp">
+				<p>Set up the content of your Index.cshtml view to load the ui dependencies your need, and load your Angular application.</p>
+<pre><code class="html">
+<!DOCTYPE html>
+<html>
+<head>
+    <base href="/">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+
+    <script src="~/lib/core-js/client/shim.js"></script>
+    <script src="~/lib/zone.js/dist/zone.js"></script>
+    <script src="~/lib/reflect-metadata/Reflect.js"></script>
+    <script src="~/lib/systemjs/dist/system.src.js"></script>
+
+    <script src="~/js/systemjs.config.js"></script>
+    <script>
+      System.import('app').catch(function(err){ console.error(err); });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <no404-bo-app>Loading...</no404-bo-app>
+    </div>
+</body>
+</html>
 </code></pre>
-				<h2></h2>
-				<p></p>
-<pre><code class="csharp">
-</code></pre>
-				<h2></h2>
-				<p></p>
-<pre><code class="csharp">
-</code></pre>
-				<h2></h2>
-				<p></p>
-<pre><code class="csharp">
-</code></pre>
+				<h2>And it's work !</h2>
+				<p>If you launch your application now, you can see that all is working and your Angular 2 application is correctly loaded.</p>
+				<div class="pic_wrapper">
+					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-018.png" title="" />
+				</div>
+				<p>You can now implement your Angular 2 application to do what you have to do. Enjoy :)</p>
 				<div id="crdny">February 11, 2017</div>
 				<div id="tags_wrapper">
 					<ul>
