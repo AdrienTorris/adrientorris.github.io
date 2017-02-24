@@ -30,7 +30,7 @@
 			</div>
 			<div id="post_ctn">
 				<h1>How to setup an Angular 2 and TypeScript project with Visual Studio 2017</h1>
-				<p>You can see the source code of this tutorial on my GitHub, here : <a href="https://github.com/AdrienTorris/Angular2TypeScriptASPNETCoreWebApp" title="GitHub source code" target="_blank">Source code on GitHub</a>.</p>
+				<p>You can see the source code of this tutorial on my GitHub repository, here : <a href="https://github.com/AdrienTorris/Angular2TypeScriptASPNETCoreWebApp" title="Angular2 web app source code" target="_blank">Angular2 web app source code on GitHub</a>.</p>
 				<p>
 				Versions :
 				</p><ul><li>ASP.NET Core : 1.1.0</li><li>Angular : 2.2.0</li><li>TypeScript : </li><li>Visual Studio : 2017 RC</li></ul>
@@ -111,9 +111,13 @@
 }
 </code></pre>
 				<h2>Add a NPM configuration file</h2>
+				<h3>What is NPM ?</h3>
+				<p><b>NPM</b>, for <b>Node Package Manager</b>, is a utility that aids JavaScript open source package installation, version and dependency management. NPM is distributed with <b>Node.js</b>, which is an asynchronous event driven JavaScript runtime, designed to build scalable network applications.</p>
+				<p>Angular 2 and its dependencies are delivered through NPM, so you need to add the NPM configuration file in your project, <i>package.json</i>.</p>
 				<div class="pic_wrapper">
 					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-007.png" title="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" alt="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" />
 				</div>
+				<p>You will have an empty NPM configuration file :</p>
 <pre><code class="json">
 {
   "version": "1.0.0",
@@ -123,6 +127,7 @@
   }
 }
 </code></pre>
+				<p>To add Angular 2 and its dependencies to your projects, you have to add some dependencies in your NPM configuration file :</p>
 <pre><code class="csharp">
 {
   "version": "1.0.0",
@@ -149,8 +154,7 @@
     "zone.js": "^0.6.25",
 
     "bower": "1.7.9",
-    "jquery": "^3.1.0",
-    "signalr": "^2.2.1"
+    "jquery": "^3.1.0"
   },
   "devDependencies": {
     "@types/core-js": "^0.9.34",
@@ -183,6 +187,7 @@
   }
 }
 </code></pre>
+				<!--<p>expliquer le détails du fichier packahe.json</p>-->
 				<p>If you open your web application in the folder explorer, you can now see a node_modules folder with some external dependencies in there :</p>
 				<div class="pic_wrapper">
 					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-008.png" title="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" alt="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" />
@@ -478,13 +483,17 @@ export class HomeComponent implements OnInit {
 					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-019.png" title="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" alt="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" />
 				</div>
 				<p>Add the Nuget dependencies you need : </p><ul>
-				<li><i>Microsoft.AspNetCore.Mvc</i> : </li>
-				<li><i>Microsoft.AspNetCore.StaticFiles</i> : allow your web application to deal with static files</li>
-				<li><i>Microsoft.Extensions.Logging.Debug</i> : </li>
-				<li><i>Microsoft.Extensions.Configuration.Json</i> : </li></ul>
+				<li><i>Microsoft.AspNetCore.Mvc</i></li>
+				<li><i>Microsoft.AspNetCore.StaticFiles</i></li>
+				<li><i>Microsoft.Extensions.Logging.Debug</i></li>
+				<li><i>Microsoft.Extensions.Configuration.Json</i></li></ul>
+				<p><b>Microsoft.AspNetCore.StaticFiles</b> is a middleware for handling requests for file system resources including files and directories that enable your application to serve HTML and javascript files, indispensable elements of an Angular application.</p>
+<p>For more information about <i>Microsoft.AspNetCore.StaticFiles</i>, you can see :</p>
+<ul><li><a href="https://github.com/aspnet/StaticFiles" title="Microsoft.AspNetCore.StaticFiles GitHub repository" target="_blank">the GitHub repository</a></li><li><a href="https://www.nuget.org/packages/Microsoft.AspNetCore.StaticFiles" title="Microsoft.AspNetCore.StaticFiles Nuget package" target="_blank">the Nuget package</a></li></ul>
 				<div class="pic_wrapper">
 					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-017.png" title="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" alt="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" />
 				</div>
+				<p>Once you have added the Microsoft.AspNetCore.StaticFiles package, you have to enable your app to serve static files. It occurs in the <i>Configure</i> method in the startup class, using <i>app.UseStaticFiles():</i>.</p>
 <pre><code class="csharp">
 public void ConfigureServices(IServiceCollection services)
 {
@@ -599,12 +608,21 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerF
 						<li>Angular</li>
 						<li>Angular2</li>
 						<li>TypeScript</li>
+						<li>NPM</li>
+						<li>Node.js</li>
 					</ul>
 				</div>
 				<div id="refs_wrapper">
 					<ul>
 						<li><a href="https://adrientorris.github.io/aspnet-core/update-asp-net-core-web-app-to-netcoreapp1-1-project-loading-failure.html" target="_Blank" title="Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure">Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure</a></li>
 						<li><a href="https://github.com/AdrienTorris/Angular2TypeScriptASPNETCoreWebApp" title="GitHub source code" target="_blank">Source code on GitHub</a></li>
+						<li><a href="https://www.npmjs.com/" title="NPM website" target="_blank">NPM website</a></li>
+						<li><a href="https://nodejs.org/en/" title="Node.js website" target="_blank">Node.js website</a></li>
+						<!--
+						<li><a href="" title="" target="_blank"></a></li>
+						<li><a href="" title="" target="_blank"></a></li>
+						<li><a href="" title="" target="_blank"></a></li>
+						-->
 					</ul>
 				</div>
             </div>
