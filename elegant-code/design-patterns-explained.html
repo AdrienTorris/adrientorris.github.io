@@ -10,8 +10,8 @@
 		<meta name="description" content="Design Patterns explained" />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
-		<meta name="generator" content="SiteUp! 0.1" />
-		<link rel="alternate" href="https://adrientorris.github.io/elegant-code/design-patterns/index.html" hreflang="en-en" />
+		<meta name="generator" content="No404! 0.1" />
+		<link rel="alternate" href="https://adrientorris.github.io/elegant-code/design-patterns-explained.html" hreflang="en-en" />
 		<link href="/wwwroot/css/style.css" rel="stylesheet" />
 	</head>
 	<body>
@@ -25,7 +25,7 @@
 				<ul>
 					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
 					<li>elegant code</li>
-					<li class="active"><a href="https://adrientorris.github.io/elegant-code/design-patterns/index.html" title="Design Patterns explained">Design Patterns explained</a></li>
+					<li class="active"><a href="https://adrientorris.github.io/elegant-code/design-patterns-explained.html" title="Design Patterns explained">Design Patterns explained</a></li>
 				</ul>
 			</div>
 			<div id="post_ctn">
@@ -83,11 +83,11 @@
 				<blockquote>In object-oriented programming (OOP), a factory is an object for creating other objects – formally a factory is a function or method that returns objects of a varying prototype or class from some method call, which is assumed to be "new".</blockquote>
 				<p>In plain words, a factory in its simplest form (it's also exists abstract factory pattern and method factory pattern) is a class which has a method that returns differents type of object.</p>
 				<p>Real world example :<p>
-				<p>Consider you are building vehicles like cars and trucks, it would be painfull if each time you need to put the wheels on the vehicle you need to think about it and start making the new wheels from the start. Instead you get them made from a factory.</p>
+				<p>Consider you are building vehicles (like cars, motorbikes, trucks and others), it would be painfull if each time you need to put the wheels on the vehicle you need to think about it and start making the new wheels from the start. Instead you get them made from a factory.</p>
 				<p>Programmatic example :<p>
 <pre><code class="csharp">
 /// <summary>
-/// Contract each wheel have to respect
+/// Contract each wheel for a vehicle have to respect
 /// </summary>
 public interface IVehicleWheel{
 	
@@ -114,9 +114,11 @@ public class CarWheel : IVehicleWheel {
 	/// <summary>
 	/// New instance of a car wheel
 	/// </summary>
-	public CarWheel(int width, int diameter){
+	public CarWheel(int width, int diameter) {
+	
 		Width = width;
 		Diameter = diameter;
+		
 	}
 	
 	public int GetWidth() => Width;
@@ -128,14 +130,153 @@ public class CarWheel : IVehicleWheel {
 /// <summary>
 /// Class to instanciate all the wheels you need
 /// </summary>
-public static class WheelFactory{
+public static class WheelFactory {
 
 	public static IVehicleWheel MakeCarWheel(int width, int diameter) => new CarWheel(width, diameter);
 
 }
 </code></pre>
+				<p>And then it can be used as :</p>
+<pre><code class="csharp">
+IVehicleWheel wheel = WheelFactory.MakeCarWheel(15, 30);
+</code></pre>
 				<p>When to use it ?<p>
 				<p>When creating an object isn't just a few assignements but involves some business logic, it makes sense to put the logic in a dedicated factory instead of repeating the code everywhere.</p>
+				<h3>Factory Method</h3>
+<pre><code class="csharp">
+public abstract class Skill
+{
+
+}
+
+public class Acrobat : Skill {
+
+}
+
+public class Dribbler : Skill {
+
+}
+
+public class DistanceShooter : Skill {
+
+}
+
+public class Speedster : Skill {
+
+}
+
+public class Tackling : Skill {
+
+}
+
+public class Tactician : Skill {
+
+}
+
+public class ClinicalFinisher : Skill {
+
+}
+
+public class Strenght : Skill {
+
+}
+
+public class Playmaker : Skill {
+
+}
+
+public class Engine : Skill {
+
+}
+
+public abstract class Player()
+{
+	public List<Skill> Skills { get; protected set;}
+	
+	// Factory Method
+    public abstract void CreateSkills();
+
+	public Player() {
+		
+		CreateSkills();
+		
+	}
+}
+
+public class Defender : Player {
+
+	// Factory Method implementation
+	public override void CreateSkills(){
+	
+		Skills = new List<Skill>();
+		
+		Skills.Add(new Strenght());
+		Skills.Add(new Tackling());
+	
+	}
+	
+}
+
+public class Midfielder : Player {
+
+	// Factory Method implementation
+	public override void CreateSkills(){
+	
+		Skills = new List<Skill>();
+		
+		Skills.Add(new Engine());
+		Skills.Add(new Playmaker());
+		Skills.Add(new Tactician());
+	
+	}
+	
+}
+
+public class Forward : Player {
+
+	// Factory Method implementation
+	public override void CreateSkills(){
+	
+		Skills = new List<Skill>();
+		
+		Skills.Add(new ClinicalFinisher());
+		Skills.Add(new Speedster());
+		Skills.Add(new Dribbler());
+		Skills.Add(new Acrobat());
+	
+	}
+	
+}
+</code></pre>
+<pre><code class="csharp">
+  class MainApp
+  {
+    /// <summary>
+    /// Entry point into console application.
+    /// </summary>
+    static void Main()
+    {
+	  // Create a list of players
+      List<Player> players = new List<Player>();
+	  players.Add(new Defender());
+	  players.Add(new Midfielder());
+	  players.Add(new Forward());
+ 
+      // Display player skills
+      foreach (Player player in players)
+      {
+        Console.WriteLine("\n" + player.GetType().Name + "--");
+        foreach (Skill skill in player.Skills)
+        {
+          Console.WriteLine(" " + skill.GetType().Name);
+        }
+      }
+ 
+      // Wait for user
+      Console.ReadKey();
+    }
+  }
+</code></pre>
 				<div id="crdny">February 26, 2017</div>
 				<div id="tags_wrapper">
 					<ul>
