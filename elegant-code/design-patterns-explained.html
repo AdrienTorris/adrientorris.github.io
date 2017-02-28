@@ -143,7 +143,15 @@ IVehicleWheel wheel = WheelFactory.MakeCarWheel(15, 30);
 				<p>When to use it ?<p>
 				<p>When creating an object isn't just a few assignements but involves some business logic, it makes sense to put the logic in a dedicated factory instead of repeating the code everywhere.</p>
 				<h3>Factory Method</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>In class-based programming, the factory method pattern is a creational pattern that uses factory methods to deal with the problem of creating objects without having to specify the exact class of the object that will be created. This is done by creating objects by calling a factory method—either specified in an interface and implemented by child classes, or implemented in a base class and optionally overridden by derived classes—rather than by calling a constructor.</blockquote>
+				<p>In plain words, a Factory Method provides a way to delegate the instanciation logic to subclasses. It defines an interface for creating an object but let's his subclasses implement this interface and decide which class to instanciate.</p>
+				<p>Real world example :<p>
+				<p>Consider a football player, it's impossible for one person to be very good in each game position, so you have to delegate some parts of the game to others players.</p>
+				<p>Programmatic example :<p>
 <pre><code class="csharp">
+#region Skills
+
 public abstract class Skill
 {
 
@@ -189,6 +197,26 @@ public class Engine : Skill {
 
 }
 
+public class Reflex : Skill {
+
+}
+
+public class Tall : Skill {
+
+}
+
+public class Springiness : Skill {
+
+}
+
+public class ExtremeConcentration : Skill {
+
+}
+
+#endregion
+
+#region Players
+
 public abstract class Player()
 {
 	public List<Skill> Skills { get; protected set;}
@@ -212,6 +240,7 @@ public class Defender : Player {
 		
 		Skills.Add(new Strenght());
 		Skills.Add(new Tackling());
+		Skills.Add(new Tall());
 	
 	}
 	
@@ -247,6 +276,24 @@ public class Forward : Player {
 	}
 	
 }
+
+public class GoalKeeper : Player {
+
+	// Factory Method implementation
+	public override void CreateSkills(){
+	
+		Skills = new List<Skill>();
+		
+		Skills.Add(new Reflex());
+		Skills.Add(new Tall());
+		Skills.Add(new Springiness());
+		Skills.Add(new ExtremeConcentration());
+	
+	}
+	
+}
+
+#endregion
 </code></pre>
 <pre><code class="csharp">
   class MainApp
@@ -258,6 +305,7 @@ public class Forward : Player {
     {
 	  // Create a list of players
       List<Player> players = new List<Player>();
+	  players.Add(new GoalKeeper());
 	  players.Add(new Defender());
 	  players.Add(new Midfielder());
 	  players.Add(new Forward());
@@ -277,11 +325,300 @@ public class Forward : Player {
     }
   }
 </code></pre>
+				<p>When to use it ?<p>
+				<p>When there is some generic processing in a class but you doesn't know what exact subclass it might need, so you let the child class decide.</p>
+				<h3>Abstract Factory</h3>
+				<p>Wikipedia says :</p>
+				<blockquote></blockquote>
+				<p>In plain words, </p>
+				<p>Real world example :<p>
+				<p></p>
+				<p>Programmatic example :<p>
+<pre><code class="csharp">
+#region Coachs
+
+public abstract class Coach {
+
+}
+
+public class GoalKeeperCoach : Coach {
+}
+
+public class DribbleCoach : Coach {
+}
+
+public class ShootCoach : Coach {
+}
+
+public class TacklingCoach : Coach {
+}
+
+public class TacticianCoach : Coach {
+}
+
+public class PassCoach : Coach {
+}
+
+public class MuscleDevelopmentCoach : Coach {
+}
+
+#endregion
+
+#region Skills
+
+public abstract class Skill
+{
+
+}
+
+public class Acrobat : Skill {
+
+}
+
+public class Dribbler : Skill {
+
+}
+
+public class Shooter : Skill {
+
+}
+
+public class DistanceShooter : Skill {
+
+}
+
+public class Speedster : Skill {
+
+}
+
+public class Tackling : Skill {
+
+}
+
+public class Tactician : Skill {
+
+}
+
+public class ClinicalFinisher : Skill {
+
+}
+
+public class Strenght : Skill {
+
+}
+
+public class Playmaker : Skill {
+
+}
+
+public class Engine : Skill {
+
+}
+
+public class Reflex : Skill {
+
+}
+
+public class Tall : Skill {
+
+}
+
+public class Springiness : Skill {
+
+}
+
+public class ExtremeConcentration : Skill {
+
+}
+
+public class ClinicalPasser : Skill {
+
+}
+
+#endregion
+
+#region Factories
+
+public abstract class PlayerFactory {
+	public abstract Player CreatePlayer();
+	public abstract List<Coach> CreateCoachs();
+}
+
+public class GoalKeeperFactory : PlayerFactory {
+
+	public override Player CreatePlayer() {
+	
+		GoalKeeper player = new GoalKeeper();
+		player.Skills = new List<Skill>();
+		player.Skills.Add(new Tall());
+		player.Skills.Add(new Reflex());
+		player.Skills.Add(new ExtremeConcentration());
+		player.Skills.Add(new Springiness());
+		return player;
+	
+	}
+	
+	public override List<Coach> CreateCoachs() {
+		List<Coach> ret = new List<Coach>();
+		ret.Add(new GoalKeeperCoach());
+		return ret;
+	}
+
+}
+
+public class DefenderFactory : PlayerFactory {
+
+	public override Player CreatePlayer() {
+	
+		GoalKeeper player = new GoalKeeper();
+		player.Skills.Add(new Strenght());
+		player.Skills.Add(new Tall());
+		player.Skills.Add(new Tackling());
+		return player;
+	
+	}
+	
+	public override List<Coach> CreateCoachs() {
+		List<Coach> ret = new List<Coach>();
+		ret.Add(new TacklingCoach());
+		ret.Add(new MuscleDevelopmentCoach());
+		return ret;
+	}
+
+}
+
+public class MidfielderFactory : PlayerFactory {
+
+	public override Player CreatePlayer() {
+	
+		GoalKeeper player = new GoalKeeper();
+		player.Skills.Add(new Dribble());
+		player.Skills.Add(new Tactician());
+		player.Skills.Add(new Tackling());
+		player.Skills.Add(new ClinicalPasser());
+		player.Skills.Add(new Playmaker());
+		return player;
+	
+	}
+	
+	public override List<Coach> CreateCoachs() {
+		List<Coach> ret = new List<Coach>();
+		ret.Add(new TacklingCoach());
+		ret.Add(new DribbleCoach());
+		ret.Add(new PassCoach());
+		ret.Add(new TacticianCoach());
+		return ret;
+	}
+
+}
+
+public class ForwardFactory : PlayerFactory {
+
+	public override Player CreatePlayer() {
+	
+		GoalKeeper player = new GoalKeeper();
+		player.Skills.Add(new Speedster());
+		player.Skills.Add(new Acrobat());
+		player.Skills.Add(new Shooter());
+		player.Skills.Add(new ClinicalFinisher());
+		player.Skills.Add(new Dribble());
+		return player;
+	
+	}
+	
+	public override List<Coach> CreateCoachs() {
+		List<Coach> ret = new List<Coach>();
+		ret.Add(new ShootCoach());
+		ret.Add(new DribbleCoach());
+		return ret;
+	}
+
+}
+
+#endregion
+
+#region Players
+
+public abstract class Player()
+{
+	public List<Skill> Skills { get; set;}
+	
+	public abstract string GetDescription();
+}
+
+public class Defender : Player {
+
+	public override string GetDescription() => $("I am a defender, I have {Skills.Count} skills");
+	
+}
+
+public class Midfielder : Player {
+
+	public override string GetDescription() => $("I am a midfielder, I have {Skills.Count} skills");
+	
+}
+
+public class Forward : Player {
+
+	public override string GetDescription() => $("I am a forward player, I have {Skills.Count} skills");
+	
+}
+
+public class GoalKeeper : Player {
+
+	public override string GetDescription() => $("I am a goalkeeper, I have {Skills.Count} skills");
+	
+}
+
+#endregion
+</code></pre>
+<pre><code class="csharp">
+  class MainApp
+  {
+    /// <summary>
+    /// Entry point into console application.
+    /// </summary>
+    static void Main()
+    {
+	  // Create a goalkeeper
+      GoalKeeperFactory gkFactory = new GoalKeeperFactory();
+	  Player goalkeeper = gkFactory.CreatePlayer();
+	  List<Coach> gkCoachs = gkFactory.CreateCoachs();
+	  Console.WriteLine($"{goalkeeper.GetDescription()} and I need {gkCoachs.Count} coachs :");
+	  foreach(Coach c in gkCoachs) {
+		Console.WriteLine("   - " + c.GetType().Name);
+	  }
+	  
+	  
+ 
+      // Wait for user
+      Console.ReadKey();
+    }
+  }
+</code></pre>
+				<p>When to use it ?<p>
+				<p></p>
+				<!--
+				<h3></h3>
+				<p>Wikipedia says :</p>
+				<blockquote></blockquote>
+				<p>In plain words, </p>
+				<p>Real world example :<p>
+				<p></p>
+				<p>Programmatic example :<p>
+<pre><code class="csharp">
+</code></pre>
+				<p>When to use it ?<p>
+				<p></p>
+				-->
 				<div id="crdny">February 26, 2017</div>
 				<div id="tags_wrapper">
 					<ul>
 						<li>Design Patterns</li>
 						<li>Design Pattern</li>
+						<li>Simple Factory</li>
+						<li>Factory Method</li>
+						<li>Abstract Factory</li>
 					</ul>
 				</div>
 				<div id="refs_wrapper">
