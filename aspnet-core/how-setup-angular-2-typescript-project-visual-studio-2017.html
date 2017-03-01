@@ -33,15 +33,17 @@
 				<p>You can see the source code of this tutorial on my GitHub repository, here : <a href="https://github.com/AdrienTorris/Angular2TypeScriptASPNETCoreWebApp" title="Angular2 web app source code" target="_blank">Angular2 web app source code on GitHub</a>.</p>
 				<p>
 				Versions :
-				</p><ul><li>ASP.NET Core : 1.1.0</li><li>Angular : 2.2.0</li><li>TypeScript : </li><li>Visual Studio : 2017 RC</li></ul>
+				</p><ul><li>ASP.NET Core : 1.1.0</li><li>Angular : 2.2.0</li><li>TypeScript : 2.0.0</li><li>Visual Studio : 2017 RC</li></ul>
 				<h2>Create new ASP.NET Core web application</h2>
 				<div class="pic_wrapper">
 					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-001.png" title="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" alt="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" />
 				</div>
 				<p>
-	-> Choose an empty project to start from zero
-	-> Choose no authentication
-	-> Don't enable the docker container support (I will make a next tutorial on Docker)
+				<ul>
+				<li>Choose an empty project to start from zero</li>
+				<li>Choose no authentication</li>
+				<li>Don't enable the docker container support (I will make a tutorial on Docker next)</li>
+				</ul>
 				</p>
 				<div class="pic_wrapper">
 					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-002.png" title="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" alt="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" />
@@ -49,26 +51,43 @@
 				<div class="pic_wrapper">
 					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-003.png" title="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" alt="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" />
 				</div>
-				<h2>Create the MVC folder structure</h2>
-				<p>
-	-> Controllers folder to put the controllers
-	-> Views folder to put the cshtml files
-	-> Models file tu put our models
-	-> Some sub-folder in wwwroot
-				</p>
+				<h2>Create the MVC folders structure</h2>
+				<p>What is MVC ?</p>
+				<p>MVC, for Model-View-Controller is an architectural pattern who separates an application into three main components :</p>
+				<ul>
+				<li>The <b>M</b>odel</li>
+				<li>The <b>V</b>iew</li>
+				<li>The <b>C</b>ontroller</li>
+				</ul>
+				<p>The purpose of this architectural pattern is to build applications that are easily maintenable and testable, separating differents components. A best practice is to pair this architectural pattern with an N-Tier layers architecture.</p>
+				<ul>
+				<li>Create the folder "Models", who contains classes that represent some data, validation logic and business rules</li>
+				<li>Create the folder "Views", who contains views who are the components that displays the user interfaces</li>
+				<li>Create the folder "Controllers", who contains the controllers, classes that handles the browser requests. Controllers handles and responds to user input and interaction</li>
+				<li>Create the folder "wwwroot", who contains static files to serve, like JavaScript files, css and images</li>
+				</ul>
 				<div class="pic_wrapper">
 					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-004.png" title="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" alt="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" />
 				</div>
-				<h2>Create a folder where put the typescript files</h2>
+				<h2>Create a folder where put the TypeScript files</h2>
 				<div class="pic_wrapper">
 					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-005.png" title="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" alt="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" />
 				</div>
-				<h2>Add TypeScript compiler configuration file</h2>
+				<h2>Set TypeScript configuration</h2>
+				<p>If TypeScript is the primary language for Angular application development, it can't be executed by the browsers directly; TypeScript must be "transpiled" into JavaScript using the tsc compiler, which requires some configuration.
+				</p>
+				<p>To configure the TypeScript compiler and set your environment, you have two files to add :</p>
+				<ul>
+				<li><i>tsconfig.json</i>, the TypeScript compiler configuration file</li>
+				<li><i>typings</i>, the TypeScript type definition files file</li>
+				</ul>
 				<!-- https://angular.io/docs/ts/latest/guide/typescript-configuration.html -->
+				<h3>tsconfig.json</h3>
+				<p>The TypeScript configuration file is required to guide the TypeScript compiler as it generates JavaScript files which are used by the browser.</p>
 				<div class="pic_wrapper">
 					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-006.png" title="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" alt="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" />
 				</div>
-				<p>You will have a file with this content :</p>
+				<p>This is the default content when you add the tsconfig.json file to your project :</p>
 <pre><code class="json">
 {
   "compilerOptions": {
@@ -84,7 +103,10 @@
   ]
 }
 </code></pre>
-				<p>explain</p>
+				<p>So, what do we have in this file ?</p>
+				<p>The <i>compilerOptions</i> section is optional, if its null default values will be use. You can find the details of this section here : http://www.typescriptlang.org/docs/handbook/compiler-options.html</p>
+				<p>If you want more information about this file, you can read the documentation : http://www.typescriptlang.org/docs/handbook/tsconfig-json.html</p>
+				<p>For our project, we have to specify where the tsc can find our TypeScript files and where we want it generates the JavaScript files, and some other settings. This is the content we need :</p>
 <pre><code class="json">
 {
   "compilerOptions": {
@@ -108,6 +130,17 @@
     "node_modules",
     "wwwroot"
   ]
+}
+</code></pre>
+				<h3>TypeScript type definition files</h3>
+				<!-- https://angular.io/docs/ts/latest/guide/typescript-configuration.html -->
+				<p>Many JavaScript libraries, such as jQuery, extend the JavaScript environment with syntax and features that the TypeScript compiler doesn't recognize natively. This file tell the compiler about the libraries you load.</p>
+<pre><code class="json">
+{
+  "globalDependencies": {
+    "jquery": "registry:dt/jquery",
+    "jasmine": "registry:dt/jasmine"
+  }
 }
 </code></pre>
 				<h2>Add a NPM configuration file</h2>
@@ -341,17 +374,6 @@ gulp.task("default", ["clean", "dependencies"]);
 				<div class="pic_wrapper">
 					<img src="/wwwroot/images/aspnet-core/how-setup-angular-2-typescript-project-visual-studio-2017-012.png" title="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" alt="How to setup an Angular 2 and TypeScript project with Visual Studio 2017" />
 				</div>
-				<h2>Add TypeScript declarations file</h2>
-				<!-- https://angular.io/docs/ts/latest/guide/typescript-configuration.html -->
-				<p>Add typings.json file</p>
-<pre><code class="json">
-{
-  "globalDependencies": {
-    "jquery": "registry:dt/jquery",
-    "jasmine": "registry:dt/jasmine"
-  }
-}
-</code></pre>
 				<h2>Add Bower</h2>
 				<p>Add bower to add jquery and boostrap dependencies</p>
 				<div class="pic_wrapper">
@@ -613,16 +635,17 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerF
 						<li>TypeScript</li>
 						<li>NPM</li>
 						<li>Node.js</li>
+						<li>MVC</li>
 					</ul>
 				</div>
 				<div id="refs_wrapper">
 					<ul>
-						<li><a href="https://adrientorris.github.io/aspnet-core/update-asp-net-core-web-app-to-netcoreapp1-1-project-loading-failure.html" target="_Blank" title="Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure">Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure</a></li>
 						<li><a href="https://github.com/AdrienTorris/Angular2TypeScriptASPNETCoreWebApp" title="GitHub source code" target="_blank">Source code on GitHub</a></li>
+						<li><a href="https://adrientorris.github.io/aspnet-core/update-asp-net-core-web-app-to-netcoreapp1-1-project-loading-failure.html" target="_Blank" title="Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure">Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure</a></li>
 						<li><a href="https://www.npmjs.com/" title="NPM website" target="_blank">NPM website</a></li>
 						<li><a href="https://nodejs.org/en/" title="Node.js website" target="_blank">Node.js website</a></li>
+						<li><a href="https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-mvc-app/" title="Building your first ASP.NET Core MVC app with Visual Studio" target="_blank">Building your first ASP.NET Core MVC app with Visual Studio</a></li>
 						<!--
-						<li><a href="" title="" target="_blank"></a></li>
 						<li><a href="" title="" target="_blank"></a></li>
 						<li><a href="" title="" target="_blank"></a></li>
 						-->
