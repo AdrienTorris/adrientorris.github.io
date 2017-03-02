@@ -41,7 +41,7 @@
 							<li><a href="#simple_factory_ttl" title="">Simple Factory</a></li>
 							<li><a href="#factory_method_ttl" title="">Factory Method</a></li>
 							<li><a href="#abstract_factory_ttl" title="">Abstract Factory</a></li>
-							<li><a href="#" title="">Builder</a></li>
+							<li><a href="#builder_ttl" title="">Builder</a></li>
 							<li><a href="#" title="">Prototype</a></li>
 							<li><a href="#" title="">Singleton</a></li>
 						</ul>
@@ -106,14 +106,14 @@ public class CarWheel : IVehicleWheel {
 	&#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
 	public int Width { get; }
 	
-	/// <summary>
-	/// Diameter of the wheel in inches
-	/// </summary>
+	&#47;&#47;&#47;&#32;&#60;summary&#62;
+	&#47;&#47;&#47;&#32;Diameter of the wheel in inches
+	&#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
 	public int Diameter { get; }
 	
-	/// <summary>
-	/// New instance of a car wheel
-	/// </summary>
+	&#47;&#47;&#47;&#32;&#60;summary&#62;
+	&#47;&#47;&#47;&#32;New instance of a car wheel
+	&#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
 	public CarWheel(int width, int diameter) {
 	
 		Width = width;
@@ -127,9 +127,9 @@ public class CarWheel : IVehicleWheel {
 	
 }
 
-/// <summary>
-/// Class to instanciate all the wheels you need
-/// </summary>
+&#47;&#47;&#47;&#32;&#60;summary&#62;
+&#47;&#47;&#47;&#32;Class to instanciate all the wheels you need
+&#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
 public static class WheelFactory {
 
 	public static IVehicleWheel MakeCarWheel(int width, int diameter) &#61;&#62; new CarWheel(width, diameter);
@@ -298,9 +298,9 @@ public class GoalKeeper : Player {
 <pre><code class="csharp">
   class MainApp
   {
-    /// <summary>
-    /// Entry point into console application.
-    /// </summary>
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;Entry point into console application.
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
     static void Main()
     {
 	  // Create a list of players
@@ -440,8 +440,11 @@ public class ClinicalPasser : Skill {
 #region Factories
 
 public abstract class PlayerFactory {
+
 	public abstract Player CreatePlayer();
+	
 	public abstract List&#60;Coach&#62; CreateCoachs();
+	
 }
 
 public class GoalKeeperFactory : PlayerFactory {
@@ -458,8 +461,8 @@ public class GoalKeeperFactory : PlayerFactory {
 	
 	}
 	
-	public override List<Coach> CreateCoachs() {
-		List<Coach> ret = new List<Coach>();
+	public override List&#60;Coach&#62; CreateCoachs() {
+		List&#60;Coach&#62; ret = new List&#60;Coach&#62;();
 		ret.Add(new GoalKeeperCoach());
 		return ret;
 	}
@@ -478,8 +481,8 @@ public class DefenderFactory : PlayerFactory {
 	
 	}
 	
-	public override List<Coach> CreateCoachs() {
-		List<Coach> ret = new List<Coach>();
+	public override List&#60;Coach&#62; CreateCoachs() {
+		List&#60;Coach&#62; ret = new List&#60;Coach&#62;();
 		ret.Add(new TacklingCoach());
 		ret.Add(new MuscleDevelopmentCoach());
 		return ret;
@@ -541,7 +544,7 @@ public class ForwardFactory : PlayerFactory {
 
 public abstract class Player()
 {
-	public List<Skill> Skills { get; set;}
+	public List&#60;Skill&#62; Skills { get; set;}
 	
 	public abstract string GetDescription();
 }
@@ -575,15 +578,15 @@ public class GoalKeeper : Player {
 <pre><code class="csharp">
   class MainApp
   {
-    /// <summary>
-    /// Entry point into console application.
-    /// </summary>
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;Entry point into console application.
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
     static void Main()
     {
 	  // Create a goalkeeper
       GoalKeeperFactory gkFactory = new GoalKeeperFactory();
 	  Player goalkeeper = gkFactory.CreatePlayer();
-	  List<Coach> gkCoachs = gkFactory.CreateCoachs();
+	  List&#60;Coach&#62; gkCoachs = gkFactory.CreateCoachs();
 	  Console.WriteLine($"{goalkeeper.GetDescription()} and I need {gkCoachs.Count} coachs :");
 	  foreach(Coach c in gkCoachs) {
 		Console.WriteLine("   - " + c.GetType().Name);
@@ -598,6 +601,88 @@ public class GoalKeeper : Player {
 </code></pre>
 				<p>When to use it ?<p>
 				<p>Still to delegate and encapsulate the creation logic complexity, but when you have interrelated dependencies.</p>
+				<h3 id="builder_ttl">Builder</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>The builder pattern is an object creation software design pattern with the intentions of finding a solution to the telescoping constructor anti-pattern.</blockquote>
+				<p>In plain words, a builder avoid the constructor pollution with options. It allows you to create the same object with different configurations.</p>
+				<p>Real world example :<p>
+				<p>Imagine you are at a Lamborghini's dealer and you order a car, let's say the Aventador. If the seller brought a car to you without any questions, this is an example of a simple factory. But there are cases when the creation logic might involve more steps, for example in this case, you probably want a customized car. Which color do you want ? Which options ? Wood or aluminium finish for the dashboard ? Which motor power ? In such cases builder pattern comes to the rescue.</p>
+				<p>Programmatic example :<p>
+				<p>Using a telescoping constructor anti-pattern :</p>
+<pre><code class="csharp">
+public class Car {
+
+	public string Manufacturer {get;set;}
+	public string Model {get;set;}
+	public int Doors { get; set; } = 5;
+	public string Color { get; set; } = "black";
+	public string DashboardFinish { get; set; } = "wood";
+	
+	public Car(string manufacturer, string model, int? doors, string color, string dashboardFinish){
+	
+		Manufacturer = manufacturer;
+		Model = model;
+	
+		if(doors.HasValue){
+			Doors = doors;
+		}
+		
+		if(!string.IsNullOrWhiteSpace(color)){
+			Color = color:
+		}
+		
+		if(!string.IsNullOrWhiteSpace(dashboardFinish)){
+			DashboardFinish = dashboardFinish:
+		}
+	}
+
+}
+</code></pre>
+				<p>Using a builder design pattern :</p>
+<pre><code class="csharp">
+public class Car {
+
+	public string Manufacturer {get;set;}
+	public string Model {get;set;}
+	public int Doors { get; set; } = 5;
+	public string Color { get; set; } = "black";
+	public string DashboardFinish { get; set; } = "wood";
+	
+	public Car(string manufacturer, string model){
+	
+		Manufacturer = manufacturer;
+		Model = model;
+	}
+
+}
+
+public class CarBuilder {
+
+	private Car Car {get;set;}
+	
+	public CarBuilder(string manufacturer, string model){
+		Car = new Car(manufacturer, model);
+	}
+	
+	public void SetNbDoors(int count) => car.Doors = count;
+	
+	public void SetColor(string color) => car.Color = color;
+	
+	public void SetDashboardFinish(string finish) => car.DashboardFinish = finish;
+	
+	public Car Build() => return Car;
+
+}
+</code></pre>
+				<p>And you can use it like :</p>
+<pre><code class="csharp">
+CarBuilder carBuilder = new CarBuilder("Lamborghini", "Aventador");
+carBuilder.SetNbDoors(3);
+carBuilder.SetColor("orange");
+Car myDreamCar = carBuilder.Build();
+</code></pre>
+				<p>When to use it ?<p>
+				<p></p>
 				<!--
 				<h3></h3>
 				<p>Wikipedia says :</p>
