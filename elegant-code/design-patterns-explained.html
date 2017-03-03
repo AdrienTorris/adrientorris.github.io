@@ -42,8 +42,8 @@
 							<li><a href="#factory_method_ttl" title="">Factory Method</a></li>
 							<li><a href="#abstract_factory_ttl" title="">Abstract Factory</a></li>
 							<li><a href="#builder_ttl" title="">Builder</a></li>
-							<li><a href="#" title="">Prototype</a></li>
-							<li><a href="#" title="">Singleton</a></li>
+							<li><a href="#prototype_ttl" title="">Prototype</a></li>
+							<li><a href="#singleton_ttl" title="">Singleton</a></li>
 						</ul>
 					</li>
 					<li>
@@ -569,7 +569,7 @@ public class Forward : Player {
 
 public class GoalKeeper : Player {
 
-	public override string GetDescription() => $("I am a goalkeeper, I have {Skills.Count} skills");
+	public override string GetDescription() &#61;&#62; &#36;("I am a goalkeeper, I have {Skills.Count} skills");
 	
 }
 
@@ -664,13 +664,13 @@ public class CarBuilder {
 		Car = new Car(manufacturer, model);
 	}
 	
-	public void SetNbDoors(int count) => car.Doors = count;
+	public void SetNbDoors(int count) &#61;&#62; car.Doors &#61; count;
 	
-	public void SetColor(string color) => car.Color = color;
+	public void SetColor(string color) &#61;&#62; car.Color &#61; color;
 	
-	public void SetDashboardFinish(string finish) => car.DashboardFinish = finish;
+	public void SetDashboardFinish(string finish) &#61;&#62; car.DashboardFinish &#61; finish;
 	
-	public Car Build() => return Car;
+	public Car Build() &#61;&#62; return Car;
 
 }
 </code></pre>
@@ -682,7 +682,53 @@ carBuilder.SetColor("orange");
 Car myDreamCar = carBuilder.Build();
 </code></pre>
 				<p>When to use it ?<p>
-				<p></p>
+				<p>When the creation logic of an object includes several steps. This is the difference between a factory, in which the creation logic is a one step process, and a builder who is used when the same construction process can create different representations of the same object.</p>
+				<h3 id="prototype_ttl">Prototype</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>The prototype pattern is a creational design pattern in software development. It is used when the type of objects to create is determined by a prototypical instance, which is cloned to produce new objects.</blockquote>
+				<p>In plain words, a prototype creates an object based on an existing object through cloning.</p>
+				<p>Real world example :<p>
+				<p>Remember dolly? The sheep that was cloned! Lets not get into the details but the key point here is that it is all about cloning</p>
+				<!--<p>Programmatic example :<p>
+<pre><code class="csharp">
+</code></pre>-->
+				<p>When to use it ?<p>
+				<p>When you need the exact same object as an existing object.</p>
+				<h3 id="singleton_ttl">Singleton</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>In software engineering, the singleton pattern is a software design pattern that restricts the instantiation of a class to one object. This is useful when exactly one object is needed to coordinate actions across the system.</blockquote>
+				<p>In plain words, a singleton ensures that only one instance of an object is ever created.</p>
+				<p>Real world example :<p>
+				<p>Consider there is only one Universe, all the solar systems and planets are sharing the same Universe, so the Universe is a singleton.</p>
+				<p>Programmatic example :<p>
+<pre><code class="csharp">
+public class Universe 
+{
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;The speed of light in m/s
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
+	public const int SpeedOfLight = 300000000;
+	
+	private static Universe instance;
+	
+	private Universe() {}
+	
+	public static Universe Instance
+	{
+		get
+		{
+			if(instance == null){
+				instance = new Universe();
+			}
+			
+			return instance;
+		}
+	}
+
+}
+</code></pre>
+				<p>When to use it ?<p>
+				<p>When you need that an object have to have only one instance at a time in your application (file logger, ...)</p>
 				<!--
 				<h3></h3>
 				<p>Wikipedia says :</p>
