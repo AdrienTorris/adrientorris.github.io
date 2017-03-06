@@ -49,7 +49,7 @@
 					<li>
 						<a href="#structural_design_pattern_title" title="">Structural</a>
 						<ul>
-							<li><a href="#" title="">Adapter</a></li>
+							<li><a href="#adapter_ttl" title="">Adapter</a></li>
 							<li><a href="#" title="">Bridge</a></li>
 							<li><a href="#" title="">Composite</a></li>
 							<li><a href="#" title="">Decorator</a></li>
@@ -304,7 +304,7 @@ public class GoalKeeper : Player {
     static void Main()
     {
 	  // Create a list of players
-      List<Player> players = new List<Player>();
+      List&#60;Player&#62; players = new List&#60;Player&#62;();
 	  players.Add(new GoalKeeper());
 	  players.Add(new Defender());
 	  players.Add(new Midfielder());
@@ -504,8 +504,8 @@ public class MidfielderFactory : PlayerFactory {
 	
 	}
 	
-	public override List<Coach> CreateCoachs() {
-		List<Coach> ret = new List<Coach>();
+	public override List&#60;Coach&#62; CreateCoachs() {
+		List&#60;Coach&#62; ret = new List&#60;Coach&#62;();
 		ret.Add(new TacklingCoach());
 		ret.Add(new DribbleCoach());
 		ret.Add(new PassCoach());
@@ -529,8 +529,8 @@ public class ForwardFactory : PlayerFactory {
 	
 	}
 	
-	public override List<Coach> CreateCoachs() {
-		List<Coach> ret = new List<Coach>();
+	public override List&#60;Coach&#62; CreateCoachs() {
+		List&#60;Coach&#62; ret = new List&#60;Coach&#62;();
 		ret.Add(new ShootCoach());
 		ret.Add(new DribbleCoach());
 		return ret;
@@ -592,8 +592,6 @@ public class GoalKeeper : Player {
 		Console.WriteLine("   - " + c.GetType().Name);
 	  }
 	  
-	  
- 
       // Wait for user
       Console.ReadKey();
     }
@@ -658,7 +656,7 @@ public class Car {
 
 public class CarBuilder {
 
-	private Car Car {get;set;}
+	private Car Car { get; set; }
 	
 	public CarBuilder(string manufacturer, string model){
 		Car = new Car(manufacturer, model);
@@ -734,6 +732,183 @@ public class Universe
 				<blockquote>In software engineering, structural design patterns are design patterns that ease the design by identifying a simple way to realize relationships between entities.</blockquote>
 				<p>In plain words :</p>
 				<blockquote>The concern of the structural patterns is how the entities can use each other.</blockquote>
+				<h3 id="adapter_ttl">Adapter</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>In software engineering, the adapter pattern is a software design pattern that allows the interface of an existing class to be used as another interface. It is often used to make existing classes work with others without modifying their source code.</blockquote>
+				<p>In plain words, an adapter let's you wrap an otherwise incompatible object in an adapter to make it compatible with another class.</p>
+				<p>Real world example :<p>
+				<p>A good example is when you need to plug something in a foreign country, let's say France and Scotland. This both countries have differents plug interface, so you absolutely not plug your french charger in a plug in Scotland. So you go to a store and buy an <b>adapter</b> : a charger who have a side to communicate with a French charger, and another who can communicate with a scottish one, without modify any of this both objects.</p>
+				<p>Programmatic example :<p>
+<pre><code class="csharp">
+public class Player
+{
+	public string Name { get; }
+	public DateTime Birthday { get; }
+	public int Level { get; }
+	
+	// Pace
+	public int SprintSpeed { get; }
+	public int Acceleration { get; }
+	
+	// Shooting
+	public int Finishing { get; }
+	public int LongShots { get; }
+	public int ShotPower { get; }
+	public int AttackPositioning { get; }
+	public int Penalties { get; }
+	public int Volleys { get; }
+	
+	// Passing
+	public int ShortPassing { get; }
+	public int LongPassing { get; }
+	public int Vision { get; }
+	public int Crossing { get; }
+	public int FKAccuracy { get; }
+	public int Curve { get; }
+	
+	// Dribbling
+	public int Dribbling { get; }
+	public int BallControl { get; }
+	public int Agility { get; }
+	public int Balance { get; }
+	public int Reactions { get; }
+	
+	// Defending
+	public int Marking { get; }
+	public int StandTackle { get; }
+	public int Interceptions { get; }
+	public int HeadingAccuracy { get; }
+	public int SlideTackle { get; }
+	
+	// Physical
+	public int Strength { get; }
+	public int Aggression { get; }
+	public int Stamina { get; }
+	public int Jumping { get; }
+	
+	// Mental
+	public int Concentration { get; }
+	public int Leadership { get; }
+	public int SelfControl { get; }
+	public int Presence { get; }
+	
+	//
+	public virtual string GetPresentationMessage() &#61;&#62; $"My name is {Name}, I am born in {Birthday.Year} and I am a {Level &#62;&#61; 80 ? "very good" : Level &#62;&#61; 65 ? "good" : string.Empty} football player.";
+}
+
+public abstract class Skill
+{}
+
+public class Shooter : Skill
+{}
+
+public class Dribbler : Skill
+{}
+
+public class Leader : Skill
+{}
+
+public class Wall : Skill
+{}
+
+public class Athlete : Skill
+{}
+
+&#47;&#47;&#47;&#32;&#60;summary&#62;
+&#47;&#47;&#47;&#32;The 'Adapter' class
+&#47;&#47;&#47;&#32;&#60;/summary&#62;
+public class SkilledPlayer : Player
+{
+	private SkillBank _skillBank &#61; new SkillBank();
+	
+	public SkilledPlayer()
+		: base()
+	{
+	}
+	
+	public override string GetPresentationMessage()
+	{
+		string ret &#61; base.GetPresentationMessage();
+		
+		List&#60;Skill&#62; skills &#61; _skillBank.GetSkills(this);
+		
+		if(skills &#61;&#61; null || skills.Count &#61;&#61; 0)
+			return ret;
+			
+		foreach(Skill skill in skills){
+			ret +&#61; $"I am a {skill.GetType().Name}. ";
+		}
+		
+		return ret;
+	}
+}
+
+&#47;&#47;&#47;&#32;&#60;summary&#62;
+&#47;&#47;&#47;&#32;The 'Adaptee' class
+&#47;&#47;&#47;&#32;&#60;summary&#62;
+public class SkillBank
+{
+	private const int _skillMinLevel &#61; 80;
+	
+	private const int _skilledPlayerMinGlobalLevel &#61; 55;
+	
+	public List&#60;Skill&#62; GetSkills(Player player)
+	{
+		List&#60;Skill&#62; ret &#61; new List&#60;Skill&#62;();
+		
+		if(player.Level &#60; _skilledPlayerMinGlobalLevel){
+			return ret;
+		}
+
+		if(HasShooterSkill(player))
+			ret.Add(new Shooter());
+
+		if(HasDefenderSkill(player))
+			ret.Add(new Wall());
+			
+		return ret;
+	}
+	
+	private bool HasShooterSkill(Player player){
+		if(player.Finishing &#62;&#61; _skillMinLevel && player.ShotPower &#62;&#61; _skillMinLevel && player.AttackPositioning &#62;&#61; _skillMinLevel)
+			return true;
+			
+		return false;
+	}
+	
+	private bool HasDefenderSkill(Player player){
+		int i = 0;
+		
+		if(player.Marking &#62;&#61; _skillMinLevel)
+			i &#61; i++;
+		
+		if(player.StandTackle &#62;&#61; _skillMinLevel)
+			i &#61; i++;
+		
+		if(player.SlideTackle &#62;&#61; _skillMinLevel)
+			i &#61; i++;
+		
+		if(player.HeadingAccuracy &#62;&#61; _skillMinLevel)
+			i &#61; i++;
+		
+		if(player.Interceptions &#62;&#61; _skillMinLevel)
+			i &#61; i++;
+		
+		if(player.Strength &#62;&#61; _skillMinLevel)
+			i &#61; i++;
+		
+		if(player.Aggression &#62;&#61; _skillMinLevel)
+			i &#61; i++;
+			
+		if(i &#62;&#61; 5)
+			return true;
+			
+		return false;
+	}
+}
+</code></pre>
+				<p>When to use it ?<p>
+				<p>When you need that some classes have to collaborate but have incompatible interfaces.</p>
 				<!--
 				<h3></h3>
 				<p>Wikipedia says :</p>
