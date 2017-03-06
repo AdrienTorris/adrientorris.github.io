@@ -909,6 +909,137 @@ public class SkillBank
 </code></pre>
 				<p>When to use it ?<p>
 				<p>When you need that some classes have to collaborate but have incompatible interfaces.</p>
+				<h3>Bridge</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>The bridge pattern is a design pattern used in software engineering that is meant to "decouple an abstraction from its implementation so that the two can vary independently"</blockquote>
+				<p>In plain words, </p>
+				<p>Real world example :<p>
+				<p></p>
+				<p>Programmatic example :<p>
+<pre><code class="csharp">
+/// <summary>
+/// The 'Bridge/Implementor' interface
+/// </summary>
+public interface IMessageSender
+{
+	void Send(string subject, string body);
+}
+
+/// <summary>
+/// The 'ConcreteImplementor' class
+/// </summary>
+public sealed class EmailSender : IMessageSender
+{
+	public void Send(string subject, string body)
+	{
+		// Business logic to send a mail
+		Console.WriteLine($"Email : {subject} - {body}");
+	}
+}
+
+/// <summary>
+/// The 'ConcreteImplementor' class
+/// </summary>
+public sealed class SMSSender : IMessageSender
+{
+	public void Send(string subject, string body)
+	{
+		// Business logic to send a SMS
+		Console.WriteLine($"SMS : {subject} - {body}");
+	}
+}
+
+/// <summary>
+/// The 'Abstraction' class
+/// </summary>
+public abstract class Message
+{
+	public string Subject { get; set; }
+	public string Body { get; set; }
+	
+	public IMessageSender Sender { get; set; }
+	public abstract void Send();
+}
+
+/// <summary>
+/// The 'RefinedAbstraction' class
+/// </summary>
+public sealed class PlayerMessage : Message
+{
+	public string Name { get; set; }
+	public int Level { get; set; }
+	
+	public PlayerMessage(string name, int level)
+	:base()
+	{
+		Name = name;
+		Level = level;
+	}
+	
+	public override void Send()
+	{
+		string fullBody = $"The player {Name} (level {Level}) sends the message: {Body}";
+		Sender.Send(Subject, fullBody);
+	}
+}
+
+/// <summary>
+/// The 'RefinedAbstraction' class
+/// </summary>
+public sealed class CoachMessage : Message
+{
+	public override void Send()
+	{
+		MessageSender.Send(Subject, Body);
+	}
+}
+</code></pre>
+<pre><code class="csharp">
+  class MainApp
+  {
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;Entry point into console application.
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
+    static void Main()
+    {
+	  IMessageSender emailSender = new EmailSender();
+	  IMessageSender smsSender = new SMSSender();
+	  
+	  // Send a player message
+	  
+	  Message msg1 = new PlayerMessage("Zidane", 95);
+	  msg1.Subject = "Test message";
+	  msg1.Body = "This is the body of the test message.";
+	  
+	  // Send - email
+	  msg1.Sender = emailSender;
+	  msg1.Send();
+	  
+	  // Send - SMS
+	  msg1.Sender = smsSender;
+	  msg1.Send();
+	  
+	  // Send a coach message
+	  
+	  Message msg2 = new CoachMessage();
+	  msg2.Subject = "Test message";
+	  msg2.Body = "This is the body of the test message.";
+	  
+	  // Send - email
+	  msg2.Sender = emailSender;
+	  msg2.Send();
+	  
+	  // Send - SMS
+	  msg2.Sender = smsSender;
+	  msg2.Send();
+ 
+      // Wait for user
+      Console.ReadKey();
+    }
+  }
+</code></pre>
+				<p>When to use it ?<p>
+				<p></p>
 				<!--
 				<h3></h3>
 				<p>Wikipedia says :</p>
