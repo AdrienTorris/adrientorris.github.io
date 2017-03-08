@@ -37,21 +37,21 @@
 					<li>I have special knowledge about the code I'm writing that the compiler doesn't have, so I'm giving a hint to the compiler about reality<br /><blockquote>"hey compiler! this thing of type User is actually of type Customer"</blockquote></i>
 					<li>I need to perform a mapping from a type to another<br /><blockquote>"hey compiler! this information is a double but I need that corresponds to a int"</blockquote></li>
 				</ul>
-				<p>Both of this cases are yellow/orange flags, and need more attention by the developer.</p>
+				<p>Both of this cases are yellow/orange flags, and need the developer pays more attention to it.</p>
 				<p>In the first case, the developer has to ask himslef : <span class="blockquote">"Why I have information about the code the compiler doesn't have ?"</span>. It means that the compiler doesn't really handle the reality, maybe it is better to change the code to fix that.</p>
 				<p>In the second case, the developer has to ask himslef : <span class="blockquote">"Why I have to do this ? Why I get a thing in a type whereas I need it in another one ?"</span></p>
 				<p>Personaly, I avoid casting as much as I can because in the majority of cases, casting is at least one of this bad thing :</p>
 				<p class="ttl">1) A non-sense</p>
-				<p>Just think about it. When you ask to the runtime to to cast an object into another one, you tell him : <span class="blockquote">"Hi! Take this thing and turn it into this other thing, for some reasons I don't explain"</span>.</p>
+				<p>Just think about it. When you ask to the runtime to cast an object into another one, you tell him : <span class="blockquote">"Hi! Take this thing and turn it into this other thing, for some reasons I don't explain"</span>.</p>
 				<p class="ttl">2) A leak of knowledge</p>
 				<p>If a developer casts an object into another one, there must be some reason to perform this operation but with a simple cast, this reason is lost. The result is a code hard to understand and hard to maintain.</p>
-				<p class="ttl">3) A bad design</p>
-				<p>If when you get something, you need another thing, it probably the sign of a perfectible design who can be improved. In this situation, you can be two totally diferent developers :</p>
+				<p class="ttl">3) Symptom of a bad design</p>
+				<p>If when you get something, you need another thing, it's probably the sign of a perfectible design who can be improved. In this situation, you can be two totally different developers :</p>
 				<ul>
-					<li>The lazy one; "Hum ... I don't care, just let's cast this"</li>
-					<li>The curious one; "Why this situation happens in the first place ? Is there an incomprehension somewhere ? What can I do ?"</li>
+					<li>The lazy one; <span class="blockquote">"Hum ... I don't care, just let's cast this"</span></li>
+					<li>The curious one; <span class="blockquote">"Why this situation happens in the first place ? Is there an incomprehension somewhere ? What can I do ?"</span></li>
 				</ul>
-				<br /><p>If <span class="thnclwrd">casting</span> have to be used with precaution and a good understanting of what it is and what the situation is, it's clearny not consistently a bad thing, if it is languages would not support it and there are. Like any other language feature, it has its utility and its reason to exists. But for my part, I always think twice before using it.</p>
+				<br /><p>If <span class="thnclwrd">casting</span> have to be used with precaution and a good understanting of what it is and what the situation is, it's clearny not consistently a bad thing. If they were, the languages would not support it and they are. Like any other language feature, it has its utility and its reason to exist. It's just preferable to think twice before using it.</p>
 				<div id="crdny">March 8, 2017</div>
 				<div id="tags_wrapper">
 					<ul>
