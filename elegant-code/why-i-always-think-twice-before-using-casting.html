@@ -32,12 +32,12 @@
             </div>
 			<div id="post_ctn">
 				<h1>Why I always think twice before using casting</h1>
-				<p>Casting is not inherently bad, it can be usefull sometimes and it's an operation the developer has to know about his existence but in the most if the cases, <span class="thnclwrd">casting</span> is used for one of this two bad things :</p>
+				<p>Casting is not inherently bad, it can be usefull sometimes and it's an operation the developer has to know about, but in the most if the cases, <span class="thnclwrd">casting</span> is misused and means one of this two bad situation :</p>
 				<ul>
 					<li>I have special knowledge about the code I'm writing that the compiler doesn't have, so I'm giving a hint to the compiler about reality<br /><blockquote>"hey compiler! this thing of type User is actually of type Customer"</blockquote></i>
 					<li>I need to perform a mapping from a type to another<br /><blockquote>"hey compiler! this information is a double but I need that corresponds to a int"</blockquote></li>
 				</ul>
-				<p>Both of this cases are yellow/orange flags, and need more attention by the developer. </p>
+				<p>Both of this cases are yellow/orange flags, and need more attention by the developer.</p>
 				<p>In the first case, the developer has to ask himslef : <span class="blockquote">"Why I have information about the code the compiler doesn't have ?"</span>. It means that the compiler doesn't really handle the reality, maybe it is better to change the code to fix that.</p>
 				<p>In the second case, the developer has to ask himslef : <span class="blockquote">"Why I have to do this ? Why I get a thing in a type whereas I need it in another one ?"</span></p>
 				<p>Personaly, I avoid casting as much as I can because in the majority of cases, casting is at least one of this bad thing :</p>
