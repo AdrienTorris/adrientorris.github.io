@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Why I always think twice before using casting ?</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="language" content="en" />
+		<meta name="keywords" content="Software programming,Architecture,Software architecture,Elegant code,programming,elegant programming,software development" />
+		<meta name="description" content="Why I always think twice before using casting ?" />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<meta name="generator" content="No404! 0.1" />
+		<link rel="alternate" href="https://adrientorris.github.io/elegant-code/why-i-always-think-twice-before-using-casting.html" hreflang="en-en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>elegant code</li>
+					<li class="active"><a href="https://adrientorris.github.io/elegant-code/why-i-always-think-twice-before-using-casting.html" title="Why you should avoid casting as much as you can ?">Why you should avoid casting ?</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn">
+            </div>
+			<div id="post_ctn">
+				<h1>Why I always think twice before using casting</h1>
+				<p>Casting is not inherently bad, there is usefull sometimes and it's an operation the developer has to know about his existence but in the most if the cases, casting is used for one of this two bad things :</p>
+				<ul>
+					<li>I have special knowledge about the code I'm writing that the compiler doesn't have, so I'm giving a hint to the compiler about reality<br /><blockquote>"hey compiler! this thing of type User is actually of type Customer"</blockquote></i>
+					<li>I need to perform a mapping from a type to another<br /><blockquote>"hey compiler! this information is a double but I need that corresponds to a int"</blockquote></li>
+				</ul>
+				<p>Both of this cases are yellow/orange flags, and need more attention by the developer. </p>
+				<p>In the first case, the developer has to ask himslef : "Why I have information about the code the compiler doesn't have ?". It means that the compiler doesn't really handle the reality, maybe it is better to change the code to fix that.</p>
+				<p>In the second case, the developer has to ask himslef : "Why I have to do this ? Why I get a thing in a type whereas I need it in another one ?"</p>
+				<p>Personaly, I avoid casting as much as I can because in the majority of cases, casting is at least one of this bad thing :</p>
+				<p class="ttl">1) A non-sense</p>
+				<p>Just think about it. When you ask to the runtime to to cast an object into another one, you tell him : "Hi! Take this thing and turn it into this other thing, for some reasons I don't explain".</p>
+				<p class="ttl">2) A leak of knowledge</p>
+				<p>If a developer casts an object into another one, there must be some reason to perform this operation but with a simple cast, this reason is lost. The result is a code hard to understand and hard to maintain.</p>
+				<p class="ttl">3) A bad design</p>
+				<p>If when you get something, you need another thing, it probably the sign of a perfectible design who can be improved. In this situation, you can be two totally diferent developers :</p>
+				<ul>
+					<li>The lazy one; "Hum ... I don't care, just let's cast this"</li>
+					<li>The curious one; "Why this situation happens in the first place ? Is there an incomprehension somewhere ? What can I do ?"</li>
+				</ul>
+				<p>If casting have to be used with precaution and a good understanting of what it is and what the situation is, it's clearny not consistently a bad thing, if it is languages would not support it and there are. Like any other language feature, it has its utility and its reason to exists. But for my part, I always think twice before using it.</p>
+				<div id="crdny">March 8, 2017</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Casting</li>
+						<li>Software Design</li>
+					</ul>
+				</div>
+				<div id="refs_wrapper">
+					<ul>
+						<li><a href="https://msdn.microsoft.com/en-us/library/ms173105(v=VS.100).aspx" title="" target="_Blank">Casting and Type Conversions - MSDN</a></li>
+						<!--<li><a href="" title="" target="_Blank"></a></li>-->
+					</ul>
+				</div>
+            </div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<!--<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>-->
+		<!--
+Casting is not inherently bad, there is usefull sometimes and it's an operation the developer has to know about his existence but in the most if the cases, casting is used for one of this two bad things :
+
+    - I have special knowledge about the code I'm writing that the compiler doesn't have, so I'm giving a hint to the compiler about reality
+<blockquote>"hey compiler! this thing of type User is actually of type Customer"</blockquote>
+
+    - I need to perform a mapping from a type to another
+<blockquote>"hey compiler! this information is a double but I need that corresponds to a int"</blockquote>
+
+Both of this cases are yellow/orange flags, and need more attention by the developer. 
+In the first case, the developer has to ask himslef : "Why I have information about the code the compiler doesn't have ?". It means that the compiler doesn't really handle the reality, maybe it is better to change the code to fix that.
+In the second case, the developer has to ask himslef : "Why I have to do this ? Why I get a thing in a type whereas I need it in another one ?"
+
+Personaly, I avoid casting as much as I can because in the majority of cases, casting is at least one of this bad thing :
+
+1) A non-sense
+
+Just think about it. When you ask to the runtime to to cast an object into another one, you tell him : "Hi! Take this thing and turn it into this other thing, for some reasons I don't explain".
+
+2) A leak of knowledge
+
+If a developer casts an object into another one, there must be some reason to perform this operation but with a simple cast, this reason is lost. The result is a code hard to understand and hard to maintain.
+
+3) A bad design
+
+If when you get something, you need another thing, it probably the sign of a perfectible design who can be improved. In this situation, you can be two totally diferent developers :
+   - The lazy one => "Hum ... let's cast this"
+   - The curious one => "Why this situation happens in the first place ? Is there an incomprehension somewhere ? What can I do ?"
+
+If casting have to be used with precaution and a good understanting of what it is and what the situation is, it's clearny not consistently a bad thing, if it is languages would not support it and there are. Like any other language feature, it has its utility and its reason to exists. But for my part, I always think twice before using it.
+		-->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-85948839-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+	</body>
+</html>
