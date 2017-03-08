@@ -40,4 +40,4 @@ div.toolbar{display:none !important;visibility:hidden !important;}
 div.syntaxhighlighter.csharp {padding:8px 0px;}
 
 span.thnclwrd{font-style:italic;letter-spacing:0.1em;}
-blockquote,blockquote.blockquote{font-style:italic;font-size:90%;}
+blockquote,span.blockquote{font-style:italic;font-size:90%;}
