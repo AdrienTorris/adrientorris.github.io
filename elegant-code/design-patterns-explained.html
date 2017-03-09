@@ -50,8 +50,8 @@
 						<a href="#structural_design_pattern_title" title="">Structural</a>
 						<ul>
 							<li><a href="#adapter_ttl" title="">Adapter</a></li>
-							<li><a href="#" title="">Bridge</a></li>
-							<li><a href="#" title="">Composite</a></li>
+							<li><a href="#bridge_ttl" title="">Bridge</a></li>
+							<li><a href="#composite_ttl" title="">Composite</a></li>
 							<li><a href="#" title="">Decorator</a></li>
 							<li><a href="#" title="">Facade</a></li>
 							<li><a href="#" title="">Flyweight</a></li>
@@ -909,12 +909,12 @@ public class SkillBank
 </code></pre>
 				<p>When to use it ?<p>
 				<p>When you need that some classes have to collaborate but have incompatible interfaces.</p>
-				<h3>Bridge</h3>
+				<h3 id="bridge_ttl">Bridge</h3>
 				<p>Wikipedia says :</p>
 				<blockquote>The bridge pattern is a design pattern used in software engineering that is meant to "decouple an abstraction from its implementation so that the two can vary independently"</blockquote>
-				<p>In plain words, </p>
+				<p>In plain words, the bridge pattern is about preferring composition over inheritance.</p>
 				<p>Real world example :<p>
-				<p></p>
+				<p>In the football management game you develop, you can pick any Premier League team to manage it. Each team has his own logo, his graphic theme and other graphical elements. Your game has 25 differents user interfaces so what are you doing ? You develop all the interface in all the themes available, and display the interfaces corresponding to the team the user choose ? Or you develop the interfaces and the themes independently, and load the good theme when you display a user interface ? If you choose the second option, it's a Bridge pattern. Otherwise, if you choose the first option, it's a Mess anti-pattern and just stay away from me...</p>
 				<p>Programmatic example :<p>
 <pre><code class="csharp">
 /// <summary>
@@ -1032,6 +1032,129 @@ public sealed class CoachMessage : Message
 	  // Send - SMS
 	  msg2.Sender = smsSender;
 	  msg2.Send();
+ 
+      // Wait for user
+      Console.ReadKey();
+    }
+  }
+</code></pre>
+				<!--<p>When to use it ?<p>
+				<p></p>-->
+				<h3 id="composite_ttl">Composite</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>In software engineering, the composite pattern is a partitioning design pattern. The composite pattern describes that a group of objects is to be treated in the same way as a single instance of an object. The intent of a composite is to "compose" objects into tree structures to represent part-whole hierarchies. Implementing the composite pattern lets clients treat individual objects and compositions uniformly.</blockquote>
+				<p>In plain words, the composite pattern composes objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly.</p>
+				<p>Real world example : <p>
+				<p>Think about the Universe. It is composed by planets, stars, galaxies, and so much things. All this things are space elements with common attributes, like a Name, a density, a chimical composition, ... and it exists a hierarchy between them : a universe owns some galaxies, who owns some systems who owns some planets.</p>
+				<p>Programmatic example :<p>
+<pre><code class="csharp">
+public abstract class SpaceElement
+{
+	public string Name { get; set; }
+	
+	public SpaceElement(string name){
+		Name = name;
+	}
+	
+	public abstract void Display();
+}
+
+public class Universe : SpaceElement
+{
+	public IEnumerable<SpaceElement> Galaxies { get; set; }
+	
+	public void AddGalaxy(Galaxy g){
+		Galaxies.Add(g);
+	}
+	
+	public override void Display()
+	{
+		Console.WriteLine($"{Name} - I am the Universe");
+		Console.WriteLine($"I have {Galaxies.Count()} galaxies :");
+		foreach(SpaceElement g in Galaxies){
+			g.Display();
+		}
+	}
+}
+
+public class Galaxy : SpaceElement
+{
+	public IEnumerable<SpaceElement> SolarSystems { get; set; }
+	
+	public void AddSystem(SolarSystem s){
+		SolarSystems.Add(s);
+	}
+	
+	public override void Display()
+	{
+		Console.WriteLine($"{Name} - Galaxy");
+		Console.WriteLine($"I have {SolarSystems.Count()} solar systems :");
+		foreach(SpaceElement s in SolarSystems){
+			s.Display();
+		}
+	}
+}
+
+public class SolarSystem : SpaceElement
+{
+	public IEnumerable<SpaceElement> Stars { get; set; }
+	public IEnumerable<SpaceElement> Planets { get; set; }
+	
+	public void AddStar(Star s){
+		Stars.Add(s);
+	}
+	
+	public void AddPlanet(Planet p){
+		Planets.Add(p);
+	}
+	
+	public override void Display()
+	{
+		Console.WriteLine($"{Name} - SolarSystem");
+		Console.WriteLine($"I have {Stars.Count()} stars :");
+		foreach(SpaceElement s in Stars){
+			s.Display();
+		}
+		Console.WriteLine($"I have {Planets.Count()} planets :");
+		foreach(SpaceElement p in Planets){
+			p.Display();
+		}
+	}
+}
+
+public class Star : SpaceElement
+{
+	public override void Display() => Console.WriteLine($"{Name} (star)");
+}
+
+public class Planet : SpaceElement
+{
+	public override void Display() => Console.WriteLine($"{Name} (planet)");
+}
+</code></pre>
+<pre><code class="csharp">
+  class MainApp
+  {
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;Entry point into console application.
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
+    static void Main()
+    {
+	  SpaceElement earth = new Planet("Earth");
+	  
+	  SpaceElement sun = new Star("Sun");
+	  
+	  SolarSystem solarSystem = new SolarSystem("Solar system");
+	  solarSystem.AddStar(sun);
+	  solarSystem.AddPlanet(earth);
+	  
+	  SpaceElement milkyWay = new Galaxy("Milky Way");
+	  milkyWay.AddSystem(solarSystem);
+	  
+	  SpaceElement universe = new Universe("Our Universe");
+	  universe.AddGalaxy(milkyWay);
+	  
+	  universe.Display();
  
       // Wait for user
       Console.ReadKey();
