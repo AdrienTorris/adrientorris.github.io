@@ -52,7 +52,7 @@
 							<li><a href="#adapter_ttl" title="">Adapter</a></li>
 							<li><a href="#bridge_ttl" title="">Bridge</a></li>
 							<li><a href="#composite_ttl" title="">Composite</a></li>
-							<li><a href="#" title="">Decorator</a></li>
+							<li><a href="#decorator_ttl" title="">Decorator</a></li>
 							<li><a href="#" title="">Facade</a></li>
 							<li><a href="#" title="">Flyweight</a></li>
 							<li><a href="#" title="">Proxy</a></li>
@@ -1163,25 +1163,25 @@ public class Planet : SpaceElement
 </code></pre>
 				<!--<p>When to use it ?<p>
 				<p></p>-->
-				<h3>Decorator</h3>
+				<h3 id="decorator_ttl">Decorator</h3>
 				<p>Wikipedia says :</p>
 				<blockquote>In object-oriented programming, the decorator pattern is a design pattern that allows behavior to be added to an individual object, either statically or dynamically, without affecting the behavior of other objects from the same class. The decorator pattern is often useful for adhering to the Single Responsibility Principle, as it allows functionality to be divided between classes with unique areas of concern.</blockquote>
 				<p>In plain words, the decorator pattern lets you dynamically attach additional responsabilities to an object. A decorator is an alternative to inheritance.</p>
-				<p>Real world example :<p>
-				<p></p>
+				<!--<p>Real world example :<p>
+				<p></p>-->
 				<p>Programmatic example :<p>
 <pre><code class="csharp">
 public class RentalAgency
 {
-	public string Name {get;set;}
-	public IEnumerable<Vehicle> Vehicles {get;set;}
+	public string Name { get; set; }
+	public IEnumerable&#60;Vehicle&#62; Vehicles { get; set; }
 }
 
 public abstract class Vehicle
 {
-	public string Model {get;set;}
-	public string Manufacturer {get;set;}
-	public int NumCopies {get;set;}
+	public string Model { get; set; }
+	public string Manufacturer { get; set; }
+	public int NumCopies { get; set; }
 	
 	public Vehicle(string manufacturer, string model, int copies)
 	{
@@ -1202,12 +1202,12 @@ public class Car : Vehicle
 		NumCopies = copies;
 	}
 	
-	public override void Display() => Console.WriteLine($"(car) {Manufacturer} {Model} - Copies: {NumCopies}");
+	public override void Display() =&#62; Console.WriteLine($"(car) {Manufacturer} {Model} - Copies: {NumCopies}");
 }
 
 public class Truck : Vehicle
 {
-	public int Capacity {get;set;}
+	public int Capacity { get; set; }
 
 	public Truck(string manufacturer, string model, int copies, int capacity)
 	{
@@ -1217,12 +1217,12 @@ public class Truck : Vehicle
 		Capacity = capacity;
 	}
 	
-	public override void Display() => Console.WriteLine($"(truck) {Manufacturer} {Model} - Capacity: {Capacity} - Copies: {NumCopies}");
+	public override void Display() =&#62; Console.WriteLine($"(truck) {Manufacturer} {Model} - Capacity: {Capacity} - Copies: {NumCopies}");
 }
 
-/// <summary>
-/// The 'Decorator' abstract class
-/// </summary>
+&#47;&#47;&#47;&#32;&#60;summary&#62;
+&#47;&#47;&#47;&#32;The 'Decorator' abstract class
+&#47;&#47;&#47;&#32;&#60;/summary&#62;
 public abstract class Decorator : Vehicle
 {
 	protected Vehicle vehicle;
@@ -1232,15 +1232,15 @@ public abstract class Decorator : Vehicle
     	vehicle = v;
 	}
 
-	public override void Display() => vehicle.Display();
+	public override void Display() =&#62; vehicle.Display();
 }
 
-/// <summary>
-/// The 'ConcreteDecorator' class
-/// </summary>
+&#47;&#47;&#47;&#32;&#60;summary&#62;
+&#47;&#47;&#47;&#32;The 'ConcreteDecorator' class
+&#47;&#47;&#47;&#32;&#60;/summary&#62;
 public class Borrowable : Decorator
 {
-	protected List<string> borrowers = new List<string>();
+	protected List&#60;string&#62; borrowers = new List&#60;string&#62;();
 	
 	public Borrowable(Vehicle vehicle)
 	  : base(vehicle)
@@ -1265,7 +1265,7 @@ public class Borrowable : Decorator
 		if(borrowers == null || borrowers.Count == 0)
 			return;
 			
-		Console.WriteLine(borrowers.Count + "borrower" + (borrowers.Count > 1 ? "s" : string.Empty));
+		Console.WriteLine(borrowers.Count + "borrower" + (borrowers.Count &#62; 1 ? "s" : string.Empty));
 		
 		foreach(string borrower in borrowers)
 			Console.WriteLine(" - " + borrower);
@@ -1297,6 +1297,110 @@ public class Borrowable : Decorator
       Console.ReadKey();
     }
   }
+</code></pre>
+				<p>When to use it ?<p>
+				<p>When you want to add some behaviors to an object without modify or extend it.</p>
+				<h3>Facade</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>A facade is an object that provides a simplified interface to a larger body of code, such as a class library.</blockquote>
+				<p>In plain words, facade pattern provides a simplified interface to a complex subsystem.</p>
+				<p>Real world example :<p>
+				<p>Facade are everywhere ! When you turn on your car you just turn a key, such a simple movement. But there are dozens of things who appends in the car to turn on the motor. The key's movement hides all the subsystem complexity, it's a facade.</p>
+				<p>Programmatic example :<p>
+<pre><code class="csharp">
+public class Car
+{
+	public string Model { get; set; }
+	public string Manufacturer { get; set; }
+	
+	public Car(string manufacturer, string model)
+	{
+		Manufacturer = manufacturer;
+		Model = model;
+	}
+	
+	public void Start()
+	{
+		if(!HasBatteryPower())
+		{
+			Console.WriteLine("The car can't start");
+			Return;
+		}
+		
+		if(!HasFuel())
+		{
+			Console.WriteLine("The car can't start");
+			Return;
+		}
+		
+		if(!CallInjector())
+		{
+			Console.WriteLine("The car can't start");
+			Return;
+		}
+		
+		if(!TurnOnSparkPlug())
+		{
+			Console.WriteLine("The car can't start");
+			Return;
+		}
+		
+		if(!StartMotor())
+		{
+			Console.WriteLine("The car can't start");
+			Return;
+		}
+		
+		Console.WriteLine("The car just started !");
+	}
+	
+	private bool HasBatteryPower()
+	{
+	}
+	
+	private bool HasFuel()
+	{
+	}
+	
+	private bool CallInjector()
+	{
+	}
+	
+	private bool TurnOnSparkPlug()
+	{
+	}
+	
+	private bool StartMotor()
+	{
+	}
+}
+</code></pre>
+<pre><code class="csharp">
+  class MainApp
+  {
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;Entry point into console application.
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
+    static void Main()
+    {
+	  Car aventador = new Car("Lamborghini", "Aventador", 8);
+	  aventador.Start();
+ 
+      // Wait for user
+      Console.ReadKey();
+    }
+  }
+</code></pre>
+				<p>When to use it ?<p>
+				<p>When for some reason you prefer keep the complexity of a system secret.</p>
+				<h3>Flyweight</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>A flyweight is an object that minimizes memory use by sharing as much data as possible with other similar objects; it is a way to use objects in large numbers when a simple repeated representation would use an unacceptable amount of memory.</blockquote>
+				<p>In plain words, use sharing to minimize memory usage and support a large numbers of fine-grained objects efficiently.</p>
+				<p>Real world example :<p>
+				<p></p>
+				<p>Programmatic example :<p>
+<pre><code class="csharp">
 </code></pre>
 				<p>When to use it ?<p>
 				<p></p>
