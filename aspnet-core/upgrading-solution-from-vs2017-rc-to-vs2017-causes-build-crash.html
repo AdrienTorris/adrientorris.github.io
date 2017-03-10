@@ -34,6 +34,7 @@
 				<p>C:\git\dotnet-sdk\bin\Debug\Sdks\Microsoft.NET.Sdk\build\Microsoft.NET.Sdk.DefaultItems.targets(66,5): error : Duplicate Compile items were included. The .NET SDK includes Compile items from your project directory by default. You can either remove these items from your project file, or set the 'EnableDefaultCompileItems' property to 'false' if you want to explicitly include them in your project file. For more information, see https://github.com/dotnet/sdk The duplicate items were: 'Class1.cs', 'DuplicateCompileItems.cs'</p>
 				<p class="ttl">Solution :</p>
 				<p>Delete the line <i>&#60;Compile Include="**\*.cs" /&#62;</i> in all the <i>csproj</i> files of my project.</p>
+				<br /><br /><p><b>EDIT: </b>A documentation page has been added to GitHub : <a href="https://github.com/dotnet/core/blob/master/release-notes/1.0/sdk/1.0-rc3-default-compile-items.md" title="" target="_blank">Default Compile Item Values in the the .NET Core SDK - Visual Studio 2017 RC3</a></p>
 				<div id="crdny">March 08, 2017</div>
 				<div id="tags_wrapper">
 					<ul>

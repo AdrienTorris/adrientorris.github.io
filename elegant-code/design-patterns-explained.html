@@ -1161,6 +1161,143 @@ public class Planet : SpaceElement
     }
   }
 </code></pre>
+				<!--<p>When to use it ?<p>
+				<p></p>-->
+				<h3>Decorator</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>In object-oriented programming, the decorator pattern is a design pattern that allows behavior to be added to an individual object, either statically or dynamically, without affecting the behavior of other objects from the same class. The decorator pattern is often useful for adhering to the Single Responsibility Principle, as it allows functionality to be divided between classes with unique areas of concern.</blockquote>
+				<p>In plain words, the decorator pattern lets you dynamically attach additional responsabilities to an object. A decorator is an alternative to inheritance.</p>
+				<p>Real world example :<p>
+				<p></p>
+				<p>Programmatic example :<p>
+<pre><code class="csharp">
+public class RentalAgency
+{
+	public string Name {get;set;}
+	public IEnumerable<Vehicle> Vehicles {get;set;}
+}
+
+public abstract class Vehicle
+{
+	public string Model {get;set;}
+	public string Manufacturer {get;set;}
+	public int NumCopies {get;set;}
+	
+	public Vehicle(string manufacturer, string model, int copies)
+	{
+		Manufacturer = manufacturer;
+		Model = model;
+		NumCopies = copies;
+	}
+	
+	public abstract void Display();
+}
+
+public class Car : Vehicle
+{
+	public Car(string manufacturer, string model, int copies)
+	{
+		Manufacturer = manufacturer;
+		Model = model;
+		NumCopies = copies;
+	}
+	
+	public override void Display() => Console.WriteLine($"(car) {Manufacturer} {Model} - Copies: {NumCopies}");
+}
+
+public class Truck : Vehicle
+{
+	public int Capacity {get;set;}
+
+	public Truck(string manufacturer, string model, int copies, int capacity)
+	{
+		Manufacturer = manufacturer;
+		Model = model;
+		NumCopies = copies;
+		Capacity = capacity;
+	}
+	
+	public override void Display() => Console.WriteLine($"(truck) {Manufacturer} {Model} - Capacity: {Capacity} - Copies: {NumCopies}");
+}
+
+/// <summary>
+/// The 'Decorator' abstract class
+/// </summary>
+public abstract class Decorator : Vehicle
+{
+	protected Vehicle vehicle;
+
+	public Decorator(Vehicle v)
+	{
+    	vehicle = v;
+	}
+
+	public override void Display() => vehicle.Display();
+}
+
+/// <summary>
+/// The 'ConcreteDecorator' class
+/// </summary>
+public class Borrowable : Decorator
+{
+	protected List<string> borrowers = new List<string>();
+	
+	public Borrowable(Vehicle vehicle)
+	  : base(vehicle)
+	{ }
+	
+	public void Borrow(string name)
+	{
+		borrowers.Add(name);
+		vehicle.NumCopies--;
+	}
+	
+	public void Return(string name)
+	{
+		borrowers.Remove(name);
+		vehicle.NumCopies++;
+	}
+	
+	public override void Display()
+	{
+		base.Display();
+		
+		if(borrowers == null || borrowers.Count == 0)
+			return;
+			
+		Console.WriteLine(borrowers.Count + "borrower" + (borrowers.Count > 1 ? "s" : string.Empty));
+		
+		foreach(string borrower in borrowers)
+			Console.WriteLine(" - " + borrower);
+	}
+}
+</code></pre>
+<pre><code class="csharp">
+  class MainApp
+  {
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;Entry point into console application.
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
+    static void Main()
+    {
+	  Car aventador = new Car("Lamborghini", "Aventador", 8);
+	  aventador.Display();
+	  
+	  Car carerra = new Car("Porshe", "Carrera 4", 6);
+	  carerra.Display();
+	  
+	  // Make the Lamborghini Aventador borrowable
+	  Borrowable borrowableAventador = new Borrowable(aventador);
+	  borrowableAventador.Borrow("Customer #1");
+	  borrowableAventador.Borrow("Customer #2");
+	  
+	  borrowableAventador.Display();
+ 
+      // Wait for user
+      Console.ReadKey();
+    }
+  }
+</code></pre>
 				<p>When to use it ?<p>
 				<p></p>
 				<!--
