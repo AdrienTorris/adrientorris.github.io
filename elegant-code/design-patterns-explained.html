@@ -59,9 +59,9 @@
 						</ul>
 					</li>
 					<li>
-						<a href="#" title="">Behavioral</a>
+						<a href="behavioral_design_pattern_title" title="">Behavioral</a>
 						<ul>
-							<li><a href="#" title="">Chain of Responsibility</a></li>
+							<li><a href="#chain_of_responsability_ttl" title="">Chain of Responsibility</a></li>
 							<li><a href="#" title="">Command</a></li>
 							<li><a href="#" title="">Iterator</a></li>
 							<li><a href="#" title="">Mediator</a></li>
@@ -1673,6 +1673,178 @@ public class APIProxy : ISomeAPI
 </code></pre>
 				<p>When to use it ?<p>
 				<p>When you want to control access to an object.</p>
+				<h2 id="behavioral_design_pattern_title">Behavioral Design Patterns</h2>
+				<p>A behavioral design pattern is about the assignments of responsabilies between the objects.</p>
+				<p>Wikipedia says :</p>
+				<blockquote>In software engineering, behavioral design patterns are design patterns that identify common communication patterns between objects and realize these patterns. By doing so, these patterns increase flexibility in carrying out this communication.</blockquote>
+				<h3 id="chain_of_responsability_ttl">Chain of Responsibility</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>In object-oriented design, the Chain of Responsibility pattern is a design pattern consisting of a source of command objects and a series of processing objects. Each processing object contains logic that defines the types of command objects that it can handle; the rest are passed to the next processing object in the chain.</blockquote>
+				<p>In plain words, the Chain of Responsibility pattern handles a chain of objects. It's handle a request from one and manage the chain from object to object until the response.</p>
+				<p>Real world example :<p>
+				<p>Imagine you apply to a job in the military forces, you have to respond to some criterias like, have passed with success the test, have passed an interview with a recruiter and have an empty criminal record. If you apply to a job, a person will vérify all of this criterias and will call the good interlocutor for each of them (police to check the criminnal record, the recruiter for his opinion after the interview and the administration to get the result of the test).</p>
+				<p>Programmatic example :<p>
+<pre><code class="csharp">
+public abstract class ApplicationManager
+{
+	protected ApplicationManager Successor;
+	
+	public void SetSuccessor(ApplicationManager successor)
+	{
+		Successor = successor;
+	}
+	
+	public abstract void ProcessRequest(string personName);
+}
+
+public class TestResultApplicationManager : ApplicationManager
+{
+	public override void ProcessRequest(string personName)
+	{
+		if(!HasPassed(personName))
+		{
+			Console.WriteLine("You need to pass the test");
+			Return;
+		}
+		
+		if(!IsApprouved(personName))
+		{
+			Console.WriteLine("Rejected");
+			Return;
+		}
+		
+		Console.WriteLine("The write test application department approved the application of " + personName);
+		
+		if(Successor != null)
+			Successor.ProcessRequest(personName);
+	}
+	
+	private bool HasPassed(string personName)
+	{
+		// Check if this person has passed the test
+	}
+	
+	private bool IsApprouved(string personName)
+	{
+		// Check if this person succeed or failed
+	}
+}
+
+public class InterviewApplicationManager : ApplicationManager
+{
+	public override void ProcessRequest(string personName)
+	{
+		if(!HasPassed(personName))
+		{
+			Console.WriteLine("You need to pass the interview");
+			Return;
+		}
+		
+		if(!IsApprouved(personName))
+		{
+			Console.WriteLine("Rejected");
+			Return;
+		}
+		
+		Console.WriteLine("The interview application department approved the application of " + personName);
+		
+		if(Successor != null)
+			Successor.ProcessRequest(personName);
+	}
+	
+	private bool HasPassed(string personName)
+	{
+		// Check if this person has passed an interview
+	}
+	
+	private bool IsApprouved(string personName)
+	{
+		// Check if the recruiter approved the applicant or not
+	}
+}
+
+public class PhysicalTestApplicationManager : ApplicationManager
+{
+	public override void ProcessRequest(string personName)
+	{
+		if(!HasPassed(personName))
+		{
+			Console.WriteLine("You need to pass the physical test");
+			Return;
+		}
+		
+		if(!IsApprouved(personName))
+		{
+			Console.WriteLine("Rejected");
+			Return;
+		}
+		
+		Console.WriteLine("The physical test application department approved the application of " + personName);
+		
+		if(Successor != null)
+			Successor.ProcessRequest(personName);
+	}
+	
+	private bool HasPassed(string personName)
+	{
+		// Check if this person has passed an interview
+	}
+	
+	private bool IsApprouved(string personName)
+	{
+		// Check if the recruiter approved the applicant or not
+	}
+}
+
+public class PoliceApplicationManager : ApplicationManager
+{
+	public override void ProcessRequest(string personName)
+	{
+		if(HasCriminalRecord(personName))
+		{
+			Console.WriteLine("Rejected");
+			Return;
+		}
+		
+		Console.WriteLine("The Police approved the application of " + personName);
+		
+		if(Successor != null)
+			Successor.ProcessRequest(personName);
+	}
+	
+	private bool HasCriminalRecord(string personName)
+	{
+		// Check if the applicant has a criminal record
+	}
+}
+</code></pre>
+<pre><code class="csharp">
+  class MainApp
+  {
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;Entry point into console application.
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
+    static void Main()
+    {
+	  ApplicationManager police = new PoliceApplicationManager();
+	  ApplicationManager test = new TestApplicationManager();
+	  ApplicationManager pysicalTest = new PhysicalTestApplicationManager();
+	  ApplicationManager interview = new InterviewApplicationManager();
+	  
+	  police.SetSuccessor(test);
+	  test.SetSuccessor(pysicalTest);
+	  pysicalTest.SetSuccessor(interview);
+	  
+	  string personName = "Adrien Torris";
+	  police.ProcessRequest(personName);
+ 
+      // Wait for user
+      Console.ReadKey();
+    }
+  }
+</code></pre>
+				<!--<p>When to use it ?<p>
+				<p></p>-->
 				<!--
 				<h3></h3>
 				<p>Wikipedia says :</p>
