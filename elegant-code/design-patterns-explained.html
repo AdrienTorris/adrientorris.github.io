@@ -55,7 +55,7 @@
 							<li><a href="#decorator_ttl" title="">Decorator</a></li>
 							<li><a href="#facade_ttl" title="">Facade</a></li>
 							<li><a href="#flyweight_ttl" title="">Flyweight</a></li>
-							<li><a href="#" title="">Proxy</a></li>
+							<li><a href="#proxy_ttl" title="">Proxy</a></li>
 						</ul>
 					</li>
 					<li>
@@ -1506,6 +1506,173 @@ public class LetterFactory
 </code></pre>
 				<p>When to use it ?<p>
 				<p>When you have a few light objects but used a multiple times.</p>
+				<h3 id="proxy_ttl">Proxy</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>A proxy, in its most general form, is a class functioning as an interface to something else. A proxy is a wrapper or agent object that is being called by the client to access the real serving object behind the scenes. Use of the proxy can simply be forwarding to the real object, or can provide additional logic. In the proxy extra functionality can be provided, for example caching when operations on the real object are resource intensive, or checking preconditions before operations on the real object are invoked.</blockquote>
+				<p>In plain words, a proxy provides a surrogate or placeholder for another object to control access to it.</p>
+				<p>Real world example :<p>
+				<p>Have you ever try to watch a parent restricted channel on the TV when you were a child ? This is a perfect proxy example. All the TV channels have things in common but when you want to watch it, you pass by a proxy who check if you have the right to watch it, adding some access logic to the channel that the channel itself doesn't know.</p>
+				<p>Placeholder programmatic example (add some behavior to access) :<p>
+<pre><code class="csharp">
+public interface ITVChannel
+{
+	void Watch();
+	int GetNumber();
+}
+
+public class TVChannel : ITVChannel
+{
+	public int Number { get; set; }
+	public string Name { get; set; }
+	public bool IsParentRestrictedAccess { get; set; }
+	
+	public TVChannel(int number, string name, bool restricted){
+		Number =  number;
+		Name = name;
+		IsParentRestrictedAccess = restricted;
+	}
+	
+	public void Watch() =&#62; Console.WriteLine("You are watching " + Name);
+	
+	public int GetNumber() =&#62; Number;
+}
+
+public class TVChannelProxy
+{
+	private ITVChannel _channel;
+	
+	public TVChannelProxy(ITVChannel channel)
+	{
+		_channel = channel;
+	}
+	
+	public void Watch(string password)
+	{
+		if(!_channel.IsParentRestrictedAccess)
+		{
+			_channel.Watch();
+			return;
+		}
+		
+		if(string.IsNullOrWhiteSpace(password))
+		{
+			Console.WriteLine("This channel has a restricted access. Please provide a password.");
+			return;
+		}
+		
+		if(password != "thepasswordstoredinsomeconstant")
+		{
+			Console.WriteLine("This channel has a restricted access. Please provide the good password.");
+			return;
+		}
+		
+		_channel.Watch();
+	}
+}
+
+public class TVChannelsProxy
+{
+	private Dictionary&#60;int, TVChannelProxy&#62; _channels = new Dictionary&#60;int, TVChannelProxy&#62;();
+	
+	public TVChannelsProxy()
+	{}
+	
+	public void AddChannel(ITVChannel channel)
+	{
+		if(_channels == null)
+			_channels = new Dictionary&#60;int, ITVChannel&#62;();
+			
+		if(_channels.ContainsKey(channel.GetNumber()))
+			return;
+			
+		_channels.Add(channel.GetNumber(), new TVChannelProxy(channel));
+	}
+	
+	public void Watch(int channelNumber, string password)
+	{
+		if(_channels == null)
+		{
+			Console.WriteLine("This proxy doesn't handle this channel");
+			return;
+		}
+		
+		if(!_channels.ContainsKey(channelNumber))
+		{
+			Console.WriteLine("This proxy doesn't handle this channel");
+			return;
+		}
+		
+		TVChannelProxy channelProxy = _channels[channelNumber];
+		channelProxy.Watch(password);
+	}
+}
+</code></pre>
+<pre><code class="csharp">
+  class MainApp
+  {
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;Entry point into console application.
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
+    static void Main()
+    {
+	  ITVChannel arte = new TVChannel(7, "Arte", false);
+	  ITVChannel france5 = new TVChannel(5, "France 5", false);
+	  ITVChannel violentSportChannel = new TVChannel(32, "Violent Sports", true);
+	  
+	  TVChannelsProxy channelProxy = new TVChannelProxy();
+	  channelProxy.AddChannel(arte);
+	  channelProxy.AddChannel(france5);
+	  channelProxy.AddChannel(violentSportChannel);
+	  
+	  channelProxy.Watch(arte.GetNumber(), null);
+	  channelProxy.Watch(violentSportChannel.GetNumber(), null);
+	  channelProxy.Watch(violentSportChannel.GetNumber(), "thepasswordstoredinsomeconstant");
+ 
+      // Wait for user
+      Console.ReadKey();
+    }
+  }
+</code></pre>
+				<p>Surrogate programmatic example (just control access) :<p>
+<pre><code class="csharp">
+public interface ISomeAPI
+{
+	string GetText(string id);
+}
+
+public class SomeAPI : ISomeAPI
+{
+	public string GetText(string id) =&#62; "this is some text, " + id;
+}
+
+public class APIProxy : ISomeAPI
+{
+	private SomeAPI _someAPI = new SomeAPI();
+	
+	public string GetText(string id) =&#62; _someAPI.GetText(id);
+} 
+</code></pre>
+<pre><code class="csharp">
+  class MainApp
+  {
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;Entry point into console application.
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
+    static void Main()
+    {
+	  APIProxy apiProxy = new APIProxy();
+	  
+	  console.WriteLine(apiProxy.GetText("a"));
+	  console.WriteLine(apiProxy.GetText("B"));
+	  console.WriteLine(apiProxy.GetText("c"));
+ 
+      // Wait for user
+      Console.ReadKey();
+    }
+  }
+</code></pre>
+				<p>When to use it ?<p>
+				<p>When you want to control access to an object.</p>
 				<!--
 				<h3></h3>
 				<p>Wikipedia says :</p>
