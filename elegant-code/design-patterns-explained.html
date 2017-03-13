@@ -53,8 +53,8 @@
 							<li><a href="#bridge_ttl" title="">Bridge</a></li>
 							<li><a href="#composite_ttl" title="">Composite</a></li>
 							<li><a href="#decorator_ttl" title="">Decorator</a></li>
-							<li><a href="#" title="">Facade</a></li>
-							<li><a href="#" title="">Flyweight</a></li>
+							<li><a href="#facade_ttl" title="">Facade</a></li>
+							<li><a href="#flyweight_ttl" title="">Flyweight</a></li>
 							<li><a href="#" title="">Proxy</a></li>
 						</ul>
 					</li>
@@ -1300,7 +1300,7 @@ public class Borrowable : Decorator
 </code></pre>
 				<p>When to use it ?<p>
 				<p>When you want to add some behaviors to an object without modify or extend it.</p>
-				<h3>Facade</h3>
+				<h3 id="facade_ttl">Facade</h3>
 				<p>Wikipedia says :</p>
 				<blockquote>A facade is an object that provides a simplified interface to a larger body of code, such as a class library.</blockquote>
 				<p>In plain words, facade pattern provides a simplified interface to a complex subsystem.</p>
@@ -1393,17 +1393,119 @@ public class Car
 </code></pre>
 				<p>When to use it ?<p>
 				<p>When for some reason you prefer keep the complexity of a system secret.</p>
-				<h3>Flyweight</h3>
+				<h3 id="flyweight_ttl">Flyweight</h3>
 				<p>Wikipedia says :</p>
 				<blockquote>A flyweight is an object that minimizes memory use by sharing as much data as possible with other similar objects; it is a way to use objects in large numbers when a simple repeated representation would use an unacceptable amount of memory.</blockquote>
 				<p>In plain words, use sharing to minimize memory usage and support a large numbers of fine-grained objects efficiently.</p>
 				<p>Real world example :<p>
-				<p></p>
+				<p>The canonical example of the flyweight pattern is the text editor. Image an english text editor without numbers or any special character, you have just 26 characters, but you can use them a multiple times. If you open a book text file, you will have tens of thousands characters, but same 26 ones. So, what do you do ? Are you create a new complete object for each of thems, knowing that you will have thousands of times the same characters ? Or you create one instance for each of the 26 characters, and you use it when you need ? The second option is called a flyweight pattern, about sharing resources.</p>
 				<p>Programmatic example :<p>
 <pre><code class="csharp">
+public abstract class Letter
+{
+	protected char symbol;
+	protected int htmlNumber;
+	
+	public abstract void Display(int idx);
+}
+
+public sealed class LetterA : Letter
+{
+	public LetterA()
+	{
+		symbol = 'A';
+		htmlNumber = 97;
+	}
+	
+	public override void Display(int idx) =&#62; Console.WriteLine($"Document contains the character '{symbol}' at the position {idx}");
+}
+
+public sealed class LetterB : Letter
+{
+	public LetterB()
+	{
+		symbol = 'B';
+		htmlNumber = 98;
+	}
+	
+	public override void Display(int idx) =&#62; Console.WriteLine($"Document contains the character '{symbol}' at the position {idx}");
+}
+
+// C, D, E, ...
+
+public sealed class LetterZ : Letter
+{
+	public LetterZ()
+	{
+		symbol = 'Z';
+		htmlNumber = 122;
+	}
+	
+	public override void Display(int idx) =&#62; Console.WriteLine($"Document contains the character '{symbol}' at the position {idx}");
+}
+
+public class LetterFactory
+{
+	private Dictionary&#60;char, Letter&#62; _instances = new Dictionary&#60;char, Letter&#62;();
+	
+	public Letter GetLetter(char key)
+	{
+		Letter ret = null;
+		
+		if(_instances.ContainsKey(key))
+			ret = _instances[key];
+		else
+		{
+			switch(key)
+			{
+				case 'A':
+					ret = new LetterA();
+					break;
+				case 'B':
+					ret = new LetterB();
+					break;
+				// C, D, E, ...
+				case 'Z':
+					ret = new LetterZ();
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+		
+		return ret;
+	}
+}
+</code></pre>
+<pre><code class="csharp">
+  class MainApp
+  {
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;Entry point into console application.
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
+    static void Main()
+    {
+	  string documentString = "THISISMYTEXT";
+	  char[] docChars = documentString.ToCharArray();
+	  
+	  LetterFactory factory = new LetterFactory();
+	  
+	  int docPosition = 0;
+	  
+	  foreach(char c in docChars)
+	  {
+		docPosition++;
+		Letter l = factory.GetLetter(c);
+		l.Display(docPosition);
+	  }
+ 
+      // Wait for user
+      Console.ReadKey();
+    }
+  }
 </code></pre>
 				<p>When to use it ?<p>
-				<p></p>
+				<p>When you have a few light objects but used a multiple times.</p>
 				<!--
 				<h3></h3>
 				<p>Wikipedia says :</p>
