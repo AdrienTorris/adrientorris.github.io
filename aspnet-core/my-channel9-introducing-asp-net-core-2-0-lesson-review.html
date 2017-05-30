@@ -6,7 +6,7 @@
 		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="language" content="en" />
-		<meta name="keywords" content="ASP.NET Core 2.0.0-preview1,Channel 9,Razor Pages,MVC,ASP.NET MVC,Visual Studio 2017,Visual Studio 2017 Preview,ASP.NET CORE CLI,Channel9,Build2017,Build 2017,ASP.NET Core,CLI,Microsoft Build 2017,dotnet cli,dot net CLI,.NET Core command-line,.NET Core command-line tools,dotNET Core command-line,dotNET Core command-line tools" />
+		<meta name="keywords" content="ASP.NET Core 2.0.0-preview1,SignalR,Channel 9,Razor Pages,MVC,ASP.NET MVC,Visual Studio 2017,Visual Studio 2017 Preview,ASP.NET CORE CLI,Channel9,Build2017,Build 2017,ASP.NET Core,CLI,Microsoft Build 2017,dotnet cli,dot net CLI,.NET Core command-line,.NET Core command-line tools,dotNET Core command-line,dotNET Core command-line tools" />
 		<meta name="description" content="My 'Introducing ASP.NET Core 2.0' lesson's review on Channel9, recorded at the Microsoft Build 2017" />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
@@ -37,10 +37,10 @@
 					<li>All .NET Runtimes provider by Microsoft implement the standard</li>
 				</ul>
 <!--
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/" title="" /></div>
+<div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/" title="" /></div>
 -->
-				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/dotnet-standard-2-0-asp-net-core.png" title="" /></div>
-				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/david-fowler-tweet-dotnet-standard-explain.png" title="" /></div>
+				<div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/dotnet-standard-2-0-asp-net-core.png" title="" /></div>
+				<div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/david-fowler-tweet-dotnet-standard-explain.png" title="" /></div>
 				<p><a href="https://gist.github.com/davidfowl/8939f305567e1755412d6dc0b8baf1b7" target="_blank" rel="nofollow" title=""></a></p>
 				<h2>How to test</h2>
 				<p>You have to install the .NET Core 2.0 framework and the preview of Visual Studio 2017. Visual Studio 2017 Preview will install another install of Visual Studio 2017 so you can have Visual Studio 2017 and Visual Studio 2017 Preview side-by-side.</p>
@@ -51,6 +51,20 @@
 					<li>The host and application configuration is now managed by the Dependency Injection module, who simplify the process and add more flexibility</li>
 					<li>The default configuratrion file format is still Json</li>
 				</ul>
+				<h2>Razor Pages</h2>
+<div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/aspnet-core-20-razor-pages-solution-explorer.png" title="" /></div>
+<div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/aspnet-core-20-razor-pages-all-expand.png" title="" /></div>
+				<ul>
+					<li>Razor Pages are pages, not views</li>
+					<li>The folder "Pages" is interpreted and diseapears from the page urls (<i>/Pages/awesome.cshtml -> /awesome</i>)</li>
+					<li>Razor pages are not the future of MVC, it's another possibility of MVC</li>
+				</ul>
+				<p><a href="https://github.com/DamianEdwards/RazorPagesSample" target="_blank" rel="nofollow" title="">Razor Pages Sample  by Damian Edwards on GitHub</a></p>
+				<h2>SignalR</h2>
+				<ul>
+					<li>Will be introduce in the future version of ASP.NET Core</li>
+				</ul>
+<div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/signalr-team-back-tweet-david-fowler.png" title="" /></div>
 				<h2></h2>
 				<ul>
 					<li></li>
@@ -66,27 +80,6 @@
 					<li></li>
 				</ul>
 <!--
-4) Razor Pages
-
- - ASP.NET Core 2.0 introduces the Razor Pages
-
-[aspnet-core-20-razor-pages-solution-explorer.png]
-[aspnet-core-20-razor-pages-all-expand.png]
-
- - Razor Pages are pages, not views
-
- - The folder "Pages" is interpreted and diseapears from the page urls
-                    /Pages/awesome.cshtml -> /awesome
-
- - Razor pages are not the future of MVC, it's another possibility of MVC
-
-[link https://github.com/DamianEdwards/RazorPagesSample]
-
-5) SignalR
-
- - Will be introduce in the future version of ASP.NET Core
-
-[signalr-team-back-tweet-david-fowler.png]
 
 6) Performance
 
@@ -132,6 +125,7 @@
 						<li>Channel9</li>
 						<li>Channel 9</li>
 						<li>ASP.NET Core 2.0.0-preview1</li>
+						<li>SignalR</li>
 					</ul>
 				</div>
 				<div id="refs_wrapper">
