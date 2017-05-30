@@ -30,40 +30,42 @@
 			</div>
 			<div id="post_ctn">
 				<h1>My "Introducing ASP.NET Core 2.0" lesson's review</h1>
-				<p></p>
+				<h2>1) .NET Standard</h2>
+				<ul>
+					<li>.NET Standard isn't a Framework but an agreement, an interface. .NET Standard is a series of APIs that allow multiple instances of .NET whi are agree on something</li>
+					<li>.NET Standard provides a specification for any platform to implement. It allows sharing code, binaries, and skills between .NET client, server and all flavors.</li>
+					<li>All .NET Runtimes provider by Microsoft implement the standard</li>
+				</ul>
 <!--
-
-
-
-My "Introducing ASP.NET Core 2.0" lesson's review
-
-
-1) .NET Standard
-
- - .NET Standard isn't a Framework but an agreement, an interface. .NET Standard is a series of APIs that allow multiple instances of .NET whi are agree on something
-
- - .NET Standard provides a specification for any platform to implement. It allows sharing code, binaries, and skills between .NET client, server and all flavors.
-
- - All .NET Runtimes provider by Microsoft implement the standard
-
-[dotnet-standard-2-0-asp-net-core.png]
-[david-fowler-tweet-dotnet-standard-explain.png]
-[link: https://gist.github.com/davidfowl/8939f305567e1755412d6dc0b8baf1b7]
-
-2) How to test
-
-You have to install the .NET Core 2.0 framework and the preview of Visual Studio 2017. Visual Studio 2017 Preview will install another install of Visual Studio 2017 so you can have Visual Studio 2017 and Visual Studio 2017 Preview side-by-side.
-
-3) CSPROJ (changer de nom)
-
- - The ASP.NET Core team did a rollback on the project.json file, to come back to a old-like CSPROJ, still in XML but with a much lighter format
-
- - The package dependency management allows to reference packages of packages, to avoid reference dozens of packages manually, but you still can do this if you prefer
-
- - The host and application configuration is now managed by the Dependency Injection module, who simplify the process and add more flexibility
-
- - The default configuratrion file format is still Json
-
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/" title="" /></div>
+-->
+				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/dotnet-standard-2-0-asp-net-core.png" title="" /></div>
+				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/channel9-introducing-asp-net-core-2-0-lesson-review/david-fowler-tweet-dotnet-standard-explain.png" title="" /></div>
+				<p><a href="https://gist.github.com/davidfowl/8939f305567e1755412d6dc0b8baf1b7" target="_blank" rel="nofollow" title=""></a></p>
+				<h2>How to test</h2>
+				<p>You have to install the .NET Core 2.0 framework and the preview of Visual Studio 2017. Visual Studio 2017 Preview will install another install of Visual Studio 2017 so you can have Visual Studio 2017 and Visual Studio 2017 Preview side-by-side.</p>
+				<h2>Application configuration</h2>
+				<ul>
+					<li>The ASP.NET Core team did a rollback on the project.json file, to come back to a old-like CSPROJ, still in XML but with a much lighter format</li>
+					<li>The package dependency management allows to reference packages of packages, to avoid reference dozens of packages manually, but you still can do this if you prefer</li>
+					<li>The host and application configuration is now managed by the Dependency Injection module, who simplify the process and add more flexibility</li>
+					<li>The default configuratrion file format is still Json</li>
+				</ul>
+				<h2></h2>
+				<ul>
+					<li></li>
+					<li></li>
+					<li></li>
+					<li></li>
+				</ul>
+				<h2></h2>
+				<ul>
+					<li></li>
+					<li></li>
+					<li></li>
+					<li></li>
+				</ul>
+<!--
 4) Razor Pages
 
  - ASP.NET Core 2.0 introduces the Razor Pages
