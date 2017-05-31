@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>My notes about the "Microservices Design and Patterns" lesson</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="language" content="en" />
+		<meta name="keywords" content="Microsoft Virtual Academy,MVA,Software Architecture,Docker,Microservices Architecture" />
+		<meta name="description" content="My notes about the 'Microservices Design and Patterns' lesson on Microsoft Virtual Academy (MVA)" />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<meta name="generator" content="No404! 0.1" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>Architecture</li>
+					<li class="active"><a href="https://adrientorris.github.io/architecture/notes-microservices-design-patterns-lesson-mva.html" title="My notes about the 'Microservices Design and Patterns' lesson">My notes about the "Microservices Design and Patterns" lesson</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn">
+				<h1>My notes about the "Microservices Design and Patterns" lesson</h1>
+<!--
+<div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/" title="" /></div>
+-->
+<!--
+
+
+My notes about the "Microservices Design and Patterns" lesson
+
+notes-microservices-design-patterns-lesson-mva.html
+
+1) Introducing Common Concerns
+
+ - A few recurring themes
+
+	* Affinity - The more information your are managing within your system, the more your system will be dictated by the constraint of having so much data
+
+[affinity.png]
+
+	* Capacity - This is a constraint we have to deal with, even in a big system the capacity, the resources, are not limitless
+
+[capacity.png]
+
+	* Speed of light - Complex interactions between servers who are far away from each others generates latency. When we build global systems, we have to keep this in mind and gigure out how to go and deploy thoses systems in a global way and how to operate thoses systems in a global way
+
+[speed-of-light-latency.png]
+
+	* Failure - Failure happens, we have to deal with it has an explicit thing
+
+[failure.png]
+
+	* Criminals and the Careless - The security and safety are the two aspects that are about really protecting your systems from unwanted interactions
+
+[criminals-and-the-careless.png]
+
+
+
+
+ - the "Pets vs Cattle" mindset
+
+ => Single machine systems vs cloud systems
+ => Individual management vs Mass management
+ 
+ The pets is the old-school way : you have a few environments, or maybe a single-one, and you know all about them. You know the name of your servers, and a lots of others informations and when one of them has a problem, you do the effort to repair it.
+ The cattle is another attitude. You're no longer running one computer but you run 100 or maybe more and if there's anythinf wrong with one of them, or one instance, you will not repair it but simply turn it off and replace it by a new one. You will never care about the individual computer anymore.
+
+
+
+[pets-vs-cattle.png]
+
+2) Designing High-Scale systems
+
+ - Distributed Systems Vocabulary
+
+[distributed-system-vocabulary.png]
+
+ - Operational Objectives 
+
+           - Scalability : 
+                   * Scale to requirements => If you scale up, your workload growth and this add of work could be useless, if you scale down you will have to deal with resources constraints, so it's really important anticipate your future needs and scale correctly your system.
+                   * A "scale ramp", is a good practice. Growth your system with your audience.
+
+           - Availability
+Keep the system available as required for the solution
+
+           - Consistency
+Provide a view of the information held by a system that is as consistent as needed to fulfill the solution requirements
+
+           - Reliability
+Operate the system reliably and resilient against failures
+
+           - Predictability
+Design to achieve predictable system performance
+
+           - Security
+Identify and explicitly mitigate (or choose not to mitigate) security threats
+
+           - Agility
+Design the system such that defects can be corrected and new capabilities introduced while meeting operational objectives.
+
+           - Safety
+Provide safety for data and systems by mitigating the risk of disasters impacting the existing environment(s).
+
+           - Supportability
+Create systems to provide operational transparency for the needs of operations and support staff.
+
+           - Cost
+Do all of the above within a set budget and striving to continually reduce that cost.
+                 
+
+
+-->
+				<div id="crdny">May 31, 2017</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Microservices Architecture</li>
+						<li>Software Architecture</li>
+						<li>Microsoft Virtual Academy (MVA)</li>
+						<li></li>
+						<li></li>
+						<li></li>
+						<li></li>
+					</ul>
+				</div>
+				<div id="refs_wrapper">
+					<ul>
+						<li><a href="https://mva.microsoft.com/en-US/training-courses/microservices-design-and-patterns-16520" title="Microservices Design and Patterns" target="_Blank" rel="nofollow">Microservices Design and Patterns</a></li>
+						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
+						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
+						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
+					</ul>
+				</div>
+            </div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+		<script
+			  src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+			  integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+			  crossorigin="anonymous"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-85948839-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+	</body>
+</html>
