@@ -51,16 +51,41 @@
 					<li>
 						<b>Scalability</b>
 						<p>Scale to requirements => If you scale up, your workload growth and this add of work could be useless, if you scale down you will have to deal with resources constraints, so it's really important anticipate your future needs and scale correctly your system.
-						<br />A "scale ramp", is a good practice. Growth your system with your audience.</p>
+						<br /><br />A "scale ramp", is a good practice. Growth your system with your audience.</p>
 					</li>
-					<li><b>Availability</b>
-					<p>Keep the system available as required for the solution</p>
-					</li>
-					<li><b></b>
-					<p></p>
-					</li>
+					<li><b>Availability</b><p>Keep the system available as required for the solution</p></li>
+					<li><b>Consistency</b><p>Provide a view of the information held by a system that is as consistent as needed to fulfill the solution requirements</p></li>
+					<li><b>Reliability</b><p>Operate the system reliably and resilient against failures</p></li>
+					<li><b>Predictability</b><p>Design to achieve predictable system performance</p></li>
+					<li><b>Security</b><p>Identify and explicitly mitigate (or choose not to mitigate) security threats</p></li>
+					<li><b>Agility</b><p>Design the system such that defects can be corrected and new capabilities introduced while meeting operational objectives</p></li>
+					<li><b>Safety</b><p>Provide safety for data and systems by mitigating the risk of disasters impacting the existing environment(s)</p></li>
+					<li><b>Supportability</b><p>Create systems to provide operational transparency for the needs of operations and support staff</p></li>
+					<li><b>Cost</b><p>Do all of the above within a set budget and striving to continually reduce that cost</p></li>
 				</ul>
-				
+				<h3>Defining Services and Microservices</h3>
+				<p>- A "Service" is software that</p>
+<ul>
+<li>is responsible for holding, processing and/or distributing particular kinds of information withi the scope of a system</li>
+<li>can be built, deployed, and run independently, meeting defined operational objectives</li>
+<li>communicates with consumers and other services, presenting information using conventions and/or contract assurances</li>
+<li>protects itself against unwanted access, and its information against loss</li>
+<li>handles failure conditions such that failures cannot lead to information corruption</li>
+</ul>
+<div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/service-does-not-imply.png" title="" /></div>
+<p>- A service consumer interacts with the service, it may be another service or a proxy to an entity in the physical world :</p>
+<ul>
+<li>User Interface</li>
+<li>Sensor</li>
+<li>Actor</li>
+</ul>
+<p>- A system is a federation of services and systems, aiming to provide a composite solution for a well-defined scope</p>
+<h3>Designing Layers and Tiers</h3>
+<ul>
+<li>Layers : Code Management</li>
+<li>Tiers : Runtime Management</li>
+<li>Services : Ownership Management</li>
+</ul>
 				<!--
 <div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/" title="" /></div>
 -->
