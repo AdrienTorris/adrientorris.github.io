@@ -25,7 +25,43 @@
 			</div>
 			<div id="post_ctn">
 				<h1>My notes about the "Microservices Design and Patterns" lesson</h1>
-<!--
+				<h2>Introducing Common Concerns</h2>
+				<h3>A few recurring themes</h3>
+				<p><b>Affinity</b> - The more information your are managing within your system, the more your system will be dictated by the constraint of having so much data</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/affinity.png" title="" /></div>
+				<p><b>Capacity</b> - This is a constraint we have to deal with, even in a big system the capacity, the resources, are not limitless</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/capacity.png" title="" /></div>
+				<p><b>Speed of light</b> - Complex interactions between servers who are far away from each others generates latency. When we build global systems, we have to keep this in mind and gigure out how to go and deploy thoses systems in a global way and how to operate thoses systems in a global way</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/speed-of-light-latency.png" title="" /></div>
+				<p><b>Failure</b> - Failure happens, we have to deal with it has an explicit thing</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/failure.png" title="" /></div>
+				<p><b>Criminals and the Careless</b> - The security and safety are the two aspects that are about really protecting your systems from unwanted interactions</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/criminals-and-the-careless.png" title="" /></div>
+				<h3>the "Pets vs Cattle" mindset</h3>
+				<p>=> Single machine systems vs cloud systems</p>
+				<p>=> Individual management vs Mass management</p>
+				<p>The pets is the old-school way : you have a few environments, or maybe a single-one, and you know all about them. You know the name of your servers, and a lots of others informations and when one of them has a problem, you do the effort to repair it.</p>
+				<p>The cattle is another attitude. You're no longer running one computer but you run 100 or maybe more and if there's anythinf wrong with one of them, or one instance, you will not repair it but simply turn it off and replace it by a new one. You will never care about the individual computer anymore.</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/pets-vs-cattle.png" title="" /></div>
+				<h2>Designing High-Scale systems</h2>
+				<h3>Distributed Systems Vocabulary</h3>
+<div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/distributed-system-vocabulary.png" title="" /></div>
+				<h3>Operational Objectives</h3>
+				<ul>
+					<li>
+						<b>Scalability</b>
+						<p>Scale to requirements => If you scale up, your workload growth and this add of work could be useless, if you scale down you will have to deal with resources constraints, so it's really important anticipate your future needs and scale correctly your system.
+						<br />A "scale ramp", is a good practice. Growth your system with your audience.</p>
+					</li>
+					<li><b>Availability</b>
+					<p>Keep the system available as required for the solution</p>
+					</li>
+					<li><b></b>
+					<p></p>
+					</li>
+				</ul>
+				
+				<!--
 <div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/" title="" /></div>
 -->
 <!--
@@ -112,9 +148,47 @@ Create systems to provide operational transparency for the needs of operations a
 
            - Cost
 Do all of the above within a set budget and striving to continually reduce that cost.
-                 
+             
+
+3) Defining Services and Microservices
+
+ - A "Service" is software that :
+ 
+<ul>
+<li>is responsible for holding, processing and/or distributing particular kinds of information withi the scope of a system</li>
+<li>can be built, deployed, and run independently, meeting defined operational objectives</li>
+<li>communicates with consumers and other services, presenting information using conventions and/or contract assurances</li>
+<li>protects itself against unwanted access, and its information against loss</li>
+<li>handles failure conditions such that failures cannot lead to information corruption</li>
+</ul>
+
+[service-does-not-imply.png]
+
+ - A service consumer interacts with the service, it may be another service or a proxy to an entity in the physical world :
+<ul>
+<li>User Interface</li>
+<li>Sensor</li>
+<li>Actor</li>
+</ul>
 
 
+ - A system is a federation of services and systems, aiming to provide a composite solution for a well-defined scope
+ 
+
+ 4) Designing Layers and Tiers
+ 
+ 
+<ul>
+<li>Layers : Code Management</li>
+<li>Tiers : Runtime Management</li>
+<li>Services : Ownership Management</li>
+</ul>
+ 
+ 
+ 5) Creating Autonomous Layers
+
+ 
+ 
 -->
 				<div id="crdny">May 31, 2017</div>
 				<div id="tags_wrapper">
