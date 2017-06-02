@@ -62,8 +62,8 @@
 						<a href="behavioral_design_pattern_title" title="">Behavioral</a>
 						<ul>
 							<li><a href="#chain_of_responsability_ttl" title="">Chain of Responsibility</a></li>
-							<li><a href="#" title="">Command</a></li>
-							<li><a href="#" title="">Iterator</a></li>
+							<li><a href="#command_ttl" title="">Command</a></li>
+							<li><a href="#iterator_ttl" title="">Iterator</a></li>
 							<li><a href="#" title="">Mediator</a></li>
 							<li><a href="#" title="">Memento</a></li>
 							<li><a href="#" title="">Observer</a></li>
@@ -1843,8 +1843,7 @@ public class PoliceApplicationManager : ApplicationManager
     }
   }
 </code></pre>
-				<!--<p>When to use it ?<p>
-				<p></p>-->
+				<!--<p>When to use it ?<p><p></p>-->
 				<h3 id="command_ttl">Command</h3>
 				<p>Wikipedia says :</p>
 				<blockquote>In object-oriented programming, the command pattern is a behavioral design pattern in which an object is used to encapsulate all information needed to perform an action or trigger an event at a later time. This information includes the method name, the object that owns the method and values for the method parameters.</blockquote>
@@ -1856,9 +1855,9 @@ public class PoliceApplicationManager : ApplicationManager
 // Receiver
 public class Television
 {
-	public void TurnOn() => Console.WriteLine("You are watching TV");
+	public void TurnOn() &#61;&#62; Console.WriteLine("You are watching TV");
 	
-	public void TurnOff() => Console.WriteLine("Get out ! I'm sleeping ...");
+	public void TurnOff() &#61;&#62; Console.WriteLine("Get out ! I'm sleeping ...");
 }
 
 // Command
@@ -1879,11 +1878,11 @@ public class TurnOn : ICommand
 		_television = t;
 	}
 	
-	public void Execute() => _television.TurnOn();
+	public void Execute() &#61;&#62; _television.TurnOn();
 	
-	public void Undo() => _television.TurnOff();
+	public void Undo() &#61;&#62; _television.TurnOff();
 	
-	public void Redo() => Execute();
+	public void Redo() &#61;&#62; Execute();
 }
 
 // Command
@@ -1896,17 +1895,17 @@ public class TurnOff : ICommand
 		_television = t;
 	}
 	
-	public void Execute() => _television.TurnOff();
+	public void Execute() &#61;&#62; _television.TurnOff();
 	
-	public void Undo() => _television.TurnOn();
+	public void Undo() &#61;&#62; _television.TurnOn();
 	
-	public void Redo() => Execute();
+	public void Redo() &#61;&#62; Execute();
 }
 
 // Invoker
 public class RemoteControl
 {
-	public void Submit(ICommand cmd) => cmd.Execute();
+	public void Submit(ICommand cmd) &#61;&#62; cmd.Execute();
 }
 </code></pre>
 <pre><code class="csharp">
@@ -1932,6 +1931,46 @@ public class RemoteControl
     }
   }
 </code></pre>
+				<!--<p>When to use it ?<p><p></p>-->
+				<h3 id="iterator_ttl">Iterator</h3>
+				<p>Wikipedia says :</p>
+				<blockquote>In object-oriented programming, the iterator pattern is a design pattern in which an iterator is used to traverse a container and access the container's elements. The iterator pattern decouples algorithms from containers; in some cases, algorithms are necessarily container-specific and thus cannot be decoupled.</blockquote>
+				<p>In plain words, an iterator provides a way to access the elements of an aggregate object sequentially without exposing its underlying representation.</p>
+				<p>Real world example :<p>
+				<p>A television with a "next" and a "previous" button is a good example. You can click on "next" and "previous" to iterate on all the channels.</p>
+				<p>Programmatic example :<p>
+<pre><code class="csharp">
+public class Channel
+{
+	public string Name {get;}
+	
+	public Channel(string name){
+		Name = name;
+	}
+}
+
+public class Television
+{
+	private IList<Channel> _channels;
+	
+	private int _currentChannelIndex;
+	
+	public Television()
+	{
+		_channels = new List<Channel>();
+		_currentChannelIndex = 0;
+	}
+	
+	public void AddChannel(Channel c) => _channels.Add(c);
+	
+	public void Next() => _currentChannelIndex += 1;
+	
+	public void Rewind() => _currentChannelIndex -= 1;
+	
+	public Channel GetChannel() => _channels[_currentChannelIndex];
+}
+</code></pre>
+				<!--<p>When to use it ?<p><p></p>-->
 				<!--
 				<h3></h3>
 				<p>Wikipedia says :</p>
