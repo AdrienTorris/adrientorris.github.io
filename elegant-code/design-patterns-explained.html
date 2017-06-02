@@ -1850,12 +1850,88 @@ public class PoliceApplicationManager : ApplicationManager
 				<blockquote>In object-oriented programming, the command pattern is a behavioral design pattern in which an object is used to encapsulate all information needed to perform an action or trigger an event at a later time. This information includes the method name, the object that owns the method and values for the method parameters.</blockquote>
 				<p>In plain words, a command pattern encapsulates a method call as an object.</p>
 				<p>Real world example :<p>
-				<p></p>
+				<p>A very common example is you (i.e. Client) switching on (i.e. Command) the television (i.e. Receiver) using a remote control (Invoker).</p>
 				<p>Programmatic example :<p>
 <pre><code class="csharp">
+// Receiver
+public class Television
+{
+	public void TurnOn() => Console.WriteLine("You are watching TV");
+	
+	public void TurnOff() => Console.WriteLine("Get out ! I'm sleeping ...");
+}
+
+// Command
+public interface ICommand
+{
+	void Execute();
+	void Undo();
+	void Redo();
+}
+
+// Command
+public class TurnOn : ICommand
+{
+	private Television _television;
+	
+	public TurnOn(Television t)
+	{
+		_television = t;
+	}
+	
+	public void Execute() => _television.TurnOn();
+	
+	public void Undo() => _television.TurnOff();
+	
+	public void Redo() => Execute();
+}
+
+// Command
+public class TurnOff : ICommand
+{
+	private Television _television;
+	
+	public TurnOn(Television t)
+	{
+		_television = t;
+	}
+	
+	public void Execute() => _television.TurnOff();
+	
+	public void Undo() => _television.TurnOn();
+	
+	public void Redo() => Execute();
+}
+
+// Invoker
+public class RemoteControl
+{
+	public void Submit(ICommand cmd) => cmd.Execute();
+}
 </code></pre>
-				<p>When to use it ?<p>
-				<p></p>
+<pre><code class="csharp">
+  class MainApp
+  {
+    &#47;&#47;&#47;&#32;&#60;summary&#62;
+    &#47;&#47;&#47;&#32;Entry point into console application.
+    &#47;&#47;&#47;&#32;&#60;&#47;summary&#62;
+    static void Main()
+    {
+	  Television television = new Television();
+	  
+	  ICommand turnOnCommand = new TurnOn(television);
+	  ICommand turnOffCommand = new TurnOff(television);
+	  
+	  RemoteControl remoteControl = new RemoteControl();
+	  
+	  remoteControl.Submit(turnOnCommand); // Will print: You are watching TV
+	  remoteControl.Submit(turnOffCommand); // Will print: Get out ! I'm sleeping ...
+ 
+      // Wait for user
+      Console.ReadKey();
+    }
+  }
+</code></pre>
 				<!--
 				<h3></h3>
 				<p>Wikipedia says :</p>
