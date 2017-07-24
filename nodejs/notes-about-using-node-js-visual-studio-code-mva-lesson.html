@@ -6,7 +6,7 @@
 		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="language" content="en" />
-		<meta name="keywords" content="Microsoft Virtual Academy,MVA,Software Architecture,NodeJS,node,Node.js,async module,request module,Javascript server,Visual Studio Code,code,NPM,node package manager,Express,Pug,Serve-favicon" />
+		<meta name="keywords" content="Microsoft Virtual Academy,Mean Stack,MVA,Software Architecture,NodeJS,node,Node.js,async module,request module,Javascript server,Visual Studio Code,code,NPM,node package manager,Express,Pug,Serve-favicon,Azure WebJobs,Azure WebJob" />
 		<meta name="description" content="My notes about the 'Using Node.js with Visual Studio Code' lesson on Microsoft Virtual Academy (MVA)" />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
@@ -88,7 +88,7 @@
 					<li>Official package manager for Node.</li>
 					<li>Bundled and installed automatically with the environment.</li>
 				</ul>
-<div class="pic_wrapper"><img  src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/node-js-notes-npm-version.png" title="" /></div>
+<div class="pic_wrapper"><img src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/node-js-notes-npm-version.png" title="" /></div>
 <div style="position:relative;height:0;padding-bottom:56.25%"><iframe src="https://www.youtube.com/embed/x03fjb2VlGY?ecver=2" width="640" height="360" frameborder="0" style="position:absolute;width:100%;height:100%;left:0" allowfullscreen></iframe></div>
 				<h4>How does it work ?</h4>
 				<ul>
@@ -108,9 +108,9 @@
 				<li>Supports multiple templating engines to simplify generating HTML</li>
 				</ul>
 				<h3>Little demo</h3>
-<div class="pic_wrapper"><img  src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/node-js-express-rest-api-demo-code.png" title="" /></div>
-<div class="pic_wrapper"><img  src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/node-js-express-generator-demo-code.png" title="" /></div>
-<div class="pic_wrapper"><img  src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/node-js-express-rest-api-demo.png" title="" /></div>
+<div class="pic_wrapper"><img src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/node-js-express-rest-api-demo-code.png" title="" /></div>
+<div class="pic_wrapper"><img src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/node-js-express-generator-demo-code.png" title="" /></div>
+<div class="pic_wrapper"><img src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/node-js-express-rest-api-demo.png" title="" /></div>
 				<h2>Express and Databases</h2>
 				<h3>About NoSQL databases</h3>
 				<p>The NoSQL databases are an alternative to the relational databases. In a relational database, you have multiple tables who contains data who are different but can be joint with keys, and the model needs to be a detailed (fine-grained) database model. In the last couple of years, developers start to prefer more sclalable and flexible data models, a lot easier to manage. With a NoSQL database, no need to develop a detailed database model, you can start quickly, with this advantages and disadvantages. Of course, it's a really short and incomplete summary, you can find a lot of resources about this on the Internet.</p>
@@ -121,25 +121,36 @@
 					<li>Object oriented APIs</li>
 					<li>Good for large amounts of data, can be scaled</li>
 				</ul>
-				
-				
-				
-				
-				
-				
-				<br /><br />
-				<br /><br />
-				<br /><br />
-				<p><i>Coming soon...</i></p>
-				<!--
-<div class="pic_wrapper"><img  src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/" title="" /></div>
--->
-
-<!--
-
-
-
--->
+<div class="pic_wrapper"><img src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/nodejs-mongodb-demo01.png" title="Demo with NodeJS and MongoDB" /></div>
+				<h2>Building a Front End for your Express web apps</h2>
+				<p>Notice that the lesson explains about the Jade templating engine who is now obsolete, and have been replaced by Pug.</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/nodejs-pug-01.png" title="" /></div>
+				<h2>Debugging and Deploying Node.js</h2>
+				<h3>Azure Web Apps</h3>
+				<ul>
+					<li>Easy to deploy a variety of different websites: node, asp.net, python, etc.</li>
+					<li>Can install some software from the gallery like WordPress or preconfigured stacks (MEAN stacks).</li>
+					<li>Has a few limitations such as cannot configure ports, compile native modules for Node.</li>
+					<li>Can configure custom domains</li>
+					<li>Can aff FTP users</li>
+					<li>Can run multiple web sites</li>
+					<li>Ideal for a production / staging environment</li>
+				</ul>
+				<h2>Extending Node.js with Azure Web Jobs</h2>
+				<h3>Azure WebJobs Overview</h3>
+				<ul>
+					<li>Ability to run a "background task" on demand, continuously, or scheduled</li>
+					<li>Deploy using PAAS - Part of websites</li>
+					<li>Ideal for tasks such API aggregation, batch processing, image resizing, etc.</li>
+					<li>Can use Node, Pythno, Bash, etc.</li>
+				</ul>
+				<h3>Indrocution to creating WebJobs for Node</h3>
+				<ul>
+					<li>Looks for a file with "run"(run.js). If not found looks for any file with supported extension.</li>
+					<li>Have as many files as you want, you zip them up.</li>
+					<li>Can have multiple webjobs.</li>
+					<li>Stored alongside your site at ./App_Data/jobs</li>
+				</ul>
 				<div id="crdny">July 12, 2017</div>
 				<div id="tags_wrapper">
 					<ul>
@@ -165,9 +176,10 @@
 						<li><a href="https://expressjs.com/en/starter/generator.html" title="" target="_Blank" rel="nofollow">Express generator</a></li>
 						<li><a href="https://www.npmjs.com/package/express-generator" title="" target="_Blank" rel="nofollow">Express generator on NPM</a></li>
 						<li><a href="https://github.com/expressjs/generator" title="" target="_Blank" rel="nofollow">Express generator on GitHub</a></li>
-						<li><a href="https://github.com/pugjs/pug" title="" target="_Blank" rel="nofollow">Pug</a></li>
+						<li><a href="https://github.com/pugjs/pug" title="" target="_Blank" rel="nofollow">Pug on GitHub</a></li>
 						<li><a href="https://trainingsupport.microsoft.com/en-us/tcmva/forum/tcmvavisual-course_49757?auth=1" title="" target="_Blank" rel="nofollow">Course forum</a></li>
 						<li><a href="https://github.com/sedouard/mongodb-mva" title="" target="_Blank" rel="nofollow">Steven Edouard's MongoDB jump start</a></li>
+						<li><a href="https://pugjs.org" title="" target="_Blank" rel="nofollow">Pug website</a></li>
 						<!--
 						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
 						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
