@@ -40,58 +40,57 @@
 					<li><a href="#watch_the_video" title="Watch the video from Channel 9">Watch the video</a></li>
 				</ul>
 				<h2 id="nullable_references_types">Nullable references types</h2>
-				<p>This feature is about to eliminate as much as possible the billion dollar error that we all know, the null reference exception.</p>
-				<p>The null reference exception occurred when you reference an object who can be null. For example, a string s can have a value or can be null, but even if it's null, you can call some properties like .Length. You call a property or a method on a null object, so it throw a null reference exception.</p>
+				<p>This feature is about to eliminate as much as possible the billion dollar error that we all know, the <span class="thnclwrd">null reference exception</span>.</p>
+				<p>The <span class="thnclwrd">null reference exception</span> occurred when you reference an object who can be <i>null</i>. For example, a string <i>s</i> can have a value or can be <i>null</i>, but even if it's <i>null</i>, you can call some properties like <span class="thnclwrd">Length</span>. You call a property or a method on a null object, so it throw a <span class="thnclwrd">null reference exception</span>.</p>
 				<p>C# already add stuffs to help developers dealing with this issue, like the nullable operator.</p>
 				<p>We already know this syntaxes :</p>
 <pre><code class="csharp">
-int i = 0;
-int? i2 = null;
+int i = 0; // i can't be null
+int? i2 = null; // i can be null
 </pre></code>
-				<p>C# 8 will introduce tue nullable operator for other type, like strings, and this will be correct :</p>
+				<p>C# 8 will introduce the nullable operator for other types like strings, so this code sample will be correct :</p>
 <pre><code class="csharp">
 string s;
 string? s;
 </pre></code>
-				<p>Fear not, string will conitnue to be a nullable type but you will can a ? to tell that this variable is supposed to be null, or have much chance to be null. It's more like a design feature.</p>
+				<p>Fear not, string will conitnue to be a nullable type but you will can add a <i>?</i> to tell that this variable is supposed to be null, or have much chance to be null. It's more like a design feature.</p>
 				<p>Moreover, it will allow the compiler to help you dealing with this issues. In this way, with the next situation the compiler will raise a warning to tell you "be careful, you reference something that might be null" :</p>
 <pre><code class="csharp">
 string? s = null;
-int i = s.Length;
+int i = s.Length; // Warning here from the compiler
 </pre></code>
-				<p>To avoid this compiler warning, you have just to check if the object you work with is null or not :</p>
+				<p>To avoid this compiler's warning, you have just to check if the object you work with is null or not :</p>
 <pre><code class="csharp">
-// No warning from the compiler in this case
 string? s = null;
-if(s != null){
-	int i = s.Length;
+if(s != null){ // Avoid a warning from the compiler
+	int i = s.Length; // No warning here
 }
 </pre></code>
-				<p>Note that you have to explicitely check if the variable is null or not to notice the compiler, you can't use the "dammit operator". So in the next example, the compile won't know that you variable is not null and will raise a warning :</p>
+				<p>Notice that you have to explicitly check if the variable is null or not, you can't use the &quot;dammit operator&quot; <i>(to quote Mads Torgersen)</i>. So in the next example, the compiler won't know that you variable is not null and will raise a warning :</p>
 <pre><code class="csharp">
 string? s = null;
 if(!s.IsNullOrWhiteSpace()){
 	int i = s.Length; // The compiler will raise a warning here
 }
 </pre></code>
-				<p>To avoid this warning, you can tell the compiler that you know this object is not null and that you can reference it using the "dammit operator", like this :</p>
+				<p>To avoid this warning, you can tell the compiler that you know this object is not null and that you can reference it using the &quot;dammit operator&quot;, like this :</p>
 <pre><code class="csharp">
 string? s = null;
 if(!s.IsNullOrWhiteSpace()){
-	int i = s!.Length; // The compiler will not raise a warning here because you tell it that you know what you are doing here
+	int i = s!.Length; // The compiler will not raise a warning because you tell it that you know what you are doing here
 }
 </pre></code>
-				<p>So, if we recap :</p>
+				<p>So, let's make a summary :</p>
 <pre><code class="csharp">
 string s; // this variable should never be null
 string? s1; // this variable can be null
 
 s?.Length; // you ask the compiler to check for null
-s!.Length; // you tell the compiler that you know what you are doing and s is not null. And yes, it's a lot of responsability :)
+s!.Length; // you tell the compiler that you know what you are doing and that s is not null. And yes, it's a lot of responsability :)
 </pre></code>
 				<p>It's looks like a small feature but it's a big thing I think. With this new feature, you will can help the compiler to understand you code better, and in this way his support will be much more effective. Really ingenious stuff.</p>
 				<h2 id="async_streams">Async streams</h2>
-				<p>It's about eliminate the callback's hell code.</p>
+				<p>This feature is about eliminate the callback's hell code.</p>
 				<p>You already know the syntax :</p>
 <pre><code class="csharp">
 async Task&#60;int&#62; GetLength(){
@@ -100,7 +99,7 @@ async Task&#60;int&#62; GetLength(){
 
 await GetLength();
 </pre></code>
-				<p>Now imagine the scenario that you develop a mobile application who gets his data from the cloud, and because it has to get a huge data set you want to perform this in several tasks, when you need it, and note get all the data than use it, you can use an async iterator :</p>
+				<p>Now imagine the scenario that you develop a mobile application who gets his data from the cloud, and because it has to get a huge set of data you want to perform this in several tasks when you need it, and not get all the data in one big call then use it. In this case, the <span class="thnclwrd">async iterator</span> does the job :</p>
 <pre><code class="csharp">
 IAsyncEnumerable&#60;T&#62; stream = [...]
 
@@ -111,8 +110,8 @@ foreach await(var s in stream)
 }
 </pre></code>
 				<h2 id="default_interface_implementations">Default Interface Implementations</h2>
-				<p>For information, it's a feature who had an impact on the runtime, the first time for a long time the csharp team and the runtime team had to work together.</p>
-				<p>This feature allow interfaces to have default implementation, so their members with default implementation doesn't must have an implementation in the children.</p>
+				<p>For information, it's a feature who had an impact on the runtime, the first time for a long time the C# team and the runtime team had to work together.</p>
+				<p>This feature allow interfaces to have default implementation, so their members with default implementations doesn't must have an implementation in their children.</p>
 				<p>Assume that you have this interface and this class :</p>
 <pre><code class="csharp">
 public interface INotify
@@ -128,9 +127,8 @@ public class MyNotifyClass : INotify
 	}
 }
 </pre></code>
-				<p>Imagine that you want to add a method to he interface without breaking the children code, you can't. You will have to create another interface, and let's you class inherit later from this another interface, etc.</p>
-				<p>With the default interface implementations, you can add a method to your interface with a default implementation, and the class inherits from this interface will not must implement this new member as long as it has a default implementation.</p>
-				<p>In this way, thi code is correct :</p>
+				<p>Imagine that you want to add a method on the interface without breaking the code, you can't. You will have to create another interface, and let's your class inherit later from this another interface, etc.</p>
+				<p>With the default interface implementations, you can add a method to your interface with a default implementation, and the class whom inherits from this interface will not must implement this new member as long as it has a default implementation.</p>
 <pre><code class="csharp">
 public interface INotify
 {
@@ -147,7 +145,7 @@ public class MyNotifyClass : INotify
 }
 </pre></code>
 				<p>Notice that with this new feature the difference between an interface and an abstract class is become less, but there are still some differences like you can inherit from multiple interfaces but only one class.</p>
-				<p>Another interesting thing (I don't know if it's a new feature of C# 8 or it already exists but I didn't know this) is about the implicit member's implementation and casting. A private implementation isn't available when you call a class, but it is if you cast your class into the interface:</p>
+				<p>Another interesting thing (I don't know if it's a new feature of C# 8 or it was already exist) is about the implicit member's implementation and casting. A private implementation isn't available when you call a class, but it is if you cast your class into the interface :</p>
 <pre><code class="csharp">
 public interface INotify
 {
@@ -190,15 +188,16 @@ public static class Ext
         }
 }
 </pre></code>
-				<p>But it has the limitation that you only can extend objects. You cannot extend properties, because what it's the first "property" of a property ?</p>
-				<p>So the all way was reviewed and C# 8 will introduce a new syntax to declare extensions will allow to extend everything :</p>
+				<p>But it has the limitation that you only can extend objects. You cannot extend properties, because of that : what it's the first "property" of a property ?</p>
+				<p>So the all way was reviewed and C# 8 will introduce a new syntax to declare extensions that will allow to extend everything :</p>
+				<p>The syntax is this one :</p>
 <pre><code class="csharp">
 extension MyPersonExtension extends Person
 {
 
 }
 </pre></code>
-				<p>This syntax doesn't modify the type of the class who it's extended, but it's adding some stuff to it in the current assembly.</p>
+				<p>It doesn't modify the type of the class who it's extended, but it's adding some stuff to it in the current assembly.</p>
 <pre><code class="csharp">
 extension MyPersonExtension extends Person
 {
@@ -232,8 +231,8 @@ extension MyPersonExtension extends Person : IEmployee // The Person class imple
 </pre></code>
 				<p>Just awesome, powerful.</p>
 				
-				<h2 id="watch_the_video">Watch the video</h2>
-				<iframe src="https://channel9.msdn.com/Blogs/Seth-Juarez/A-Preview-of-C-8-with-Mads-Torgersen/player" width="960" height="540" allowFullScreen frameBorder="0"></iframe>
+				<h2 id="watch_the_video">Watch the video</h2><div class="video-wrapper">
+				<iframe src="https://channel9.msdn.com/Blogs/Seth-Juarez/A-Preview-of-C-8-with-Mads-Torgersen/player" width="960" height="540" allowFullScreen frameBorder="0"></iframe></div>
 				<!--
 				<p></p>
 <pre><code class="csharp">
