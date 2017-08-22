@@ -31,8 +31,15 @@
             </div>
 			<div id="post_ctn">
 				<h1>What I get from the preview of C# 8 with Mads Torgersen</h1>
-				<p>C# 8 will introduce major features, who claimed tought work from the bottom.</p>
-				<h2>Nullable references types</h2>
+				<p>C# 8 will introduce some major features, who claimed tought work from the bottom.</p>
+				<ul>
+					<li><a href="#nullable_references_types" title="Nullable references types">Nullable references types</a></li>
+					<li><a href="#async_streams" title="Async streams">Async streams</a></li>
+					<li><a href="#default_interface_implementations" title="Default Interface Implementations">Default Interface Implementations</a></li>
+					<li><a href="#extension_everything" title="Extension Everything">Extension Everything</a></li>
+					<li><a href="#watch_the_video" title="Watch the video from Channel 9">Watch the video</a></li>
+				</ul>
+				<h2 id="nullable_references_types">Nullable references types</h2>
 				<p>This feature is about to eliminate as much as possible the billion dollar error that we all know, the null reference exception.</p>
 				<p>The null reference exception occurred when you reference an object who can be null. For example, a string s can have a value or can be null, but even if it's null, you can call some properties like .Length. You call a property or a method on a null object, so it throw a null reference exception.</p>
 				<p>C# already add stuffs to help developers dealing with this issue, like the nullable operator.</p>
@@ -83,7 +90,7 @@ s?.Length; // you ask the compiler to check for null
 s!.Length; // you tell the compiler that you know what you are doing and s is not null. And yes, it's a lot of responsability :)
 </pre></code>
 				<p>It's looks like a small feature but it's a big thing I think. With this new feature, you will can help the compiler to understand you code better, and in this way his support will be much more effective. Really ingenious stuff.</p>
-				<h2>Async streams</h2>
+				<h2 id="async_streams">Async streams</h2>
 				<p>It's about eliminate the callback's hell code.</p>
 				<p>You already know the syntax :</p>
 <pre><code class="csharp">
@@ -103,7 +110,7 @@ foreach await(var s in stream)
 	// when the data is here, it will move next to the next one
 }
 </pre></code>
-				<h2>Default Interface Implementations</h2>
+				<h2 id="default_interface_implementations">Default Interface Implementations</h2>
 				<p>For information, it's a feature who had an impact on the runtime, the first time for a long time the csharp team and the runtime team had to work together.</p>
 				<p>This feature allow interfaces to have default implementation, so their members with default implementation doesn't must have an implementation in the children.</p>
 				<p>Assume that you have this interface and this class :</p>
@@ -167,7 +174,7 @@ myClass.NotifyAll(); // Doesn't work because NotifyAll() is private
 INotify myNotifyInterface = (INotify)myClass;
 myNotifyInterface.NotifyAll(); // It works
 </pre></code>
-				<h2>Extension Everything</h2>
+				<h2 id="extension_everything">Extension Everything</h2>
 				<p>Currently, you can extends objects using static classes and static methods, like this :</p>
 <pre><code class="csharp">
 public class Person
@@ -225,7 +232,7 @@ extension MyPersonExtension extends Person : IEmployee // The Person class imple
 </pre></code>
 				<p>Just awesome, powerful.</p>
 				
-				<p>To watch the video:</p>
+				<h2 id="watch_the_video">Watch the video</h2>
 				<iframe src="https://channel9.msdn.com/Blogs/Seth-Juarez/A-Preview-of-C-8-with-Mads-Torgersen/player" width="960" height="540" allowFullScreen frameBorder="0"></iframe>
 				<!--
 				<p></p>
