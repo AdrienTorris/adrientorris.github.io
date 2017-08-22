@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>What I get from the preview of C# 8 with Mads Torgersen</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="language" content="en" />
+		<meta name="keywords" content="C#8,C# 8,C# 8.0,async,IAsyncEnumerable<T>,Async streams,default interface implementation,default interfaces implementations,Channel9,Channel 9,Mads Torgersen,C# preview" />
+		<meta name="description" content="What I get from the preview of C# 8 with Mads Torgersen" />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<meta name="generator" content="No404! 0.1" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>C#</li>
+					<li class="active"><a href="https://adrientorris.github.io/csharp/what-i-get-from-the-preview-of-csharp-8-with-Mads-Torgersen.html" title="What I get from the preview of C# 8 with Mads Torgersen">What I get from the preview of C# 8 with Mads Torgersen</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn">
+            </div>
+			<div id="post_ctn">
+				<h1>What I get from the preview of C# 8 with Mads Torgersen</h1>
+				<p>C# 8 will introduce major features, who claimed tought work from the bottom.</p>
+				<h2>Nullable references types</h2>
+				<p>This feature is about to eliminate as much as possible the billion dollar error that we all know, the null reference exception.</p>
+				<p>The null reference exception occurred when you reference an object who can be null. For example, a string s can have a value or can be null, but even if it's null, you can call some properties like .Length. You call a property or a method on a null object, so it throw a null reference exception.</p>
+				<p>C# already add stuffs to help developers dealing with this issue, like the nullable operator.</p>
+				<p>We already know this syntaxes :</p>
+<pre><code class="csharp">
+int i = 0;
+int? i2 = null;
+</pre></code>
+				<p>C# 8 will introduce tue nullable operator for other type, like strings, and this will be correct :</p>
+<pre><code class="csharp">
+string s;
+string? s;
+</pre></code>
+				<p>Fear not, string will conitnue to be a nullable type but you will can a ? to tell that this variable is supposed to be null, or have much chance to be null. It's more like a design feature.</p>
+				<p>Moreover, it will allow the compiler to help you dealing with this issues. In this way, with the next situation the compiler will raise a warning to tell you "be careful, you reference something that might be null" :</p>
+<pre><code class="csharp">
+string? s = null;
+int i = s.Length;
+</pre></code>
+				<p>To avoid this compiler warning, you have just to check if the object you work with is null or not :</p>
+<pre><code class="csharp">
+// No warning from the compiler in this case
+string? s = null;
+if(s != null){
+	int i = s.Length;
+}
+</pre></code>
+				<p>Note that you have to explicitely check if the variable is null or not to notice the compiler, you can't use the "dammit operator". So in the next example, the compile won't know that you variable is not null and will raise a warning :</p>
+<pre><code class="csharp">
+string? s = null;
+if(!s.IsNullOrWhiteSpace()){
+	int i = s.Length; // The compiler will raise a warning here
+}
+</pre></code>
+				<p>To avoid this warning, you can tell the compiler that you know this object is not null and that you can reference it using the "dammit operator", like this :</p>
+<pre><code class="csharp">
+string? s = null;
+if(!s.IsNullOrWhiteSpace()){
+	int i = s!.Length; // The compiler will not raise a warning here because you tell it that you know what you are doing here
+}
+</pre></code>
+				<p>So, if we recap :</p>
+<pre><code class="csharp">
+string s; // this variable should never be null
+string? s1; // this variable can be null
+
+s?.Length; // you ask the compiler to check for null
+s!.Length; // you tell the compiler that you know what you are doing and s is not null. And yes, it's a lot of responsability :)
+</pre></code>
+				<p>It's looks like a small feature but it's a big thing I think. With this new feature, you will can help the compiler to understand you code better, and in this way his support will be much more effective. Really ingenious stuff.</p>
+				<h2>Async streams</h2>
+				<p>It's about eliminate the callback's hell code.</p>
+				<p>You already know the syntax :</p>
+<pre><code class="csharp">
+async Task&#60;int&#62; GetLength(){
+	return 1;
+}
+
+await GetLength();
+</pre></code>
+				<p>Now imagine the scenario that you develop a mobile application who gets his data from the cloud, and because it has to get a huge data set you want to perform this in several tasks, when you need it, and note get all the data than use it, you can use an async iterator :</p>
+<pre><code class="csharp">
+IAsyncEnumerable&#60;T&#62; stream = [...]
+
+foreach await(var s in stream)
+{
+	// it doesn't block the thread during you get this item
+	// when the data is here, it will move next to the next one
+}
+</pre></code>
+				<h2>Default Interface Implementations</h2>
+				<p>For information, it's a feature who had an impact on the runtime, the first time for a long time the csharp team and the runtime team had to work together.</p>
+				<p>This feature allow interfaces to have default implementation, so their members with default implementation doesn't must have an implementation in the children.</p>
+				<p>Assume that you have this interface and this class :</p>
+<pre><code class="csharp">
+public interface INotify
+{
+	void Notify();
+}
+
+public class MyNotifyClass : INotify
+{
+	public void Notify()
+	{
+		// Do some stuff
+	}
+}
+</pre></code>
+				<p>Imagine that you want to add a method to he interface without breaking the children code, you can't. You will have to create another interface, and let's you class inherit later from this another interface, etc.</p>
+				<p>With the default interface implementations, you can add a method to your interface with a default implementation, and the class inherits from this interface will not must implement this new member as long as it has a default implementation.</p>
+				<p>In this way, thi code is correct :</p>
+<pre><code class="csharp">
+public interface INotify
+{
+	void Notify();
+	void NotifyAll() {  }
+}
+
+public class MyNotifyClass : INotify
+{
+	public void Notify()
+	{
+		// Do some stuff
+	}
+}
+</pre></code>
+				<p>Notice that with this new feature the difference between an interface and an abstract class is become less, but there are still some differences like you can inherit from multiple interfaces but only one class.</p>
+				<p>Another interesting thing (I don't know if it's a new feature of C# 8 or it already exists but I didn't know this) is about the implicit member's implementation and casting. A private implementation isn't available when you call a class, but it is if you cast your class into the interface:</p>
+<pre><code class="csharp">
+public interface INotify
+{
+	void Notify();
+	void NotifyAll() {  }
+}
+
+public class MyNotifyClass : INotify
+{
+	public void Notify()
+	{
+		// Do some stuff
+	}
+
+	private void NotifyAll()
+	{
+		// Do some stuff
+	}
+}
+
+MyNotifyClass myClass = new MyNotifyClass();
+myClass.NotifyAll(); // Doesn't work because NotifyAll() is private
+
+INotify myNotifyInterface = (INotify)myClass;
+myNotifyInterface.NotifyAll(); // It works
+</pre></code>
+				<h2>Extension Everything</h2>
+				<p>Currently, you can extends objects using static classes and static methods, like this :</p>
+<pre><code class="csharp">
+public class Person
+{
+
+}
+
+public static class Ext
+{
+	public static T M&#60;T&#62;(this Person person)
+        {
+            return default(T);
+        }
+}
+</pre></code>
+				<p>But it has the limitation that you only can extend objects. You cannot extend properties, because what it's the first "property" of a property ?</p>
+				<p>So the all way was reviewed and C# 8 will introduce a new syntax to declare extensions will allow to extend everything :</p>
+<pre><code class="csharp">
+extension MyPersonExtension extends Person
+{
+
+}
+</pre></code>
+				<p>This syntax doesn't modify the type of the class who it's extended, but it's adding some stuff to it in the current assembly.</p>
+<pre><code class="csharp">
+extension MyPersonExtension extends Person
+{
+	public int CountFingers()
+	{
+		this. // it call the current instance of Person
+	}
+}
+</pre></code>
+<pre><code class="csharp">
+extension MyPersonExtension extends Person
+&#123;
+	public int NumberOfFingers()
+	&#123;
+		get { ... }
+	}
+}
+</pre></code>
+<pre><code class="csharp">
+extension MyPersonExtension extends Person
+&#123;
+	static int ... // You can add static things
+}
+</pre></code>
+				<p>Another feature who will not be released in C# 8.0 but maybe in a future minor release is the possibility to have extension interfaces implementations. Imagine the scenario : the developer team who wrote the Person class didn't know about the employee who it's a new feature and for a reason we don't care here, the Person class cannot be updated. With this next feature which is not done but on the radar, you will be able to do something like this :</p>
+<pre><code class="csharp">
+extension MyPersonExtension extends Person : IEmployee // The Person class implements now the IEmployee interface in your assembly
+&#123;
+	[ ... ]
+}
+</pre></code>
+				<p>Just awesome, powerful.</p>
+				
+				<p>To watch the video:</p>
+				<iframe src="https://channel9.msdn.com/Blogs/Seth-Juarez/A-Preview-of-C-8-with-Mads-Torgersen/player" width="960" height="540" allowFullScreen frameBorder="0"></iframe>
+				<!--
+				<p></p>
+<pre><code class="csharp">
+
+</pre></code>
+-->
+				<div id="crdny">August 22, 2017</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>C#</li>
+						<li>Csharp</li>
+						<li>C# 8.0</li>
+						<li>C# 8</li>
+						<li>Channel9</li>
+					</ul>
+				</div>
+				<div id="refs_wrapper">
+					<ul>
+						<li><a href="https://channel9.msdn.com/Blogs/Seth-Juarez/A-Preview-of-C-8-with-Mads-Torgersen" title="A Preview of C# 8 with Mads Torgersen" target="_Blank">A Preview of C# 8 with Mads Torgersen</a></li>
+						<li><a href="https://github.com/dotnet/csharplang" title="C# Language Design Repo" target="_Blank">C# Language Design Repo</a></li>
+						<li><a href="https://msdn.microsoft.com/en-us/library/mt793980(v=vs.150).aspx" title="IAsyncEnumerable interface" target="_Blank">IAsyncEnumerable Interface</a></li>
+						<!--<li><a href="" title="" target="_Blank"></a></li>-->
+					</ul>
+				</div>
+            </div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-85948839-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+	</body>
+</html>
