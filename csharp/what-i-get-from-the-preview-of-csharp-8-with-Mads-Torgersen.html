@@ -66,14 +66,14 @@ if(s != null){ // Avoid a warning from the compiler
 	int i = s.Length; // No warning here
 }
 </pre></code>
-				<p>Notice that you have to explicitly check if the variable is null or not, you can't use the &quot;dammit operator&quot; <i>(to quote Mads Torgersen)</i>. So in the next example, the compiler won't know that you variable is not null and will raise a warning :</p>
+				<p>Notice that you have to explicitly check if the variable is null or not, you can't use the &quot;damnit operator&quot; <i>(to quote Mads Torgersen)</i>. So in the next example, the compiler won't know that you variable is not null and will raise a warning :</p>
 <pre><code class="csharp">
 string? s = null;
 if(!s.IsNullOrWhiteSpace()){
 	int i = s.Length; // The compiler will raise a warning here
 }
 </pre></code>
-				<p>To avoid this warning, you can tell the compiler that you know this object is not null and that you can reference it using the &quot;dammit operator&quot;, like this :</p>
+				<p>To avoid this warning, you can tell the compiler that you know this object is not null and that you can reference it using the &quot;damnit operator&quot;, like this :</p>
 <pre><code class="csharp">
 string? s = null;
 if(!s.IsNullOrWhiteSpace()){
