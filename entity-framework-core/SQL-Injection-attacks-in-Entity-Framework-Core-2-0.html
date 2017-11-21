@@ -30,16 +30,16 @@
 				<h3>Using the FromSql()</h3>
 				<p>Bad practice : use string concatenation</p>
 <div class="pic_wrapper">
-		<img src="/wwwroot/images/entity-framework-core/entity-framework-core-2-0-sql-injection-attack-bad-practice.png" title="" alt="" />
+		<img src="/wwwroot/images/entity-framework-core/entity-framework-core-2-0-sql-injection-bad-practice.png?raw=true" title="" alt="" />
 </div>
 				<p>Good practice : use string interpolation</p>
 <div class="pic_wrapper">
-		<img src="/wwwroot/images/entity-framework-core/entity-framework-core-2-0-sql-injection-attack-good-practice.png" title="" alt="" />
+		<img src="/wwwroot/images/entity-framework-core/entity-framework-core-2-0-sql-injection-good-practice.png?raw=true" title="" alt="" />
 </div>
 				<h3>Using the ToSql()</h3>
 				<p>With the ToSql(), be careful about overload</p>
 <div class="pic_wrapper">
-		<img src="/wwwroot/images/entity-framework-core/entity-framework-core-2-0-sql-injection-attack-overload.png" title="" alt="" />
+		<img src="/wwwroot/images/entity-framework-core/entity-framework-core-2-0-sql-injection-overload-bad-practice.png?raw=true" title="" alt="" />
 </div>
 				<p>Nick Craver wrote some scenarios to illustrate the risk about the overload. The next samples are just some pastes of his work that you can find <a href="https://github.com/NickCraver/EFCoreInjectionSample/blob/master/Program.cs" title="EF Core injection samples by Nick Craver" target="_Blank" rel="nofollow">here</a>.</p>
 <pre><code class="csharp">
