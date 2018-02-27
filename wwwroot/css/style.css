@@ -4,14 +4,14 @@ div#main_ctn{width:100%;max-width:940px;margin:0px auto;text-align:left;padding:
 div#main_ctn > header{width:100%;font-family: 'Open Sans', Georgia, serif;font-size: 16px;line-height: 1.75;color: #2b2b2b;}
 div#main_ctn > header > div#header-content{display: table;width: 100%;position: relative;padding: 40px 0;margin-bottom: 40px;border-bottom: 1px solid #e6e6e6;}
 div#main_ctn > header > div#header-content > a{width:50%;float:left;font-size:40px;text-decoration:none;color: #2b2b2b;font-weight:700;}
-div#main_ctn > header > div#header-content > h2{width:80%;float:left;}
-div#main_ctn > header > div#header-content > ul#flags_wrapper{width:20%;float:right;padding:0px;margin:0px;padding-top:28px;}
+div#main_ctn > header > div#header-content > h2{width:60%;float:left;}
+div#main_ctn > header > div#header-content > ul#flags_wrapper{width:40%;float:right;padding:0px;margin:0px;padding-top:28px;}
 div#main_ctn > header > div#header-content > ul#flags_wrapper > li{float:right;list-style:none;margin-left:10px;}
 div#main_ctn > header > div#header-content > ul#flags_wrapper > li > img{}
 div#main_ctn > header > div#header-content > ul#flags_wrapper > li.cur > img{opacity:0.3;}
 div#main_ctn > header > div#header-content > ul#flags_wrapper > li > a{}
 div#main_ctn > header > div#header-content > ul#flags_wrapper > li > a > img{}
-div#main_ctn > header > div#header-content > ul#social_links{width:20%;float:right;padding:0px;margin:0px;padding-top:22px;}
+div#main_ctn > header > div#header-content > ul#social_links{width:40%;float:right;padding:0px;margin:0px;padding-top:22px;}
 div#main_ctn > header > div#header-content > ul#social_links > li{float:right;list-style:none;margin-left:15px;text-align:center;}
 div#main_ctn > header > div#header-content > ul#social_links > li > a{}
 div#main_ctn > header > div#header-content > ul#social_links > li > a > i{}
@@ -23,6 +23,8 @@ div#main_ctn > header > div#header-content > ul#social_links > li#gplus_link > a
 div#main_ctn > header > div#header-content > ul#social_links > li#gplus_link > a > i{}
 div#main_ctn > header > div#header-content > ul#social_links > li#github_link > a{color:#171516;}
 div#main_ctn > header > div#header-content > ul#social_links > li#github_link > a > i{}
+div#main_ctn > header > div#header-content > ul#social_links > li#linkedin_link > a{color:#007bb6;}
+div#main_ctn > header > div#header-content > ul#social_links > li#linkedin_link > a > i{}
 div#main_ctn.home_ctn{}
 div#main_ctn.post_ctn{}
 div#main_ctn.post_ctn > header > div#header-content{padding: 10px 0;margin-bottom: 10px;}
