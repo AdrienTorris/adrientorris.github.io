@@ -11,6 +11,18 @@ div#main_ctn > header > div#header-content > ul#flags_wrapper > li > img{}
 div#main_ctn > header > div#header-content > ul#flags_wrapper > li.cur > img{opacity:0.3;}
 div#main_ctn > header > div#header-content > ul#flags_wrapper > li > a{}
 div#main_ctn > header > div#header-content > ul#flags_wrapper > li > a > img{}
+div#main_ctn > header > div#header-content > ul#social_links{width:20%;float:right;padding:0px;margin:0px;padding-top:22px;}
+div#main_ctn > header > div#header-content > ul#social_links > li{float:right;list-style:none;margin-left:15px;text-align:center;}
+div#main_ctn > header > div#header-content > ul#social_links > li > a{}
+div#main_ctn > header > div#header-content > ul#social_links > li > a > i{}
+div#main_ctn > header > div#header-content > ul#social_links > li#twitter_link > a{color:#00aced;}
+div#main_ctn > header > div#header-content > ul#social_links > li#twitter_link > a > i{}
+div#main_ctn > header > div#header-content > ul#social_links > li#so_link > a{color:#f48024;}
+div#main_ctn > header > div#header-content > ul#social_links > li#so_link > a > i{}
+div#main_ctn > header > div#header-content > ul#social_links > li#gplus_link > a{color:#dd4b39;}
+div#main_ctn > header > div#header-content > ul#social_links > li#gplus_link > a > i{}
+div#main_ctn > header > div#header-content > ul#social_links > li#github_link > a{color:#171516;}
+div#main_ctn > header > div#header-content > ul#social_links > li#github_link > a > i{}
 div#main_ctn.home_ctn{}
 div#main_ctn.post_ctn{}
 div#main_ctn.post_ctn > header > div#header-content{padding: 10px 0;margin-bottom: 10px;}
