@@ -48,6 +48,12 @@ div#main_ctn > div#post_ctn > div.pic_wrapper{clear:both;padding:10px;text-align
 div#main_ctn > div#post_ctn > div.pic_wrapper > img{float:middle;max-width:calc(100% - 10px);height:auto;border: solid 5px #eee;}
 div#main_ctn > div#post_listing{}
 div#main_ctn > div#post_listing > div.post_listing_e{width:100%;padding:10px 0px;clear:both;}
+div#main_ctn > div#relatedpostlist_ctn{clear:both;padding:25px 0px;}
+div#main_ctn > div#relatedpostlist_ctn > ul{width:100%;height:auto;margin:0;padding:0;}
+div#main_ctn > div#relatedpostlist_ctn > ul > li{margin:0;padding:0;}
+div#main_ctn > div#relatedpostlist_ctn > ul > li > a{}
+div#main_ctn > div#relatedpostlist_ctn > ul > li:hover{}
+div#main_ctn > div#relatedpostlist_ctn > ul > li:hover > a{}
 div#main_ctn > footer{padding:40px 0px 15px 0px;font-size:60%;}
 /* SyntaxHighlighter */
 div.toolbar{display:none !important;visibility:hidden !important;}
