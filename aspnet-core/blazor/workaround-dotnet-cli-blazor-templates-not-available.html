@@ -58,9 +58,9 @@
 			</div>
 			<div id="post_ctn">
 				<h1>Workaround to use the Blazor templates with the .NET CLI</h1>
-				<p>There is a little bug with the templating by the DotNet command line interface currently, so maybe you will see Blazor templates only once after installing them.</p>
+				<p>There is a little bug with the templating by the DotNet command line interface currently, so maybe you will see the Blazor templates only once after installing them.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/blazor/blazor-templating-dotnet-cli-problem-blazor-templates.png" title="" /></div>
-				<p>If you encounter the problem, a quick and very simple workaround is to execute the command line <i>dotnet new --debug:reinit</i>, and reinstall the Blazor templates, you will see them back.</p>
+				<p>If you encounter the problem, a quick and very simple workaround is to run the command line <i>dotnet new --debug:reinit</i>, and reinstall the Blazor templates. After doing this you will see the Blazor templates back in the list.</p>
 <pre><code class="json">
 dotnet new --debug:reinit
 dotnet new -i Microsoft.AspNetCore.Blazor.Templates::0.0.5-* --nuget-source https://dotnet.myget.org/F/blazor-dev/api/v3/index.json
