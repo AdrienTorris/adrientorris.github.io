@@ -2,12 +2,12 @@
 <html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-		<title>Workaround to use the Blazor templates with the .NET CLI</title>
+		<title>The first public preview of Blazor is released</title>
 		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="language" content="en" />
-		<meta name="keywords" content="Blazor,ASP.NET Core,.NET Core,.NET CLI,DOTNET CLI,.NET command line interface" />
-		<meta name="description" content="Workaround to use the Blazor templates with the .NET CLI if you don't see them after their install." />
+		<meta name="keywords" content="Blazor,ASP.NET Core,.NET Core,Flight finder Blazor demo" />
+		<meta name="description" content="The first public preview of Blazor is released" />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
 		<meta name="generator" content="SiteUp! 0.1" />
@@ -53,45 +53,25 @@
 					<li><a href="https://adrientorris.github.io/index.html" title="Technical blog of Adrien Torris (Blazor, .NET Core, ASP.NET Core, ...)">Home</a></li>
 					<li>ASP.NET Core</li>
 					<li>Blazor</li>
-					<li class="active"><a href="https://adrientorris.github.io/aspnetcore/blazor/workaround-dotnet-cli-blazor-templates-not-available" title="Workaround to use the Blazor templates with the .NET CLI if you don't see them after their install">Workaround to use the Blazor templates with the .NET CLI</a></li>
+					<li class="active"><a href="https://adrientorris.github.io/aspnetcore/blazor/getting-started-with-blazor" title="The first public preview of Blazor is released">The first public preview of Blazor is released</a></li>
 				</ul>
 			</div>
-			<div id="edit_ctn">
-				<p>
-				<span>22/03/2018</span>
-				No more need of this workaround now, the first public preview of Blazor is released. Read this blog post to learn how to get started with Blazor : <a href="https://blogs.msdn.microsoft.com/webdev/2018/03/22/get-started-building-net-web-apps-in-the-browser-with-blazor/" title="Get started building .NET web apps that run in the browser with Blazor" target="_blank" rel="nofollow">Get started building .NET web apps that run in the browser with Blazor</a>.
-				</p>
-			</div>
 			<div id="post_ctn">
-				<h1>Workaround to use the Blazor templates with the .NET CLI</h1>
-				<p>There is a little bug with the templating by the DotNet command line interface currently, so maybe you will see the Blazor templates only once after installing them.</p>
-<div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/blazor/blazor-templating-dotnet-cli-problem-blazor-templates.png" title="" /></div>
-				<p>If you encounter the problem, a quick and very simple workaround is to run the command line <i>dotnet new --debug:reinit</i>, and reinstall the Blazor templates. After doing this you will see the Blazor templates back in the list.</p>
-<pre><code class="json">
-dotnet new --debug:reinit
-dotnet new -i Microsoft.AspNetCore.Blazor.Templates::0.0.5-* --nuget-source https://dotnet.myget.org/F/blazor-dev/api/v3/index.json
-</code></pre>
-				<div class="pic_wrapper"><img src="/wwwroot/images/aspnet-core/blazor/blazor-templating-dotnet-cli-problem-blazor-templates-workaround.png" title="Workaround to use the Blazor templates with the .NET CLI" /></div><pre><code class="json">
-dotnet new --list
-</code></pre>
-				<div class="pic_wrapper"><img src="/wwwroot/images/aspnet-core/blazor/blazor-templating-dotnet-cli-problem-blazor-templates-list.png" title="Workaround to use the Blazor templates with the .NET CLI" /></div>
-				<div id="crdny">March 06, 2018</div>
+				<h1>The first public preview of Blazor is released</h1>
+				<p></p>
+				<div id="crdny">March 23, 2018</div>
 				<div id="tags_wrapper">
 					<ul>
 						<li>Blazor</li>
+						<li>Blazor Preview</li>
+						<li>Blazor Demo</li>
+						<li>Blazor Flight Finder Demo</li>
 						<li>ASP.NET Core</li>
 						<li>.NET Core 2.1 Preview</li>
-						<li>DOTNET CLI</li>
-						<li>DOTNET Command Line Interface</li>
-						<li>ASP.NET Core templating</li>
-						<li>DOTNET CLI templating</li>
-						<li>DOTNET Command Line Interface templating</li>
-						<li>Blazor templates</li>
 					</ul>
 				</div>
 				<div id="refs_wrapper">
 					<ul>
-						<li><a href="https://github.com/dotnet/templating/issues/1447" title="Templating issue on GitHub" target="_Blank" rel="nofollow">Issue on GitHub</a></li>
 						<li><a href="https://www.microsoft.com/net/download/dotnet-core/sdk-2.1.300-preview1" title=".NET Core SDK 2.1.300-preview1" target="_Blank" rel="nofollow">.NET Core SDK 2.1.300-preview1</a></li>
 						<li><a href="https://github.com/aspnet/blazor" title="Blazor's GitHub repository" target="_Blank" rel="nofollow">Blazor's GitHub repository</a></li>
 						<li><a href="https://dotnet.myget.org/gallery/blazor-dev" title="Daily builds of the 'dev' branch of https://github.com/aspnet/Blazor" target="_Blank" rel="nofollow">Daily builds of Blazor</a></li>
@@ -105,9 +85,7 @@ dotnet new --list
 					<li>
 						<a href="https://adrientorris.github.io/aspnetcore/blazor/introduction-to-blazor" title="Introduction to Blazor">Introduction to Blazor</a>
 					</li>
-					<li>
-						<a href="https://adrientorris.github.io/aspnetcore/blazor/getting-started-with-blazor" title="Getting started with Blazor">Getting started with Blazor</a>
-					</li>
+					<li><a href="https://adrientorris.github.io/aspnetcore/blazor/workaround-dotnet-cli-blazor-templates-not-available" title="Workaround to use the Blazor templates with the .NET CLI if you don't see them after their install">Workaround to use the Blazor templates with the .NET CLI</a></li>
 				</ul>
 			</div>
 			<footer>
