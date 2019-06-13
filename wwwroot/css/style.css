@@ -19,8 +19,9 @@ div#main_ctn > header > div#header-content > ul#social_links > li#twitter_link >
 div#main_ctn > header > div#header-content > ul#social_links > li#twitter_link > a > i{}
 div#main_ctn > header > div#header-content > ul#social_links > li#so_link > a{color:#f48024;}
 div#main_ctn > header > div#header-content > ul#social_links > li#so_link > a > i{}
-div#main_ctn > header > div#header-content > ul#social_links > li#gplus_link > a{color:#dd4b39;}
-div#main_ctn > header > div#header-content > ul#social_links > li#gplus_link > a > i{}
+div#main_ctn > header > div#header-content > ul#social_links > li#gplus_link{display:none;}
+div#main_ctn > header > div#header-content > ul#social_links > li#gplus_link > a{color:#dd4b39;display:none;}
+div#main_ctn > header > div#header-content > ul#social_links > li#gplus_link > a > i{display:none;}
 div#main_ctn > header > div#header-content > ul#social_links > li#github_link > a{color:#171516;}
 div#main_ctn > header > div#header-content > ul#social_links > li#github_link > a > i{}
 div#main_ctn > header > div#header-content > ul#social_links > li#linkedin_link > a{color:#007bb6;}
