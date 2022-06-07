@@ -198,9 +198,9 @@ builder.Services.TryAddEnumerable(transientDescriptor);
 </code></pre>
 <p>In this example, only the first implementation will be registered, the second will not.</p>
 <h3>Summary</h3>
-<p>The Add Method has no check on the uniqueness of the service, it means that it registers the service type and service implementation pair in all the case, even if the DI container already has it.</p>
-<p>The TryAdd method checks the uniqueness but only on the service type, it means that it allows to register only one implementation per service declaration type. You can't register multiple services for a same type, even if their implementation are different.</p>
-<p>The TryAddEnumerable method checks the uniqueness of the service based on the combination of the service type and the implementation type so you can register as many as implementations as you want as long as their implementation are different. Don't forget that the uniqueness check is lifetime agnostic.</p>
+<ul><li>The Add Method has no check on the uniqueness of the service, it means that it registers the service type and service implementation pair in all the case, even if the DI container already has it.</li>
+<li>The TryAdd method checks the uniqueness but only on the service type, it means that it allows to register only one implementation per service declaration type. You can't register multiple services for a same type, even if their implementation are different.</li>
+<li>The TryAddEnumerable method checks the uniqueness of the service based on the combination of the service type and the implementation type so you can register as many as implementations as you want as long as their implementation are different. Don't forget that the uniqueness check is lifetime agnostic.</li></ul>
 <!--<div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/blazor/blazor-templating-dotnet-cli-problem-blazor-templates.png" title="" /></div>-->
 				<div id="crdny">February 06, 2022</div>
 				<div id="tags_wrapper">
