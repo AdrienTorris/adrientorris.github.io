@@ -53,16 +53,18 @@
 			<div id="post_ctn">
 <h1>Dependency Injection with .NET : the difference between the Add, TryAdd and TryAddEnumerable methods</h1>
 <p>Manage the dependencies is one of the most common but complex thing to do in development, and a great opportunity to mess your codebase up if you do it wrong. To help you with this issue .NET has introduced since .NET Core 1.0 a wonderful and powerful built-in IoC container which is now part of the framework.</p>
-<p>We will not covering what Dependency Injection is and how the .NET framework implemented it in this article, if you are not familiar with this pattern you must take several minutes to read some documentation about it: <a href="https://docs.microsoft.com/en-us/dotnet/core/extensions/dependency-injection" title="Documentation of the Dependency Injection with .NET by Microsoft" target="_blank">Dependency injection in .NET</a>.</p>
+<p>We will not covering what Dependency Injection is and how the .NET framework implemented it in this article, if you are not familiar with this pattern you must take several minutes to read some documentation about it: <a href="https://docs.microsoft.com/en-us/dotnet/core/extensions/dependency-injection" title="Documentation of the Dependency Injection with .NET by Microsoft" target="_blank" rel="nofollow">Dependency injection in .NET</a>.</p>
 <p>The overall idea of this IoC container is that you register the dependencies at the application startup, then you resolve them (you ask and the container do the magic for you) at runtime when you need it.</p>
 <p>.NET provides several methods to register a dependency. You can choose one of the three available lifetime (Singleton, Transient and Scoped) but do you know the difference between the Add, TryAdd and TryAddEnumerable methods?<br />Are you able to explain what will differ in the three implementations below?</p>
 <pre><code class="csharp">
 builder.Services.AddSingleton&#60;IService, FirstService&#62;();
 builder.Services.AddSingleton&#60;IService, SecondService&#62;();
-
+</code></pre>
+<pre><code class="csharp">
 builder.Services.TryAddSingleton&#60;IService, FirstService&#62;();
 builder.Services.TryAddSingleton&#60;IService, SecondService&#62;();
-
+</code></pre>
+<pre><code class="csharp">
 var firstDescriptor = new ServiceDescriptor(typeof(IService), typeof(FirstService), ServiceLifetime.Singleton);
 var secondDescriptor = new ServiceDescriptor(typeof(IService), typeof(SecondService), ServiceLifetime.Singleton);
 builder.Services.TryAddEnumerable(new [] { firstDescriptor, secondDescriptor });
@@ -202,7 +204,7 @@ builder.Services.TryAddEnumerable(transientDescriptor);
 <li>The TryAdd method checks the uniqueness but only on the service type, it means that it allows to register only one implementation per service declaration type. You can't register multiple services for a same type, even if their implementation are different.</li>
 <li>The TryAddEnumerable method checks the uniqueness of the service based on the combination of the service type and the implementation type so you can register as many as implementations as you want as long as their implementation are different. Don't forget that the uniqueness check is lifetime agnostic.</li></ul>
 <!--<div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/blazor/blazor-templating-dotnet-cli-problem-blazor-templates.png" title="" /></div>-->
-				<div id="crdny">February 06, 2022</div>
+				<div id="crdny">June 06, 2022</div>
 				<div id="tags_wrapper">
 					<ul>
 						<li>.NET</li>
