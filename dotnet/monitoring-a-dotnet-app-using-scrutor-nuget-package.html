@@ -116,11 +116,11 @@ public class WeatherForecastController : ControllerBase
 <pre><code class="csharp">
 builder.Services.AddSingleton&#60;IWeatherService, WeatherService&#62;();
 </code></pre>
-<p>How can we now add some monitoring to our app? We could add some measures in our service but it has nothing to do there, and if we do this we should add a mechanism to allow us to disable it if we want so it becomes complex and invasive. This is where Scrutor comes: this package allows us to add a decorator to our WeatherForecastService which will take the responsability of the measuring stuff and only this, so our service won't have to change, it won't even know that he's measured!</p>
+<p>How can we now add some monitoring to our app? We could add some measures in our service but it has nothing to do there, and if we do this we should add a mechanism to allow us to disable it if we want so it becomes complex and invasive. This is where Scrutor comes: this package allows us to add a decorator to our <i>WeatherForecastService</i> which will take the responsability of the measuring stuff and only this, so our service won't have to change, it won't even know that he's measured!</p>
 
 <p>How to do this? It's pretty simple.</p>
 
-<p>We add another service, let's call it MeasuredWeatherService which implements the same interface that our WeatherService and takes the IWeatherService in constructor's parameter. Then you implement the interface by assuming the monitoring logic and calling the decorated service for the core logic:</p>
+<p>We add another service, let's call it <i>MeasuredWeatherService</i> which implements the same interface that our <i>WeatherService</i> and takes the <i>IWeatherService</i> in constructor's parameter. Then you implement the interface by assuming the monitoring logic and calling the decorated service for the core logic:</p>
 <pre><code class="csharp">
 public class MeasuredWeatherService : IWeatherService
 {
@@ -154,6 +154,7 @@ builder.Services.Decorate&#60;IWeatherService, MeasuredWeatherService&#62;();
 </code></pre>
 <p>At the runtime the Dependency Injection container will resolve the decorator service which references the decorated so at the execution we will find our measures in the traces:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/monitoring-a-dotnet-app-using-scrutor-nuget-package-01.png" title="" /></div>
+<p>You can check the source code on my GitHub: <a href="https://github.com/AdrienTorris/Entropy/tree/master/src/DynamicProxyLab/DynamicProxyLab.Api" title="" target="_Blank" rel="nofollow">@AdrienTorris</a></p>
 				<div id="crdny">June 10, 2022</div>
 				<div id="tags_wrapper">
 					<ul>
@@ -167,6 +168,7 @@ builder.Services.Decorate&#60;IWeatherService, MeasuredWeatherService&#62;();
 				</div>
 				<div id="refs_wrapper">
 					<ul>
+						<li><a href="https://github.com/AdrienTorris/Entropy/tree/master/src/DynamicProxyLab/DynamicProxyLab.Api" title="" target="_Blank" rel="nofollow">Demo source code</a></li>
 						<li><a href="https://github.com/khellang/Scrutor" title="Scrutor" target="_Blank" rel="nofollow">Scrutor</a></li>
 						<li><a href="https://andrewlock.net/using-scrutor-to-automatically-register-your-services-with-the-asp-net-core-di-container" title="Using Scrutor to automatically register your services with the ASP.NET Core DI container" target="_Blank" rel="nofollow">Using Scrutor to automatically register your services with the ASP.NET Core DI container</a></li>
 						<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
