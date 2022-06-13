@@ -53,15 +53,11 @@
 			<div id="post_ctn">
 			<h1>Monitoring a .NET app using Castle Core</h1>
 <p><a href="https://github.com/castleproject/Core" title="Castle Core" target="_Blank" rel="nofollow">Scrutor</a> </p>
-
-
-<pre><code class="csharp">
-
-</code></pre>
-<pre><code class="csharp">
-
-</code></pre>
-<p>We clean the controller to resolve the service and call the method he exposes:</p>
+<p>We saw on a previous post <a href="https://adrientorris.github.io/dotnet/monitoring-a-dotnet-app-using-scrutor-nuget-package" target="_blank" title="Monitoring a .NET app using Scrutor">Monitoring a .NET app using Scrutor</a> and the decorator pattern. This is a great but it comes with a big limitation: this is not scalable. Indeed, as the decorators classes have to implement the interface they decorate, each time you add a method you will have to update all the decorators. It's not a really big issue but it's clearly not elegant and only the elegant methods are really good. This is where comes Castle.Core and his dynamic proxies. Let's dig into the interceptor pattern.</p>
+<p>Castle DynamicProxy is a library for generating lightweight .NET proxies on the fly at runtime. They allow us to intercept calls to the original class and to overwrite their behavior. As you can see below, it's a common practice in the software development. For example, NHibernate uses them to provide lazy loading of data and several mocking frameworks use them to intercept method/property calls, like that:</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/monitoring-a-dotnet-app-using-castle-core-nuget-package-02.png" title="Castle DynamicProxy used by the mocking library Moq" alt="Castle DynamicProxy used by the mocking library Moq" /></div>
+<p>Castle DynamicProxy allows you to proxy a class to add additional features without modifying it like logging or security checking. Let's see how to use it to add diagnostics monitoring traces.</p>
+<p>We start with an empty API .NET 6 application, like the post <a href="https://adrientorris.github.io/dotnet/monitoring-a-dotnet-app-using-scrutor-nuget-package" target="_blank" title="Monitoring a .NET app using Scrutor">Monitoring a .NET app using Scrutor</a>, and we do the same, that is create a WeatherService called in the controller.</p>
 <pre><code class="csharp">
 [ApiController]
 [Route("[controller]")]
@@ -83,10 +79,67 @@ public class WeatherForecastController : ControllerBase
     }
 }
 </code></pre>
+<p>Now we add the Castle.Core Nuget package to our application, and create our diagnostic proxy :</p>
+<pre><code class="csharp">
+public class DurationInterceptor : IInterceptor
+{
+    private readonly ILogger&#60;DurationInterceptor&#62; _logger;
 
+    public DurationInterceptor(ILogger&#60;DurationInterceptor&#62; logger)
+    {
+        _logger = logger;
+    }
+
+    public void Intercept(IInvocation invocation)
+    {
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            invocation.Proceed();
+        }
+        finally
+        {
+            sw.Stop();
+            _logger.LogInformation("{MethodName} method took {Duration}ms", invocation.Method.Name, sw.ElapsedMilliseconds);
+        }
+    }
+}
+</code></pre>
+<p>That last thing to do is to register our proxy in the Dependency Injection container. We could do it directly in the main program class but to it in the clean way we will create an extension method which can handle as many as interceptor class registering as we need.</p>
+<pre><code class="csharp">
+using Castle.DynamicProxy;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+namespace DynamicProxyLab.CastleCore.Api.Extensions
+{
+    internal static class InterceptionExtensions
+    {
+        internal static void AddInterceptedSingleton&#60;TInterface, TImplementation, TInterceptor&#62;(this IServiceCollection services)
+            where TInterface : class
+            where TImplementation : class, TInterface
+            where TInterceptor : class, IInterceptor
+        {
+            services.TryAddSingleton&#60;IProxyGenerator, ProxyGenerator&#62;();
+            services.AddSingleton&#60;TImplementation&#62;();
+            services.TryAddTransient&#60;TInterceptor&#62;();
+            services.AddSingleton(provider =&#62;
+            {
+                var proxyGenerator = provider.GetRequiredService&#60;IProxyGenerator&#62;();
+                var implementation = provider.GetRequiredService&#60;TImplementation&#62;();
+                var interceptor = provider.GetRequiredService&#60;TInterceptor&#62;();
+                return proxyGenerator.CreateInterfaceProxyWithTarget&#60;TInterface&#62;(implementation, interceptor);
+            });
+        }
+    }
+}
+</code></pre>
+<p>And using our extension method we register our interceptor:</p>
+<pre><code class="csharp">
+builder.Services.AddInterceptedSingleton&#60;IWeatherService, WeatherService, DurationInterceptor&#62;();
+</code></pre>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/monitoring-a-dotnet-app-using-castle-core-nuget-package-01.png" title="" /></div>
 <p>You can check the source code on my GitHub: <a href="https://github.com/AdrienTorris/Entropy/tree/master/src/DynamicProxyLab/DynamicProxyLab.CastleCore.Api" title="" target="_Blank" rel="nofollow">@AdrienTorris</a></p>
-				<div id="crdny">June 11, 2022</div>
+				<div id="crdny">June 13, 2022</div>
 				<div id="tags_wrapper">
 					<ul>
 						<li>.NET</li>
@@ -101,6 +154,8 @@ public class WeatherForecastController : ControllerBase
 					<ul>
 						<li><a href="https://github.com/AdrienTorris/Entropy/tree/master/src/DynamicProxyLab/DynamicProxyLab.CastleCore.Api" title="" target="_Blank" rel="nofollow">Demo source code</a></li>
 						<li><a href="https://github.com/castleproject/Core" title="Scrutor" target="_Blank" rel="nofollow">Castle Core</a></li>
+						<li><a href="https://github.com/moq/moq/blob/main/src/Moq.DynamicProxy/DynamicMockFactory.cs" title="Castle Dynamic Proxy used by the mocking library named Moq" target="_Blank" rel="nofollow"></a></li>
+						<li><a href="http://www.castleproject.org/projects/dynamicproxy/" title="Castle DynamicProxy" target="_Blank" rel="nofollow">Castle DynamicProxy</a></li>
 						<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
 					</ul>
 				</div>
