@@ -149,7 +149,7 @@ namespace DynamicProxyLab.CastleCore.Api.Extensions
         {
             services.TryAddSingleton&#60;IProxyGenerator, ProxyGenerator&#62;();
             services.AddSingleton&#60;TImplementation&#62;();
-            services.TryAddTransient&#60;TInterceptor&#62;();
+            services.TryAddTransient&#60;TInterceptor&#62;(); // We use a Transient lifetime to not register multiple times the same interceptor
             services.AddSingleton(provider =&#62;
             {
                 var proxyGenerator = provider.GetRequiredService&#60;IProxyGenerator&#62;();
