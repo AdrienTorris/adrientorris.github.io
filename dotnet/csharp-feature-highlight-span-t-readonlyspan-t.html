@@ -62,9 +62,11 @@ However, Span&#60;T&#62; can be used as a type of method arguments or return val
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-01.png" title="" alt="" /></div>
 <p>When to use Span&#60;T&#62; and ReadOnlySpan&#60;T&#62;? These two types are very useful tools when you need to improve the speed and/or when you need to reduce the allocations of your code. Let's see some examples by using it with strings and arrays, which are probably the most common usecases for "standard" developers.</p>
 <h2>Using ReadOnlySpan&#60;T&#62; with System.String</h2>
-<p>Assume the following scenario: you receive an invoice number which is composed by the year of the invoice, the month, an id for the customer and the amount of the invoice (let's say "2022-06-123-600" for example) and you want to parse the string to deconstruct these 4 informations.</p>
+<p>Assume the following scenario: you receive an invoice number which is composed by the year of the invoice, the month, an id for the customer and the amount of the invoice (let's say <i>"2022-06-123-600"</i> for example) and you want to parse the string to deconstruct these 4 informations.</p>
 <p>Without using Span&#60;T&#62; you could do something like this:</p>
 <pre><code class="csharp">
+private static readonly string _invoiceReference = "2022-06-123-600";
+
 public static (int year, int month, int customerId, int amount) ParseInvoiceReferenceWithSubstring()
 {
     string year = _invoiceReference.Substring(0, 4);
@@ -81,9 +83,11 @@ public static (int year, int month, int customerId, int amount) ParseInvoiceRefe
 }
 </code></pre>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-02.png" title="" alt="" /></div>
-<p>This method will work but because <span class="thnclwrd">System.String</span> is an immutable type each time you extract a part of _invoiceReference you create a new string that will be store in memory so your memory allocation will be pretty much significant (here it won't be massive but the same method in a loop could have an impact on the performance o the memory consumption).</p>
+<p>This method will work but because <span class="thnclwrd">System.String</span> is an immutable type each time you extract a part of <i>_invoiceReference</i> you create a new string that will be store in memory so your memory allocation will be pretty much significant (here it won't be massive but the same method in a loop could have an impact on the performance o the memory consumption).</p>
 <p>Now we can rewrite this method using <span class="thnclwrd">ReadOnlySpan&#60;T&#62;</span> and by replacing the <span class="thnclwrd">.Substring()</span> by some <span class="thnclwrd">.Slice()</span> methods:</p>
 <pre><code class="csharp">
+private static readonly string _invoiceReference = "2022-06-123-600";
+
 public static(int year, int month, int customerId, int amount) ParseInvoiceReferenceWithSpanT()
 {
     ReadOnlySpan&#60;char&#62; invoiceReferenceAsSpan = _invoiceReference;
@@ -135,6 +139,8 @@ ReadOnlySpan&#60;int&#62; invoiceData = new (invoiceDataArray, 1, 2); // Equival
 </code></pre>
 <p>To get back to our invoice example, out method could be write with something like this:</p>
 <pre><code class="csharp">
+private static readonly string _invoiceReference = "2022-06-123-600";
+
 public static (int year, int month, int customerId, int amount) ParseArrayWithSpanT()
 {
     var invoiceDataArray = new int[4] { 2022, 06, 123, 600 };
