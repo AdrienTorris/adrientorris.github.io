@@ -56,7 +56,7 @@
 <p>Span&#60;T&#62;, which was introduced with C# 7.2, is a ref struct, which also began with C# 7.2. A <span class="thnclwrd">ref struct</span> is allocated on the stack and can't escape on the heap which introduces some limitations to their usage :<ul><li>You can't use a Span&#60;T&#62; or a ReadOnlySpan&#60;T&#62; field in a class, or even in non-ref-like struct (it also means that you can't use these two types in places where they might implicitly become fields on classes, by capturing them into lambdas or by declaring them into an async method for example)</li>
 <li>Span&#60;T&#62; and ReadOnlySpan&#60;T&#62; can't be boxed (it also means that you can't use them as generic arguments because in some situation they can be stored to the heap or they can getting boxed)</li></ul><br />
 However, Span&#60;T&#62; can be used as a type of method arguments or return values.</p>
-<p>If you need an equivalent of Span&#60;T&#62; but that can be stored to the heap <a href="https://docs.microsoft.com/en-us/dotnet/api/system.memory-1?view=net-6.0" title="Memory<T> Struct" target="_Blank" rel="nofollow">Memory<T></a> is probably the option that will suits the best for you but I won't cover this type in this article.</p>
+<p>If you need an equivalent of Span&#60;T&#62; but that can be stored to the heap <a href="https://docs.microsoft.com/en-us/dotnet/api/system.memory-1?view=net-6.0" title="Memory<T> Struct" target="_Blank" rel="nofollow">Memory&#60;T&#62;</a> is probably the option that will suits the best for you but I won't cover this type in this article.</p>
 <p>Span&#60;T&#62; has a variant type called System.ReadOnlySpan&#60;T&#62; which enabled read-only access and works with immutable data types like System.String.</p>
 <p>Span&#60;T&#62; and ReadOnlySpan&#60;T&#62; can be represented like this:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-01.png" title="" alt="" /></div>
@@ -112,8 +112,8 @@ public static(int year, int month, int customerId, int amount) ParseInvoiceRefer
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-06.png" title="" alt="" /></div>
 <p>Notice that Span&#60;T&#62; and ReadOnlySpan&#60;T&#62; have a static property Empty you can use if you want an empty variable and a property IsEmpty:</p>
 <pre><code class="csharp">
-ReadOnlySpan<char> invoiceReferenceAsSpan = _invoiceReference ?? ReadOnlySpan<char>.Empty;
-ReadOnlySpan<char> year = invoiceReferenceAsSpan.IsEmpty ? ReadOnlySpan<char>.Empty : invoiceReferenceAsSpan.Slice(0, 4);
+ReadOnlySpan&#60;char&#62; invoiceReferenceAsSpan = _invoiceReference ?? ReadOnlySpan&#60;char&#62;.Empty;
+ReadOnlySpan&#60;char&#62; year = invoiceReferenceAsSpan.IsEmpty ? ReadOnlySpan&#60;char&#62;.Empty : invoiceReferenceAsSpan.Slice(0, 4);
 </code></pre>
 <h2>Using Span&#60;T&#62; with arrays</h2>
 <p>Span&#60;T&#62; is pretty close to arrays and a lots of developer sees Span&#60;T&#62; like a new fashion-way to do arrays but it's not that simple. This confusion comes from the fact that Span&#60;T&#62; is a view on some data and most of the time this data is represented through an array. So array is still needed and Span&#60;T&#62; is a just a convenient view on it. But Span&#60;T&#62; has some superpowers that arrays and even ArraySegment<T> doesn't have:
@@ -123,7 +123,7 @@ ReadOnlySpan<char> year = invoiceReferenceAsSpan.IsEmpty ? ReadOnlySpan<char>.Em
 <p>You can instanciate a Span&#60;T&#62; directly from an Array:</p>
 <pre><code class="csharp">
 var invoiceDataArray = new int[4] { 2022, 06, 123, 600 };
-ReadOnlySpan&#60;int&#62; invoiceData = new ReadOnlySpan<int&#62;(invoiceDataArray);
+ReadOnlySpan&#60;int&#62; invoiceData = new ReadOnlySpan&#60;int&#62;(invoiceDataArray);
 </code></pre>
 <p>You can also write this line shorter like this now:</p>
 <pre><code class="csharp">
@@ -149,17 +149,93 @@ public static (int year, int month, int customerId, int amount) ParseArrayWithSp
     return (invoiceData[0], invoiceData[1], invoiceData[2], invoiceData[3]);
 }
 </code></pre>
-<!--<p></p>
-<p></p>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-03.png" title="" alt="" /></div>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/" title="" alt="" /></div>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/" title="" alt="" /></div>
+<h2>Benchmarking our string scenario</h2>
+<p>Because Span<T> doesn't allocate new memory when he slices it has great performance regarding to speed execution and memory allocation, but why don't we benchmark it to see exactly what's going on?</p>
+<p>I took our two previous methods which were parsing some invoice scenario from string invoice references and took them in a basic benchmark class. This is my program class:</p>
 <pre><code class="csharp">
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Columns;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Loggers;
+using BenchmarkDotNet.Order;
+using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Validators;
 
+var benchmarkConfig = new ManualConfig()
+        .WithOptions(ConfigOptions.DisableOptimizationsValidator)
+        .AddValidator(JitOptimizationsValidator.DontFailOnError)
+        .AddLogger(ConsoleLogger.Default)
+        .AddColumnProvider(DefaultColumnProviders.Instance);
+
+BenchmarkRunner.Run&#60;InvoiceParserBenchmarks&#62;(benchmarkConfig);
+
+public class InvoiceParser
+{
+    public (int year, int month, int customerId, int amount) ParseInvoiceReferenceWithSubstring(string invoiceReference)
+    {
+        string year = invoiceReference.Substring(0, 4);
+        string month = invoiceReference.Substring(5, 2);
+        string customerId = invoiceReference.Substring(8, 3);
+        string amount = invoiceReference[12..];
+
+        int parsedYear = Int32.Parse(year);
+        int parsedMonth = Int32.Parse(month);
+        int parsedCustomerId = Int32.Parse(customerId);
+        int parsedAmount = Int32.Parse(amount);
+
+        return (parsedYear, parsedMonth, parsedCustomerId, parsedAmount);
+    }
+
+    public (int year, int month, int customerId, int amount) ParseInvoiceReferenceWithSpanT(ReadOnlySpan&#60;char&#62; invoiceReference)
+    {
+        ReadOnlySpan&#60;char&#62; year = invoiceReference.Slice(0, 4);
+        ReadOnlySpan&#60;char&#62; month = invoiceReference.Slice(5, 2);
+        ReadOnlySpan&#60;char&#62; customerId = invoiceReference.Slice(8, 3);
+        ReadOnlySpan&#60;char&#62; amount = invoiceReference.Slice(12);
+
+        int parsedYear = Int32.Parse(year);
+        int parsedMonth = Int32.Parse(month);
+        int parsedCustomerId = Int32.Parse(customerId);
+        int parsedAmount = Int32.Parse(amount);
+
+        return (parsedYear, parsedMonth, parsedCustomerId, parsedAmount);
+    }
+
+    public (int year, int month, int customerId, int amount) ParseArrayWithSpanT()
+    {
+        var invoiceDataArray = new int[4] { 2022, 06, 123, 600 };
+        ReadOnlySpan&#60;int&#62; invoiceData = invoiceDataArray;
+
+        return (invoiceData[0], invoiceData[1], invoiceData[2], invoiceData[3]);
+    }
+}
+
+[RankColumn]
+[Orderer(SummaryOrderPolicy.FastestToSlowest)]
+[MemoryDiagnoser]
+public class InvoiceParserBenchmarks
+{
+    private static readonly string invoiceReference = "2022-06-123-600";
+    private static readonly InvoiceParser invoiceParser = new ();
+
+    [Benchmark]
+    public void ParseInvoiceReferenceWithSubstring()
+    {
+        invoiceParser.ParseInvoiceReferenceWithSubstring(invoiceReference);
+    }
+
+    [Benchmark]
+    public void ParseInvoiceReferenceWithSpanT()
+    {
+        invoiceParser.ParseInvoiceReferenceWithSpanT(invoiceReference);
+    }
+}
 </code></pre>
-<pre><code class="csharp">
-
-</code></pre>-->
+<p>This is the result of the benchmark (in debug mode on a developer local machine):</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-benchmark-output.png" title="" alt="" /></div>
+<p>As you can see, the method using Span&#60;T&#62; is slightly faster but but above all it consumes much less memory with no memory allocated againt 128 bytes.</p>
+<p>There are still a lot of things to say about this subject but I hope to have enlightened you a little on it and I invite you to learn more about this powerful stuff, I have put a list of links below the article.</p>
+<p>Keep coding! ;)</p>
 				<div id="crdny">June 17, 2022</div>
 				<div id="tags_wrapper">
 					<ul>
@@ -177,7 +253,7 @@ public static (int year, int month, int customerId, int amount) ParseArrayWithSp
 						<li><a href="https://docs.microsoft.com/fr-fr/events/connect-2017/t125" title="" target="_Blank" rel="nofollow">Span&#60;T&#62; by Jared Parsons (video)</a></li>
 						<li><a href="https://www.stevejgordon.co.uk/an-introduction-to-optimising-code-using-span-t" title="" target="_Blank" rel="nofollow">An introduction to optimising code using Span&#60;T&#62;</a></li>
 						<li><a href="https://blog.ndepend.com/improve-c-code-performance-with-spant/" title="" target="_Blank" rel="nofollow">Improve C# code performance with Span&#60;T&#62;</a></li>
-						<li><a href="https://docs.microsoft.com/en-us/dotnet/standard/memory-and-spans/memory-t-usage-guidelines" title="" target="_Blank" rel="nofollow">Memory<T> and Span&#60;T&#62; usage guidelines</a></li>
+						<li><a href="https://docs.microsoft.com/en-us/dotnet/standard/memory-and-spans/memory-t-usage-guidelines" title="" target="_Blank" rel="nofollow">Memory&#60;T&#62; and Span&#60;T&#62; usage guidelines</a></li>
 						<li><a href="https://docs.microsoft.com/en-us/dotnet/api/system.memory-1?view=net-6.0" title="Memory<T> Struct" target="_Blank" rel="nofollow"></a></li>
 						<li><a href="https://adamsitnik.com/Span/" title="" target="_Blank" rel="nofollow">Span by Adam Sitnik</a></li>
 						<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
