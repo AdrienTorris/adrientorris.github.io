@@ -235,7 +235,20 @@ dotnet add package NetEscapades.EnumGenerators --prerelease
 &#60;package id="NetEscapades.EnumGenerators" version="1.0.0-beta04" targetFramework="net48" PrivateAssets="all" ExcludeAssets="runtime" /&#62;
 </code></pre>
 <p>To use the Source Generator to an enum, you have to add the attribute EnumExtensions to it:</p>
-<p></p>
+<pre><code class="csharp">
+[EnumExtensions]
+public enum Color
+{
+    Green,
+    Red,
+    Blue,
+    Yellow,
+    Cyan,
+    Pink
+}
+</code></pre>
+<p>Now if you compile your project, NetEscapades.EnumGenerators will generate an extension class for each enum you marked with the EnumExtensions attribute, here is my ColorExtensions class:</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-05.png" title="" /></div>
 <!--<p></p>
 <p></p>
 <p></p>
@@ -256,11 +269,11 @@ dotnet add package NetEscapades.EnumGenerators --prerelease
 				</div>
 				<div id="refs_wrapper">
 					<ul>
-						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
-						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
-						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
-						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
-						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
+						<li><a href="https://github.com/andrewlock/NetEscapades.EnumGenerators" title="" target="_Blank" rel="nofollow"></a></li>
+						<li><a href="https://andrewlock.net/netescapades-enumgenerators-a-source-generator-for-enum-performance/" title="" target="_Blank" rel="nofollow"></a></li>
+						<li><a href="https://andrewlock.net/creating-a-source-generator-part-1-creating-an-incremental-source-generator/" title="" target="_Blank" rel="nofollow"></a></li>
+						<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview" title="" target="_Blank" rel="nofollow"></a></li>
+						<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview" title="" target="_Blank" rel="nofollow"></a></li>
 						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
 						<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
 					</ul>
