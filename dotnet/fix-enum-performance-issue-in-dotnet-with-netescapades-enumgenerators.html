@@ -61,7 +61,7 @@
 | EnumIsDefined |  66.95 ns | 0.877 ns | 0.820 ns |         - |
 |  EnumTryParse | 211.29 ns | 1.256 ns | 1.175 ns |      68 B |
 </code></pre>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-01.png" title="" /></div>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-01.png" title="Enum ToString benchmark results" alt="Enum ToString benchmark results" /></div>
 <p>Now that we have put the finger on this issue, what can we do to fix it? The obvious solution would be to implement a caching system. We could store the label of each value of our enum in a collection (dictionary? array?) and get it from that collection rather than getting it from the enum itself. Our caching class could be something like it:</p>
 <pre><code class="csharp">
 public static class ColorCachingExtensions
@@ -191,7 +191,7 @@ public static bool TryParseFast(string color, out Color? parsedColor)
 |          EnumTryParse | 242.248 ns | 4.8671 ns | 12.8219 ns |      68 B |
 |      EnumTryParseFast |  30.590 ns | 0.5771 ns |  0.5926 ns |         - |
 </code></pre>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-02.png" title="" /></div>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-02.png" title="Enum utility methods performance benchmark results (ToString(), IsDefined and TryParse)" alt="Enum utility methods performance benchmark results (ToString(), IsDefined and TryParse)" /></div>
 <p>Benchmark with .NET 6:</p>
 <pre><code class="csharp">
 |                Method |      Mean |     Error |    StdDev | Allocated |
@@ -204,7 +204,7 @@ public static bool TryParseFast(string color, out Color? parsedColor)
 |          EnumTryParse | 76.595 ns | 1.3933 ns | 1.2351 ns |         - |
 |      EnumTryParseFast | 11.209 ns | 0.1397 ns | 0.1307 ns |         - |
 </code></pre>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-04.png" title="" /></div>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-04.png" title="Enum utility methods performance benchmark results (ToString(), IsDefined and TryParse)" alt="Enum utility methods performance benchmark results (ToString(), IsDefined and TryParse)" /></div>
 <p>As you can see, performance gain are massive. We already saw that the faster equivalent of the .ToString() method is more than 100 times faster that the classic method but you can see that the IsDefined method is 5x faster than is equivalent and the TryParse method is 8 times faster than is equivalent with no memory allocation against 68 bytes. It may seem small because we speack about nanoseconds and bytes here but multiply that by the number of times you work with enums and it can make a difference, especially if you have to work with limited environments like arduinos or Raspberry Pis.</p>
 <p>Our custom methods are way more efficients than the .NET ones but obviously our solution isn't perfect: it requires to write a specific extension class with several methods implementations for each enumeration you are using. It's a lot of code, it must be maintened to not create bugs and it can get quite laborious if you have to deal with big enumerations (my colors enumeration in the example has 6 values but the .NET one has 147 values for examples, imagine our class now with these enum).</p>
 <p>This is where comes Andrew Lock and Source Generators!</p>
@@ -228,7 +228,7 @@ public static bool TryParseFast(string color, out Color? parsedColor)
 <pre><code class="command">
 dotnet add package NetEscapades.EnumGenerators --prerelease
 </code></pre>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-03.png" title="" /></div>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-03.png" title="" alt="" /></div>
 <p>This adds a Package Reference to your project. You can additionally mark the package as PrivateAssets="all" and ExcludeAssets="runtime". Setting PrivateAssets="all" means any projects referencing this one won't get a reference to the NetEscapades.EnumGenerators package and setting ExcludeAssets="runtime" ensures the NetEscapades.EnumGenerators.Attributes.dll file is not copied to your build output because it is not required at runtime, the Source Generator operates during the compilation.</p>
 <p>In a .NET Framework 4.8 project you will have a line like this in your packages.config file:</p>
 <pre><code class="xml">
@@ -248,15 +248,42 @@ public enum Color
 }
 </code></pre>
 <p>Now if you compile your project, NetEscapades.EnumGenerators will generate an extension class for each enum you marked with the EnumExtensions attribute, here is my ColorExtensions class:</p>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-05.png" title="" /></div>
-<!--<p></p>
-<p></p>
-<p></p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-05.png" title="NetEscapades.EnumGenerators extension class example" alt="NetEscapades.EnumGenerators extension class example" /></div>
+<p>Let's do a little benchmark to see what are the performances now with the NetEscapades.EnumGenerators methods (benchmark on .NET 6):</p>
 <pre><code class="csharp">
-
+|            Method |     Mean |     Error |    StdDev | Allocated |
+|------------------ |---------:|----------:|----------:|----------:|
+|  EnumToStringFast | 2.055 ns | 0.1037 ns | 0.0919 ns |         - |
+| EnumIsDefinedFast | 3.765 ns | 0.0880 ns | 0.0735 ns |         - |
+|  EnumTryParseFast | 9.916 ns | 0.1995 ns | 0.2375 ns |         - |
 </code></pre>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-01.png" title="" /></div>-->
-
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-06.png" title="NetEscapades.EnumGenerators benchmark results on .NET 6" alt="NetEscapades.EnumGenerators benchmark results on .NET 6" /></div>
+<p>As you can see, NetEscapades.EnumGenerators is a really great and elegant solution to make enumerations performant which is a major thing because of the utility of enums.</p>
+<p>Also, this package has a lot of features. For example, he takes enums attributes into account when generating the extension class so you can still use enums values display name for example (not in the 1.0.0-beta04 which was release in November 2021 but the development of this feature is ready to ship):</p>
+<pre><code class="csharp">
+[EnumExtensions]
+public enum Color
+{
+    Green,
+    Red,
+    Blue,
+	
+	[Display(Name = "It's yellow")]
+    Yellow,
+	
+	[Display(Name = "Clear blue")]
+    Cyan,
+    Pink
+}
+</code></pre>
+<p>You also can configure the extension class for an enum with a custom name and a custom namespace:</p>
+<pre><code class="csharp">
+[EnumExtensions(ExtensionClassName ="MyCustomColorExtensionClass", ExtensionClassNamespace = "MyCustomColorExtensionClassNamespace")]
+</code></pre>
+<p>And now my class has another name and namespace:</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/fix-enum-performance-issue-in-dotnet-with-netescapades-enumgenerators-07.png" title="" /></div>
+<p>You can check the <a href="https://github.com/andrewlock/NetEscapades.EnumGenerators" title="NetEscapades.EnumGenerators GitHub repository" target="_Blank" rel="nofollow">GitHub</a> of the project to see all the available options and features, and check the links below to deep more about NetEscapades.EnumGenerators (I recommand the post from Andrew Lock itself on his blog which are really well written and detailled and the video by Nick Chaspas).</p>
+<p>Keep coding folks! :)</p>
 				<div id="crdny">June 21, 2022</div>
 				<div id="tags_wrapper">
 					<ul>
@@ -269,12 +296,11 @@ public enum Color
 				</div>
 				<div id="refs_wrapper">
 					<ul>
-						<li><a href="https://github.com/andrewlock/NetEscapades.EnumGenerators" title="" target="_Blank" rel="nofollow"></a></li>
-						<li><a href="https://andrewlock.net/netescapades-enumgenerators-a-source-generator-for-enum-performance/" title="" target="_Blank" rel="nofollow"></a></li>
-						<li><a href="https://andrewlock.net/creating-a-source-generator-part-1-creating-an-incremental-source-generator/" title="" target="_Blank" rel="nofollow"></a></li>
-						<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview" title="" target="_Blank" rel="nofollow"></a></li>
-						<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview" title="" target="_Blank" rel="nofollow"></a></li>
-						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
+						<li><a href="https://github.com/andrewlock/NetEscapades.EnumGenerators" title="NetEscapades.EnumGenerators GitHub repository" target="_Blank" rel="nofollow">GitHub repository</a></li>
+						<li><a href="https://andrewlock.net/netescapades-enumgenerators-a-source-generator-for-enum-performance/" title="" target="_Blank" rel="nofollow">Article by Andrew Lock</a></li>
+						<li><a href="https://andrewlock.net/creating-a-source-generator-part-1-creating-an-incremental-source-generator/" title="" target="_Blank" rel="nofollow">Article by Andrew Lock Source Generators</a></li>
+						<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview" title="" target="_Blank" rel="nofollow">Source Generator documentation</a></li>
+						<li><a href="https://www.youtube.com/watch?v=-RX6XKHkjOs" title="" target="_Blank" rel="nofollow">Video by Nick Chaspas</a></li>
 						<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
 					</ul>
 				</div>
