@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Introducing PeriodicTimer, the new async timer from .NET 6</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="language" content="en" />
+		<meta name="keywords" content=".NET,.NET 6,.NET 7,csharp,C#,timer,PeriodicTimer" />
+		<meta name="description" content="Introducing PeriodicTimer, the new async timer from .NET 6." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<!--<meta name="generator" content="SiteUp! 0.1" />-->
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2>
+					<ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/4428633/adrientorris" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="Technical blog of Adrien Torris (Blazor, .NET Core, ASP.NET Core, .NET, ASP.NET, ...)">Home</a></li>
+					<li>.NET</li>
+					<li class="active"><a href="https://adrientorris.github.io/dotnet/periodic-timer-new-async-timer-dotnet-6" title="Introducing PeriodicTimer, the new async timer from .NET 6">Introducing PeriodicTimer, the new async timer from .NET 6</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn">
+			<h1>Introducing PeriodicTimer, the new async timer from .NET 6</h1>
+<p>You often need to wait a specific interval of time between executions of a repeating task, but how to do this in .NET? You probably already did that in .NET but which Timer have you used? </p>
+<p>.NET 5 has 5 different timers which have specific purposes:</p>
+<ul>
+<li>System.Threading.Timer</li>
+<li>System.Timers.Timer</li>
+<li>System.Windows.Forms.Timer</li>
+<li>System.Web.UI.Timer</li>
+<li>System.Windows.Threading.DispatcherTimer</li>
+</ul>
+<p>.NET 6 came with a new type of timer, PeriodicTimer, that enables waiting asynchronously for timer ticks so we can use asynchronous methods with it. Moreover, this new timer allows us to avoid using callbacks which can lead to memory leaks in long-lived operations and can be the source of bugs which are difficult to investigate on.</p>
+<p>PeriodicTimer has only one method, WaitForNextTickAsync, which waits for the next tick or for the timer to be stopped. And it has only one constructor, which takes a TimeSpan as parameter which is the duration of the tick. How wonderful is this?</p>
+<pre><code class="csharp">
+PeriodicTimer timer = new(TimeSpan.FromMilliseconds(1000));
+
+while (await timer.WaitForNextTickAsync())
+{
+    // Put your business logic here
+}
+</code></pre>
+<p>Because PeriodicTimer is asynchronous, you can use asynchronous code too in the business logic. Another great feature of this timer is that he pauses when the business logic is running so you don't have to worry about overlapping problems (but you have to know that your code execution's duration impacts the ticks if you awaiting it, I mean if you have a timer that ticks all the seconds and a code that takes 5 seconds to run then the timer will ticks all the 6 seconds).</p>
+<p>Let's see some usecases. Imagine you want a service to run a repeating task at a specific time interval.</p>
+<p>Assume we have a background service for weather forecasting:</p>
+<pre><code class="csharp">
+public class WeatherForecastBackgroundService: BackgroundService
+{
+    private readonly ILogger&#60;WeatherForecastBackgroundService&#62; logger;
+
+    public WeatherForecastBackgroundService(ILogger&#60;WeatherForecastBackgroundService&#62; logger)
+    {
+        this.logger = logger;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        Console.WriteLine(string.Concat("WeatherForecastBackgroundService: ", DateTime.Now.ToString("O")));
+    }
+}
+</code></pre>
+<p>Which is registered as a hosted service:</p>
+<pre><code class="csharp">
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHostedService&#60;WeatherForecastBackgroundService>();
+var app = builder.Build();
+app.Run();
+</code></pre>
+<p>How can we make this service executes the method several times at a specific interval?</p>
+<p>We could use a task's delay:</p>
+<pre><code class="csharp">
+public class WeatherForecastBackgroundService: BackgroundService
+{
+    private readonly ILogger&#60;WeatherForecastBackgroundService&#62; logger;
+
+    public WeatherForecastBackgroundService(ILogger&#60;WeatherForecastBackgroundService&#62; logger)
+    {
+        this.logger = logger;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            Console.WriteLine(string.Concat("WeatherForecastBackgroundService: ", DateTime.Now.ToString("O")));
+            await Task.Delay(1000, cancellationToken);
+        }
+    }
+}
+</code></pre>
+<p>The output result would be:</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/periodic-timer-new-async-timer-dotnet-6-01.png" title="" alt="" /></div>
+<p>This method works but notice that the delay between two method executions is not exactly one second as we asked for but a little more each time; it's because the method awaits for 1000 milliseconds after his execution so its execution time is added to the delay you want.</p>
+<p>Can we do something to have a method that will be repeated at a specific interval, based on his starts and not his ends?</p>
+<p>We could extract our method and not awaiting it but it could have catastrophic impacts on our application lifetime depending on his execution duration and his resources but it seems a pretty bad design. If we extract our behavior in a method and await the result the result would be close to our first one, with a little more delay because our code has now to handle a Task at each execution:</p>
+<pre><code class="csharp">
+public class WeatherForecastBackgroundService: BackgroundService
+{
+    private readonly ILogger&#60;WeatherForecastBackgroundService&#62; logger;
+
+    public WeatherForecastBackgroundService(ILogger&#60;WeatherForecastBackgroundService&#62; logger)
+    {
+        this.logger = logger;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            await LogWeatherForecastAsync();
+            await Task.Delay(1000, cancellationToken);
+        }
+    }
+
+    private static async Task LogWeatherForecastAsync()
+    {
+        Console.WriteLine(string.Concat("WeatherForecastBackgroundService: ", DateTime.Now.ToString("O")));
+    }
+}
+</code></pre>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/periodic-timer-new-async-timer-dotnet-6-02.png" title="" alt="" /></div>
+<p>Let's take a look at the new timer added by .NET 6, PeriodicTimer, and use it in our code to see his behavior. We can add a PeriodicTimer as field in our class to handle the ticks and base our execution method on it using WaitForNextTickAsync method we saw earlier:</p>
+<pre><code class="csharp">
+public class WeatherForecastBackgroundService: BackgroundService
+{
+    private readonly PeriodicTimer timer = new(TimeSpan.FromMilliseconds(1000));
+
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested
+            && await timer.WaitForNextTickAsync(cancellationToken))
+        {
+            await LogWeatherForecastAsync();
+        }
+    }
+
+    private static async Task LogWeatherForecastAsync()
+    {
+        Console.WriteLine(string.Concat("WeatherForecastBackgroundService: ", DateTime.Now.ToString("O")));
+    }
+}
+</code></pre>
+<p>The output is now something like that:</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/periodic-timer-new-async-timer-dotnet-6-03.png" title="PeriodicTimer the new async timer from .NET 6 in a web application" alt="PeriodicTimer the new async timer from .NET 6 in a web application" /></div>
+<p>As you can see the timer is extremely precise and the gap between each method execution is minimal.</p>
+<p>Let's see the behavior if we add a delay of 500 milliseconds to the method to simulate a code execution:</p>
+<pre><code class="csharp">
+private static async Task LogWeatherForecastAsync()
+{
+    Console.WriteLine(string.Concat("WeatherForecastBackgroundService: ", DateTime.Now.ToString("O")));
+    await Task.Delay(500);
+}
+</code></pre>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/periodic-timer-new-async-timer-dotnet-6-04.png" title="PeriodicTimer the new async timer from .NET 6 in a web application" alt="PeriodicTimer the new async timer from .NET 6 in a web application" /></div>
+<p>The precision of the timer is not impacted by the method execution duration, the gap between each repetition is still to one second.</p>
+<p>What will be the behavior of this code if the LogWeatherForecastAsync() takes more than one second to run and it still awaited:</p>
+<pre><code class="csharp">
+private static async Task LogWeatherForecastAsync()
+{
+    Console.WriteLine(string.Concat("WeatherForecastBackgroundService: ", DateTime.Now.ToString("O")));
+    await Task.Delay(2000);
+}
+</code></pre>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/periodic-timer-new-async-timer-dotnet-6-05.png" title="PeriodicTimer the new async timer from .NET 6 in a web application" alt="PeriodicTimer the new async timer from .NET 6 in a web application" /></div>
+<p>Now the gap between each execution is 2 seconds because it's the time that the method needs to execute, so the WaitForNextTickAsync method won't overlap several executions.</p>
+<h2>Using the PeriodicTimer in a console application</h2>
+<p>We just saw how to use the brand new PeriodTimer in a .NET 6 ASP.NET web application. The challenge is that the timer tick needs to be awaited but you don't want to block your code's flow for this. A way for doing this is to create a class that will have a PeriodicTimer, a Task and a CancellationTokenSource as members, an async method to run the code inside a loop that awaits the timer ticks, and a method to stop the timer using the CancellationTokenSource (you cancel the token, you wait for the next tick that will be the last one then you dispose the CancellationTokenSource that won't be needed anymore). The timer can starts in the constructor of the class or in a dedicated method. The code could be something like that:</p>
+<pre><code class="csharp">
+internal class WeatherForecastBackgroundService
+{
+    private readonly PeriodicTimer timer;
+    private readonly CancellationTokenSource cts = new();
+    private Task? timerTask;
+
+    public WeatherForecastBackgroundService(TimeSpan timerInterval)
+    {
+        timer = new(timerInterval);
+    }
+
+    public void Start()
+    {
+        timerTask = DoWorkAsync();
+        Console.WriteLine("WeatherForecastBackgroundService just started");
+    }
+
+    private async Task DoWorkAsync()
+    {
+        try
+        {
+            while(await timer.WaitForNextTickAsync(cts.Token))
+            {
+                Console.WriteLine(string.Concat("WeatherForecastBackgroundService: ", DateTime.Now.ToString("O")));
+                await Task.Delay(500);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+
+        }
+    }
+
+    public async Task StopAsync()
+    {
+        if(timerTask is null)
+        {
+            return;
+        }
+
+        cts.Cancel();
+        await timerTask;
+        cts.Dispose();
+        Console.WriteLine("WeatherForecastBackgroundService just stopped");
+    }
+}
+</code></pre>
+<p>To call it in your program class you have just to instanciate a WeatherForecastBackgroundService with the interval you want in parameter then to start it and stop it when you want, it will execute in the background so it won't block your code's flow:</p>
+<pre><code class="csharp">
+using PeriodicTimerLab.ConsoleApp;
+
+Console.WriteLine("Hello to WeatherForecastBackgroundService");
+Console.WriteLine("Press any button to start the service");
+Console.ReadKey();
+
+WeatherForecastBackgroundService weatherForecastBackgroundService = new (TimeSpan.FromMilliseconds(1000));
+weatherForecastBackgroundService.Start();
+
+Console.WriteLine("Press any button to stop the service");
+Console.ReadKey();
+
+await weatherForecastBackgroundService.StopAsync();
+</code></pre>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/periodic-timer-new-async-timer-dotnet-6-06.png" title="PeriodicTimer the new async timer from .NET 6 in a console application" alt="PeriodicTimer the new async timer from .NET 6 in a console application" /></div>
+<p>As you can see it works and the timer tick is really really close to the second each time. This is a really modern, simple and nice way of implementing a timer, don't you think?</p>
+<p>Notice that the PeriodicTimer is intended to be used only by a single consumer at a time: only one call to WaitForNextTickAsync(CancellationToken) may be in flight at any given moment. Also, the execution contest isn't captured.</p>
+<p>For more informations you can read the <a href="https://docs.microsoft.com/en-us/dotnet/api/system.threading.periodictimer?view=net-6.0" title="Official PeriodicTimer documentation in .NET 6" target="_Blank" rel="nofollow">official documentation</a> and the links bellow.</p>
+				<div id="crdny">June 28, 2022</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>.NET 6</li>
+						<li>.NET Timer</li>
+						<li>PeriodicTimer</li>
+					</ul>
+				</div>
+				<div id="refs_wrapper">
+					<ul>
+					<li><a href="https://docs.microsoft.com/en-us/dotnet/api/system.threading.periodictimer?view=net-6.0" title="Official PeriodicTimer documentation in .NET 6" target="_Blank" rel="nofollow">Official PeriodicTimer documentation</a></li>
+					<li><a href="https://www.youtube.com/watch?v=J4JL4zR_l-0" title="" target="_Blank" rel="nofollow">Video by Nick Chaspas</a></li>
+					<li><a href="https://www.ilkayilknur.com/a-new-modern-timer-api-in-dotnet-6-periodictimer" title="" target="_Blank" rel="nofollow">A New Modern Timer API In .NET 6 - PeriodicTimer</a></li>
+						<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
+					</ul>
+				</div>
+            </div>
+			<!--<div id="relatedpostlist_ctn">
+				<h2>Related posts</h2>
+				<ul>
+					<li>
+						<a href="" title=""></a>
+					</li>
+				</ul>
+			</div>-->
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-85948839-1', 'auto');
+  ga('send', 'pageview');
+
+</script></body></html>
