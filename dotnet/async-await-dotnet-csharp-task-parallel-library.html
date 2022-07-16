@@ -56,12 +56,12 @@
 <p>In this article we will cover what the TPL is and does, what are the advantages of the Await and Async keywords and what are the tradeoffs of this because all code is not a good candidate for parallelization. We saw a lot of "Make all async" recently in companies but it's often a mistake.</p>
 <p>Like I just said, the Task Parallel Library allows you to ask for some code to run on a separated thread. For example this code creates and launches a Task on a separated thread, even if nothing is executed:</p>
 <pre><code class="csharp">
-Task.Run(() => { });
+Task.Run(() =&#62; { });
 </code></pre>
 <p>A Task distributes a work to a different thread. Be careful because unlike when your are handling the threads yourself, with the TPL the threads can be reused so be very careful with objects that could be shared between executions like static data, or just don't use it.</p>
 <p>The TPL also provides a lot of features like the possibility to subscribe to when the work is completed (this is know as something called "continuation"):</p>
 <pre><code class="csharp">
-Task<string>.Run(() => 
+Task&#60;string&#62;.Run(() =&#62; 
 {
    return "Hello from a Task!";
 });
@@ -71,19 +71,19 @@ Task<string>.Run(() =>
 <p>Assume we have a app that contain a button and a text block, and when you click on it a method is called that writes something into the textblock and in the debug trace.</p>
 <p>We have this XAML:</p>
 <pre><code class="csharp">
-<Window x:Class="WpfApp1.MainWindow"
+&#60;Window x:Class="WpfApp1.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfApp1"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Button HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="30" Click="Button_Click">Do some work</Button>
-        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="TracesTextBlock"></TextBlock>
-    </Grid>
-</Window>
+        Title="MainWindow" Height="450" Width="800"&#62;
+    &#60;Grid&#62;
+        &#60;Button HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="30" Click="Button_Click"&#62;Do some work</Button&#62;
+        &#60;TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="TracesTextBlock"></TextBlock&#62;
+    &#60;/Grid&#62;
+&#60;/Window&#62;
 </code></pre>
 <p>And this code behind:</p>
 <pre><code class="csharp">
@@ -137,7 +137,7 @@ private void DoSomeWork()
     Debug.WriteLine("Just started the execution of the method DoSomeWork...");
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    Task.Run(() => Thread.Sleep(2000));
+    Task.Run(() =&#62; Thread.Sleep(2000));
 
     TracesTextBlock.Text += "Just ended the execution of the method DoSomeWork...\n";
     Debug.WriteLine("Just ended the execution of the method DoSomeWork...");
@@ -156,8 +156,8 @@ private void DoSomeWork()
     Debug.WriteLine("Just started the execution of the method DoSomeWork...");
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    Task task = Task.Run(() => Thread.Sleep(2000));
-    task.ContinueWith(resultTask => {
+    Task task = Task.Run(() =&#62; Thread.Sleep(2000));
+    task.ContinueWith(resultTask =&#62; {
         TracesTextBlock.Text += "Just ended the execution of the method DoSomeWork...\n";
         Debug.WriteLine("Just ended the execution of the method DoSomeWork...");
     });
@@ -179,9 +179,9 @@ private void DoSomeWork()
     Debug.WriteLine("Just started the execution of the method DoSomeWork...");
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    Task task = Task.Run(() => Thread.Sleep(2000));
-    task.ContinueWith(resultTask => {
-        Dispatcher.Invoke(() =>
+    Task task = Task.Run(() =&#62; Thread.Sleep(2000));
+    task.ContinueWith(resultTask =&#62; {
+        Dispatcher.Invoke(() =&#62;
         {
             TracesTextBlock.Text += "Just ended the execution of the method DoSomeWork...\n";
             Debug.WriteLine("Just ended the execution of the method DoSomeWork...");
@@ -203,12 +203,12 @@ private void DoSomeWork()
     Debug.WriteLine("Just started the execution of the method DoSomeWork...");
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    var task = Task.Run<string>(() => {
+    var task = Task.Run&#60;string&#62;(() =&#62; {
         Thread.Sleep(2000);
         return "Here some text from the Task!";
     });
-    task.ContinueWith(resultTask => {
-        Dispatcher.Invoke(() =>
+    task.ContinueWith(resultTask =&#62; {
+        Dispatcher.Invoke(() =&#62;
         {
             TracesTextBlock.Text += resultTask.Result;
             Debug.WriteLine("Just ended the execution of the method DoSomeWork...");
@@ -223,15 +223,15 @@ private void DoSomeWork()
     Debug.WriteLine("Just started the execution of the method DoSomeWork...");
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    var task = Task.Run<string>(() => {
+    var task = Task.Run&#60;string&#62;(() =&#62; {
         Thread.Sleep(2000);
         return "Here some text from the Task!";
     });
 
     string taskResult = task.Result;
 
-    task.ContinueWith(resultTask => {
-        Dispatcher.Invoke(() =>
+    task.ContinueWith(resultTask =&#62; {
+        Dispatcher.Invoke(() =&#62;
         {
             TracesTextBlock.Text += taskResult;
             Debug.WriteLine("Just ended the execution of the method DoSomeWork...");
@@ -247,9 +247,9 @@ private void DoSomeWork()
 {
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    Task task = Task.Run(() => Thread.Sleep(2000));
+    Task task = Task.Run(() =&#62; Thread.Sleep(2000));
 	
-    task.ContinueWith(resultTask => {
+    task.ContinueWith(resultTask =&#62; {
         TracesTextBlock.Text += "Just ended the execution of the method DoSomeWork...\n";
     });
 }
@@ -260,9 +260,9 @@ private void DoSomeWork()
 {
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    Task task = Task.Run(() => throw new Exception());
+    Task task = Task.Run(() =&#62; throw new Exception());
 	
-    task.ContinueWith(resultTask => {
+    task.ContinueWith(resultTask =&#62; {
         TracesTextBlock.Text += "Just ended the execution of the method DoSomeWork...\n";
     });
 }
@@ -273,9 +273,9 @@ private void DoSomeWork()
 {
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    Task task = Task.Run(() => throw new Exception());
+    Task task = Task.Run(() =&#62; throw new Exception());
 
-    task.ContinueWith(resultTask => {
+    task.ContinueWith(resultTask =&#62; {
 
         if (task.IsFaulted)
         {
@@ -293,9 +293,9 @@ private void DoSomeWork()
 {
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    Task task = Task.Run(() => Thread.Sleep(2000));
+    Task task = Task.Run(() =&#62; Thread.Sleep(2000));
 
-    task.ContinueWith(resultTask =>
+    task.ContinueWith(resultTask =&#62;
     {
         if (task.IsFaulted)
         {
@@ -312,9 +312,9 @@ private void DoSomeWork()
 {
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    Task task = Task.Run(() => Thread.Sleep(2000));
+    Task task = Task.Run(() =&#62; Thread.Sleep(2000));
 
-    task.ContinueWith(resultTask =>
+    task.ContinueWith(resultTask =&#62;
     {
         if (task.IsFaulted)
         {
@@ -322,9 +322,9 @@ private void DoSomeWork()
         }
 
         TracesTextBlock.Text += "Just ended the execution of the method DoSomeWork...\n";
-    }).ContinueWith(task =>
+    }).ContinueWith(task =&#62;
     {
-        Dispatcher.Invoke(() =>
+        Dispatcher.Invoke(() =&#62;
         {
             Debug.WriteLine("An error occurred in the first Method.ContinueWith!");
             TracesTextBlock.Text += "An error occurred in the first Method.ContinueWith!";
@@ -338,9 +338,9 @@ private void DoSomeWork()
 <pre><code class="csharp">
 private void DoSomeWork()
 {
-    Task.Run(() =>
+    Task.Run(() =&#62;
     {
-        Parallel.For(0, 10, (i) =>
+        Parallel.For(0, 10, (i) =&#62;
         {
             Debug.WriteLine("For execution " + i);
         });
@@ -372,12 +372,12 @@ private void DoSomeWork()
 {
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    var task = Task.Run<string>(() => {
+    var task = Task.Run&#60;string&#62;(() =&#62; {
         Thread.Sleep(2000);
         return "Here some text from the Task!";
     });
-    task.ContinueWith(resultTask => {
-        Dispatcher.Invoke(() =>
+    task.ContinueWith(resultTask =&#62; {
+        Dispatcher.Invoke(() =&#62;
         {
             TracesTextBlock.Text += resultTask.Result;
         });
@@ -395,7 +395,7 @@ private async void DoSomeWorkAsync()
 {
     TracesTextBlock.Text += "Just started the execution of the method DoSomeWork...\n";
 
-    var task = Task.Run<string>(() => {
+    var task = Task.Run&#60;string&#62;(() =&#62; {
         Thread.Sleep(2000);
         return "Here some text from the Task!";
     });
@@ -431,7 +431,7 @@ private async Task DoSomeWorkAsync()
 {
     TracesTextBlock.Text += DateTime.Now.ToString() + " || Just started the execution of the method DoSomeWork...\n";
 
-    var task = Task.Run<string>(() => {
+    var task = Task.Run&#60;string&#62;(() =&#62; {
         Thread.Sleep(2000);
         return DateTime.Now.ToString() + " || Here some text from the Task!";
     });
@@ -463,7 +463,7 @@ private async Task DoSomeWorkAsync()
 {
     TracesTextBlock.Text += DateTime.Now.ToString() + " || Just started the execution of the method DoSomeWork...\n";
 
-    var task = Task.Run<string>(() =>
+    var task = Task.Run&#60;string&#62;(() =&#62;
     {
         throw new Exception();
         Thread.Sleep(2000);
@@ -518,7 +518,7 @@ private async Task DoSomeWorkAsync()
 {
     TracesTextBlock.Text += DateTime.Now.ToString() + " || Just started the execution of the method DoSomeWork...\n";
 
-    var task = Task.Run<string>(() =>
+    var task = Task.Run&#60;string&#62;(() =&#62;
     {
         Thread.Sleep(2000);
         return DateTime.Now.ToString() + " || Here some text from the Task!";
@@ -552,7 +552,7 @@ private async Task DoSomeWorkAsync()
     Thread.Sleep(4000);
     TracesTextBlock.Text += DateTime.Now.ToString() + " || Just started the execution of the method DoSomeWork...\n";
 
-    var task = Task.Run<string>(() =>
+    var task = Task.Run&#60;string&#62;(() =&#62;
     {
         Thread.Sleep(2000);
         return DateTime.Now.ToString() + " || Here some text from the Task!";
@@ -607,17 +607,17 @@ public class C
 {
     [StructLayout(LayoutKind.Auto)]
     [CompilerGenerated]
-    private struct <GetMyName>d__0 : IAsyncStateMachine
+    private struct &#60;GetMyName&#62;d__0 : IAsyncStateMachine
     {
-        public int <>1__state;
+        public int &#60;&#62;1__state;
 
-        public AsyncTaskMethodBuilder <>t__builder;
+        public AsyncTaskMethodBuilder &#60;&#62;t__builder;
 
-        private TaskAwaiter <>u__1;
+        private TaskAwaiter &#60;&#62;u__1;
 
         private void MoveNext()
         {
-            int num = <>1__state;
+            int num = &#60;&#62;1__state;
             try
             {
                 TaskAwaiter awaiter;
@@ -626,28 +626,28 @@ public class C
                     awaiter = Task.Delay(2000).GetAwaiter();
                     if (!awaiter.IsCompleted)
                     {
-                        num = (<>1__state = 0);
-                        <>u__1 = awaiter;
-                        <>t__builder.AwaitUnsafeOnCompleted(ref awaiter, ref this);
+                        num = (&#60;>1__state = 0);
+                        &#60;>u__1 = awaiter;
+                        &#60;>t__builder.AwaitUnsafeOnCompleted(ref awaiter, ref this);
                         return;
                     }
                 }
                 else
                 {
-                    awaiter = <>u__1;
-                    <>u__1 = default(TaskAwaiter);
-                    num = (<>1__state = -1);
+                    awaiter = &#60;&#62;u__1;
+                    &#60;&#62;u__1 = default(TaskAwaiter);
+                    num = (&#60;&#62;1__state = -1);
                 }
                 awaiter.GetResult();
             }
             catch (Exception exception)
             {
-                <>1__state = -2;
-                <>t__builder.SetException(exception);
+                &#60;&#62;1__state = -2;
+                &#60;&#62;t__builder.SetException(exception);
                 return;
             }
-            <>1__state = -2;
-            <>t__builder.SetResult();
+            &#60;&#62;1__state = -2;
+            &#60;&#62;t__builder.SetResult();
         }
 
         void IAsyncStateMachine.MoveNext()
@@ -659,7 +659,7 @@ public class C
         [DebuggerHidden]
         private void SetStateMachine(IAsyncStateMachine stateMachine)
         {
-            <>t__builder.SetStateMachine(stateMachine);
+            &#60;&#62;t__builder.SetStateMachine(stateMachine);
         }
 
         void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
@@ -669,19 +669,19 @@ public class C
         }
     }
 
-    [AsyncStateMachine(typeof(<GetMyName>d__0))]
+    [AsyncStateMachine(typeof(&#60;GetMyName&#62;d__0))]
     public Task GetMyName()
     {
-        <GetMyName>d__0 stateMachine = default(<GetMyName>d__0);
-        stateMachine.<>t__builder = AsyncTaskMethodBuilder.Create();
-        stateMachine.<>1__state = -1;
-        stateMachine.<>t__builder.Start(ref stateMachine);
-        return stateMachine.<>t__builder.Task;
+        &#60;GetMyName&#62;d__0 stateMachine = default(&#60;GetMyName&#62;d__0);
+        stateMachine.&#60;&#62;t__builder = AsyncTaskMethodBuilder.Create();
+        stateMachine.&#60;&#62;1__state = -1;
+        stateMachine.&#60;&#62;t__builder.Start(ref stateMachine);
+        return stateMachine.&#60;&#62;t__builder.Task;
     }
 }
 </code></pre>
 <p>The first thing to notice is that there is no async and await in this compilated code, it's because these 2 keywords does not really exists, they do not mean anything for the CLR they are just syntaxic sugar (a massive one) for the developers.</p>
-<p>You can see the code that instanciates the State Machine, set his state then starts it in the GetMyName method, you also can notice that it returns the State Machine's Task, which allows to access to the result of his execution: <code>return stateMachine.<>t__builder.Task</code>.</p>
+<p>You can see the code that instanciates the State Machine, set his state then starts it in the GetMyName method, you also can notice that it returns the State Machine's Task, which allows to access to the result of his execution: <code>return stateMachine.&#60;&#62;t__builder.Task</code>.</p>
 <p>Our original code has been moved into the State Machine as I said before, in the MoveNext method. The method loops until the Task.Delay's GetAwaiter is done, then it get and set the result.</p>
 <p>This compilated code is a little bit more difficult to apprehend that our original method that only has 3 lines in the method body, and the more your method will do the more the compilation will have to do for you.</p>
 <p>Now there is a danger we have to speack about, the deadlocks.</p>
@@ -690,9 +690,9 @@ public class C
 <p>A deadlock can completely crash your application. It happens when you create a circular awaiting dependency between different threads. If a thread A awaits the thread B to complete, the thread B awaits the thread C to complete and the thread C awaits the thread A to complete, nothing will happens and your application is crashed.</p>
 <p>Let's take a very basic example:</p>
 <pre><code class="csharp">
-Task.Delay(1).ContinueWith((t) =>
+Task.Delay(1).ContinueWith((t) =&#62;
 {
-    Dispatcher.Invoke(() =>
+    Dispatcher.Invoke(() =&#62;
     {
 
     });
@@ -723,7 +723,7 @@ private async Task DoSomeWorkAsync()
 {
     TracesTextBlock.Text += DateTime.Now.ToString() + " || Just started the execution of the method DoSomeWork...\n";
 
-    var task = Task.Run<string>(() =>
+    var task = Task.Run&#60;string&#62;(() =&#62;
     {
         Thread.Sleep(2000);
         return DateTime.Now.ToString() + " || Here some text from the Task! \n";
@@ -777,20 +777,20 @@ public class C
 {
     [StructLayout(LayoutKind.Auto)]
     [CompilerGenerated]
-    private struct <SomeAsyncMethod>d__0 : IAsyncStateMachine
+    private struct &#60;SomeAsyncMethod&#62;d__0 : IAsyncStateMachine
     {
-        public int <>1__state;
+        public int &#60;&#62;1__state;
 
-        public AsyncTaskMethodBuilder <>t__builder;
+        public AsyncTaskMethodBuilder &#60;&#62;t__builder;
 
-        public C <>4__this;
+        public C &#60;&#62;4__this;
 
-        private TaskAwaiter <>u__1;
+        private TaskAwaiter &#60;&#62;u__1;
 
         private void MoveNext()
         {
-            int num = <>1__state;
-            C c = <>4__this;
+            int num = &#60;&#62;1__state;
+            C c = &#60;&#62;4__this;
             try
             {
                 TaskAwaiter awaiter;
@@ -799,28 +799,28 @@ public class C
                     awaiter = c.AnotherAsyncMethod().GetAwaiter();
                     if (!awaiter.IsCompleted)
                     {
-                        num = (<>1__state = 0);
-                        <>u__1 = awaiter;
-                        <>t__builder.AwaitUnsafeOnCompleted(ref awaiter, ref this);
+                        num = (&#60;&#62;1__state = 0);
+                        &#60;&#62;u__1 = awaiter;
+                        &#60;&#62;t__builder.AwaitUnsafeOnCompleted(ref awaiter, ref this);
                         return;
                     }
                 }
                 else
                 {
-                    awaiter = <>u__1;
-                    <>u__1 = default(TaskAwaiter);
-                    num = (<>1__state = -1);
+                    awaiter = &#60;&#62;u__1;
+                    &#60;&#62;u__1 = default(TaskAwaiter);
+                    num = (&#60;&#62;1__state = -1);
                 }
                 awaiter.GetResult();
             }
             catch (Exception exception)
             {
-                <>1__state = -2;
-                <>t__builder.SetException(exception);
+                &#60;&#62;1__state = -2;
+                &#60;&#62;t__builder.SetException(exception);
                 return;
             }
-            <>1__state = -2;
-            <>t__builder.SetResult();
+            &#60;&#62;1__state = -2;
+            &#60;&#62;t__builder.SetResult();
         }
 
         void IAsyncStateMachine.MoveNext()
@@ -832,7 +832,7 @@ public class C
         [DebuggerHidden]
         private void SetStateMachine(IAsyncStateMachine stateMachine)
         {
-            <>t__builder.SetStateMachine(stateMachine);
+            &#60;&#62;t__builder.SetStateMachine(stateMachine);
         }
 
         void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
@@ -844,20 +844,20 @@ public class C
 
     [StructLayout(LayoutKind.Auto)]
     [CompilerGenerated]
-    private struct <AnotherAsyncMethod>d__1 : IAsyncStateMachine
+    private struct &#60;AnotherAsyncMethod&#62;d__1 : IAsyncStateMachine
     {
-        public int <>1__state;
+        public int &#60;&#62;1__state;
 
-        public AsyncTaskMethodBuilder <>t__builder;
+        public AsyncTaskMethodBuilder &#60;&#62;t__builder;
 
-        public C <>4__this;
+        public C &#60;&#62;4__this;
 
-        private TaskAwaiter <>u__1;
+        private TaskAwaiter &#60;&#62;u__1;
 
         private void MoveNext()
         {
-            int num = <>1__state;
-            C c = <>4__this;
+            int num = &#60;&#62;1__state;
+            C c = &#60;&#62;4__this;
             try
             {
                 TaskAwaiter awaiter;
@@ -866,28 +866,28 @@ public class C
                     awaiter = c.ThirdAsyncMethod().GetAwaiter();
                     if (!awaiter.IsCompleted)
                     {
-                        num = (<>1__state = 0);
-                        <>u__1 = awaiter;
-                        <>t__builder.AwaitUnsafeOnCompleted(ref awaiter, ref this);
+                        num = (&#60;&#62;1__state = 0);
+                        &#60;&#62;u__1 = awaiter;
+                        &#60;&#62;t__builder.AwaitUnsafeOnCompleted(ref awaiter, ref this);
                         return;
                     }
                 }
                 else
                 {
-                    awaiter = <>u__1;
-                    <>u__1 = default(TaskAwaiter);
-                    num = (<>1__state = -1);
+                    awaiter = &#60;&#62;u__1;
+                    &#60;&#62;u__1 = default(TaskAwaiter);
+                    num = (&#60;&#62;1__state = -1);
                 }
                 awaiter.GetResult();
             }
             catch (Exception exception)
             {
-                <>1__state = -2;
-                <>t__builder.SetException(exception);
+                &#60;&#62;1__state = -2;
+                &#60;&#62;t__builder.SetException(exception);
                 return;
             }
-            <>1__state = -2;
-            <>t__builder.SetResult();
+            &#60;&#62;1__state = -2;
+            &#60;&#62;t__builder.SetResult();
         }
 
         void IAsyncStateMachine.MoveNext()
@@ -899,7 +899,7 @@ public class C
         [DebuggerHidden]
         private void SetStateMachine(IAsyncStateMachine stateMachine)
         {
-            <>t__builder.SetStateMachine(stateMachine);
+            &#60;&#62;t__builder.SetStateMachine(stateMachine);
         }
 
         void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
@@ -911,17 +911,17 @@ public class C
 
     [StructLayout(LayoutKind.Auto)]
     [CompilerGenerated]
-    private struct <ThirdAsyncMethod>d__2 : IAsyncStateMachine
+    private struct &#60;ThirdAsyncMethod&#62;d__2 : IAsyncStateMachine
     {
-        public int <>1__state;
+        public int &#60;&#62;1__state;
 
-        public AsyncTaskMethodBuilder <>t__builder;
+        public AsyncTaskMethodBuilder &#60;&#62;t__builder;
 
-        private TaskAwaiter <>u__1;
+        private TaskAwaiter &#60;&#62;u__1;
 
         private void MoveNext()
         {
-            int num = <>1__state;
+            int num = &#60;&#62;1__state;
             try
             {
                 TaskAwaiter awaiter;
@@ -930,28 +930,28 @@ public class C
                     awaiter = Task.Delay(500).GetAwaiter();
                     if (!awaiter.IsCompleted)
                     {
-                        num = (<>1__state = 0);
-                        <>u__1 = awaiter;
-                        <>t__builder.AwaitUnsafeOnCompleted(ref awaiter, ref this);
+                        num = (&#60;&#62;1__state = 0);
+                        &#60;&#62;u__1 = awaiter;
+                        &#60;&#62;t__builder.AwaitUnsafeOnCompleted(ref awaiter, ref this);
                         return;
                     }
                 }
                 else
                 {
-                    awaiter = <>u__1;
-                    <>u__1 = default(TaskAwaiter);
-                    num = (<>1__state = -1);
+                    awaiter = &#60;&#62;u__1;
+                    &#60;&#62;u__1 = default(TaskAwaiter);
+                    num = (&#60;&#62;1__state = -1);
                 }
                 awaiter.GetResult();
             }
             catch (Exception exception)
             {
-                <>1__state = -2;
-                <>t__builder.SetException(exception);
+                &#60;&#62;1__state = -2;
+                &#60;&#62;t__builder.SetException(exception);
                 return;
             }
-            <>1__state = -2;
-            <>t__builder.SetResult();
+            &#60;&#62;1__state = -2;
+            &#60;&#62;t__builder.SetResult();
         }
 
         void IAsyncStateMachine.MoveNext()
@@ -963,7 +963,7 @@ public class C
         [DebuggerHidden]
         private void SetStateMachine(IAsyncStateMachine stateMachine)
         {
-            <>t__builder.SetStateMachine(stateMachine);
+            &#60;&#62;t__builder.SetStateMachine(stateMachine);
         }
 
         void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
@@ -973,36 +973,36 @@ public class C
         }
     }
 
-    [AsyncStateMachine(typeof(<SomeAsyncMethod>d__0))]
+    [AsyncStateMachine(typeof(&#60;SomeAsyncMethod&#62;d__0))]
     private Task SomeAsyncMethod()
     {
-        <SomeAsyncMethod>d__0 stateMachine = default(<SomeAsyncMethod>d__0);
-        stateMachine.<>t__builder = AsyncTaskMethodBuilder.Create();
-        stateMachine.<>4__this = this;
-        stateMachine.<>1__state = -1;
-        stateMachine.<>t__builder.Start(ref stateMachine);
-        return stateMachine.<>t__builder.Task;
+        &#60;SomeAsyncMethod>d__0 stateMachine = default(&#60;SomeAsyncMethod&#62;d__0);
+        stateMachine.&#60;&#62;t__builder = AsyncTaskMethodBuilder.Create();
+        stateMachine.&#60;&#62;4__this = this;
+        stateMachine.&#60;&#62;1__state = -1;
+        stateMachine.&#60;&#62;t__builder.Start(ref stateMachine);
+        return stateMachine.&#60;&#62;t__builder.Task;
     }
 
-    [AsyncStateMachine(typeof(<AnotherAsyncMethod>d__1))]
+    [AsyncStateMachine(typeof(&#60;AnotherAsyncMethod&#62;d__1))]
     private Task AnotherAsyncMethod()
     {
-        <AnotherAsyncMethod>d__1 stateMachine = default(<AnotherAsyncMethod>d__1);
-        stateMachine.<>t__builder = AsyncTaskMethodBuilder.Create();
-        stateMachine.<>4__this = this;
-        stateMachine.<>1__state = -1;
-        stateMachine.<>t__builder.Start(ref stateMachine);
-        return stateMachine.<>t__builder.Task;
+        &#60;AnotherAsyncMethod>d__1 stateMachine = default(&#60;AnotherAsyncMethod&#62;d__1);
+        stateMachine.&#60;&#62;t__builder = AsyncTaskMethodBuilder.Create();
+        stateMachine.&#60;&#62;4__this = this;
+        stateMachine.&#60;&#62;1__state = -1;
+        stateMachine.&#60;&#62;t__builder.Start(ref stateMachine);
+        return stateMachine.&#60;&#62;t__builder.Task;
     }
 
-    [AsyncStateMachine(typeof(<ThirdAsyncMethod>d__2))]
+    [AsyncStateMachine(typeof(&#60;ThirdAsyncMethod&#62;d__2))]
     private Task ThirdAsyncMethod()
     {
-        <ThirdAsyncMethod>d__2 stateMachine = default(<ThirdAsyncMethod>d__2);
-        stateMachine.<>t__builder = AsyncTaskMethodBuilder.Create();
-        stateMachine.<>1__state = -1;
-        stateMachine.<>t__builder.Start(ref stateMachine);
-        return stateMachine.<>t__builder.Task;
+        &#60;ThirdAsyncMethod>d__2 stateMachine = default(&#60;ThirdAsyncMethod&#62;d__2);
+        stateMachine.&#60;&#62;t__builder = AsyncTaskMethodBuilder.Create();
+        stateMachine.&#60;&#62;1__state = -1;
+        stateMachine.&#60;&#62;t__builder.Start(ref stateMachine);
+        return stateMachine.&#60;&#62;t__builder.Task;
     }
 }
 </code></pre>
@@ -1034,7 +1034,7 @@ private async Task ThirdAsyncMethod()
 <pre><code class="csharp">
 private Task ThirdAsyncMethod()
 {
-    return Task.Run(() => Task.Delay(500));
+    return Task.Run(() =&#62; Task.Delay(500));
 }
 </code></pre>
 <p>Notice that if this method had multiple independent code processes, like this:</p>
@@ -1073,13 +1073,13 @@ public class C
 {
     [Serializable]
     [CompilerGenerated]
-    private sealed class <>c
+    private sealed class &#60;&#62;c
     {
-        public static readonly <>c <>9 = new <>c();
+        public static readonly &#60;&#62;c &#60;&#62;9 = new &#60;&#62;c();
 
-        public static Func<Task> <>9__2_0;
+        public static Func&#60;Task> &#60;&#62;9__2_0;
 
-        internal Task <ThirdAsyncMethod>b__2_0()
+        internal Task &#60;ThirdAsyncMethod&#62;b__2_0()
         {
             return Task.Delay(500);
         }
@@ -1097,7 +1097,7 @@ public class C
 
     private Task ThirdAsyncMethod()
     {
-        return Task.Run(<>c.<>9__2_0 ?? (<>c.<>9__2_0 = new Func<Task>(<>c.<>9.<ThirdAsyncMethod>b__2_0)));
+        return Task.Run(&#60;&#62;c.&#60;&#62;9__2_0 ?? (&#60;&#62;c.&#60;&#62;9__2_0 = new Func&#60;Task&#62;(&#60;&#62;c.&#60;&#62;9.&#60;ThirdAsyncMethod&#62;b__2_0)));
     }
 }
 </code></pre>
@@ -1156,69 +1156,23 @@ private async Task LongRunningOperationAsync(CancellationToken token)
     }
 }
 </code></pre>
-<!--
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/.png" title="" alt="" /></div>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<pre><code class="csharp">
-
-</code></pre>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/.png" title="" alt="" /></div>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<pre><code class="csharp">
-</code></pre>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/.png" title="" alt="" /></div>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<pre><code class="csharp">
-</code></pre>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/.png" title="" alt="" /></div>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<pre><code class="csharp">
-</code></pre>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/.png" title="" alt="" /></div>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<pre><code class="csharp">
-</code></pre>-->
 <div id="crdny">July 14, 2022</div>
 				<div id="tags_wrapper">
 					<ul>
-						<li>.NET 6</li>
-						<li>Hashids</li>
-						<li>Hashids NuGet package</li>
+						<li>.NET</li>
+						<li>Task Parallel Library</li>
+						<li>Async</li>
+						<li>Await</li>
 					</ul>
 				</div>
 				<div id="refs_wrapper">
 				<li><a href="https://docs.microsoft.com/en-us/dotnet/standard/parallel-programming/task-parallel-library-tpl" title="" target="_Blank" rel="nofollow">Task Parallel Library (TPL) documentation</a></li>
+				<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
 				<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
 				<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
 				<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
 				<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
-				<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>
-						<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
+						<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
 					</ul>
 				</div>
             </div>
