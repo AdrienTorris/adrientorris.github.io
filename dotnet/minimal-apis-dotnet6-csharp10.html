@@ -6,7 +6,7 @@
 		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="language" content="en" />
-		<meta name="keywords" content=".NET,.NET 6,.NET 7,csharp,C#,Minimal API,Minimal APIs,.NET API development,C# 9, C# 10" />
+		<meta name="keywords" content=".NET,.NET 6,.NET 7,csharp,C#,Minimal API,Minimal APIs,.NET API development,C# 9, C# 10,NancyFX,GO GIN,Python FastAPI" />
 		<meta name="description" content="Overview of Minimal APIs with .NET 6 and C# 10. What is it? How it works? Is it great?" />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
@@ -54,16 +54,12 @@
 			<h1>Overview of Minimal APIs with .NET 6 and C# 10</h1>
 <h2>What are minimal APIs ?</h2>
 <q>An unopiniatonated way to build high performance APIs in .NET with the minimal amount of implicitly added features and the maximal amount of flexibility to explicitly opt in the features and the structure that you need</q>
-<p>Nick Chaspas, NDC London 2022</p>
+<p style="font-size:10px;font-style:italic;text-align:right;float:right;">- Nick Chaspas, NDC London 2022</p>
 <p>The Minimal APIs journey start with the will of the .NET development team to allow developers to embrace minimalism. We speak a lot for years now about how to avoid massive monotlithic applications and to prefer microservices but .NET never offered a way to really create minimal APIs. The reason is because APIs are based on the MVC layer so they ineherit from a lot of useless code which make them more complex and resources-cosuming than they should be. Minimal APIs are the answer of the .NET team of all this useless complexity. Now, .NET, like the majority of the others development languages, offers a way to create really minimal APIs with just what you need inside. Regarding that, Minimal APIs are a major .NET feature.</p>
 <h2>Minimal APIs is not a new concept</h2>
 <p>Even if they didn't exist in .NET, minimal APIs are existing for years now in other development environments.</p>
-<p style="font-weight:700;padding-left:25px;">Node.Json</p>
-<pre><code class="nodejs">
-
-</code></pre>
 <p style="font-weight:700;padding-left:25px;">Node.JS</p>
-<pre><code class="nodejs">
+<pre><code class="javascript">
 const express = require('express')
 const app = express()
 const port = 3000
@@ -101,7 +97,6 @@ def read_root():
 </code></pre>
 <p>To be fair it is not exactly right to say that Minimal APIs weren't existing in .NET before .NET 6 and C# 10, it was existing but you needed to use a package named NancyFX, a lightweight and low-ceremony framework for building HTTP based services on .Net and Mono but it was pretty confidential:</p>
 <p style="font-weight:700;padding-left:25px;">.NET - NancyFX</p>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis-dotnet6-csharp10-nancyfx-github.png" title="" alt="" /></div>
 <pre><code class="csharp">
 public class SampleModule : Nancy.NancyModule
 {
@@ -112,6 +107,7 @@ public class SampleModule : Nancy.NancyModule
 }
 </code></pre>
 <p>If NancyFX is still available notice that this project has been archived on GitHub since .NET Core and is not longer maintained: <a href="https://github.com/NancyFx/Nancy#-announcement----nancy-is-no-longer-being-maintained" title="" target="_Blank" rel="nofollow">** Announcement ** - Nancy is no longer being maintained!</a>.</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis-dotnet6-csharp10-nancyfx-github.png" title="" alt="" /></div>
 <p>The code samples below are just a few examples of Minimal APIs in other developments environments but they exists in pretty much of the languages, .NET and C# is one of the last to incorporate them with official support.</p>
 <h2>How can they work?</h2>
 <p>The Minimal APIs are based on several C# 9 and C# 10 features, mainly C# 10 features:</p>
@@ -216,18 +212,6 @@ app.Run();
 <pre><code class="csharp">
 var builder = WebApplication.CreateBuilder(args);
 
-// ConfigureServices
-
-var app = builder.Build();
-
-// Configure
-
-app.Run();
-</code></pre>
-<p>Let's add some endpoints now:</p>
-<pre><code class="csharp">
-var builder = WebApplication.CreateBuilder(args);
-
 var app = builder.Build();
 
 app.MapGet("hello", () => "Hello You! How are you?");
@@ -274,7 +258,8 @@ app.Run();
 </code></pre>
 <p>We made some GET examples but you have a Map method for several HTTP verbs like POST, PUT or DELETE.</p>
 <p>The minimal API is capable of dealing with route parameters the same ways than controllers:</p>
-<p>var builder = WebApplication.CreateBuilder(args);
+<pre><code class="csharp">
+var builder = WebApplication.CreateBuilder(args);
 
 var app = builder.Build();
 
@@ -283,9 +268,11 @@ app.MapPost("user/{id:int}", (int id) =>
      id
 });
 
-app.Run();</p>
+app.Run();
+</code></pre>
 <p>You can use the routing API the same way as with controllers:</p>
-<p>var builder = WebApplication.CreateBuilder(args);
+<pre><code class="csharp">
+var builder = WebApplication.CreateBuilder(args);
 
 var app = builder.Build();
 
@@ -296,7 +283,9 @@ app.MapPost("user/{id:int}", ([FromQuery]int id, [FromHeader]string accept, [Fro
 
 app.Run();
 
-record User(string fullName);</p>
+record User(string fullName);
+</code></pre>
+<p>To see more of the possibilities offers by the Minimal APIs you should take the time to browse the Dodyg samples on it, there are just a goldmine (like all his samples): <a href="https://github.com/dodyg/practical-aspnetcore/tree/net6.0/projects/minimal-api" title="" target="_Blank" rel="nofollow">Minimal APIs samples</a>.</p>
 <h2>What minimal API does not support?</h2>
 <ul>
 <li>No support for filters (It seems that an equivalent of them will coming pretty soon but it won't be the exactly same thing as today so we probably won't use the filters we have in our actual MVC projects).</li>
@@ -318,13 +307,52 @@ record User(string fullName);</p>
 <li>They can grow a lot leading to "fat controllers"</li>
 </ul>
 <h2>Can Minimal APIs have some structure?</h2>
-<p><!-- here --></p>
+<p>The complaint I hear the most about Minimal APIs is that it has no structure, but this complaint just doesn't make any sense! Minimal APIs are not "Single File API's", they are Minimal APIs. If you develop an MVC-way API and put all your code in a single file, it doesn't make the MVC-way bad, it's just you who doesn't make things right. It the same for Minimal APIs, they can be developped in a single file, which will most of the time a bad practice, and they can structured like any .NET project in an elegant and coherent structure. I invite you to consult the <a href="https://github.com/Elfocrash/clean-minimal-api" title="" target="_Blank" rel="nofollow">clean minimal API sample by Nick Chaspas</a> which is a structured Minimal API project :</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/structured-clean-minimal-api-dotnet-nick-chaspas.png" title="" alt="" /></div>
+<p>In this sample, Nick Chaspas has created separates endpoint classes to avoid useless coupling between them.</p>
+<p>This is an example for the endpoint to get an item, a consumer here:</p>
+<pre><code class="csharp">
+using Customers.Api.Contracts.Requests;
+using Customers.Api.Contracts.Responses;
+using Customers.Api.Mapping;
+using Customers.Api.Services;
+using FastEndpoints;
+using Microsoft.AspNetCore.Authorization;
+
+namespace Customers.Api.Endpoints;
+
+[HttpGet("customers/{id:guid}"), AllowAnonymous]
+public class GetCustomerEndpoint : Endpoint<GetCustomerRequest, CustomerResponse>
+{
+    private readonly ICustomerService _customerService;
+
+    public GetCustomerEndpoint(ICustomerService customerService)
+    {
+        _customerService = customerService;
+    }
+
+    public override async Task HandleAsync(GetCustomerRequest req, CancellationToken ct)
+    {
+        var customer = await _customerService.GetAsync(req.Id);
+
+        if (customer is null)
+        {
+            await SendNotFoundAsync(ct);
+            return;
+        }
+
+        var customerResponse = customer.ToCustomerResponse();
+        await SendOkAsync(customerResponse, ct);
+    }
+}
+</code></pre>
+<p>As you can see this project is perfectly structured but has the minimal amount of built-in code, which is all the purpose of Minimal APIs.</p>
+<h2>To conclude</h2>
 <p>When you think about it, the minimalism and low-ceremony approach seems to be the better one, the "natural one". Call it "Minimal APIs" is maybe a mistake because it infers that it's not the default way to do it, which can be a little scary, when the old fashion is probably the wrong one. Maybe Microsoft should have name "Minimal APIs" just "APIs" and the MVC-way of doing it "Unessential APIs" or "Massive APIs". In any case, .NET 6 brings us an elegant and efficient way of developing APIs that I invite you to discover and try if you haven't already done so. The first step (or second if you are reading theses lines...) should be to watch the brilliant talk of <a href="https://www.youtube.com/watch?v=hPpvlKLeYYA" title="" target="_Blank" rel="nofollow">Nick Chaspas at the NDC London</a>.</p>
 <!--
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/" title="" alt="" /></div>
 <p></p>
 <pre><code class="csharp">
-
 </code></pre>-->
 <div id="crdny">August 28, 2022</div>
 				<div id="tags_wrapper">
@@ -332,7 +360,7 @@ record User(string fullName);</p>
 						<li>.NET 6</li>
 						<li>C# 10</li>
 						<li>Minimal APIs</li>
-						<li></li>
+						<li>NancyFX</li>
 					</ul>
 				</div>
 				<div id="refs_wrapper">
@@ -341,6 +369,7 @@ record User(string fullName);</p>
 				<li><a href="https://www.hanselman.com/blog/implicit-usings-in-net-6" title="" target="_Blank" rel="nofollow">Article from Scott Hanselman about Implicit using statements</a></li>
 				<li><a href="https://github.com/Elfocrash/clean-minimal-api" title="" target="_Blank" rel="nofollow">Clean minimal API sample by Nick Chaspas</a></li>
 				<li><a href="https://github.com/NancyFx/Nancy" title="" target="_Blank" rel="nofollow">NancyFX's GitHub</a></li>
+				<li><a href="https://github.com/dodyg/practical-aspnetcore/tree/net6.0/projects/minimal-api" title="" target="_Blank" rel="nofollow">Minimal APIs samples</a></li>
 				<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
 					</ul>
 				</div>
