@@ -175,9 +175,14 @@ Console.ReadLine();
 var func = (string firstName, string lastName) => $"Hi! I am {firstName} {lastName}";
 </code></pre>
 <h3>Attributes on lambdas</h3>
-<p></p>
+<p>Beginning with C# 10, you can add attributes to a lambda expression and its parameters. Here an example with an <code>obsolete</code> tag:</p>
 <pre><code class="csharp">
 var func = [Obsolete](string firstName, string lastName) => $"Hi! I am {firstName} {lastName}";
+</code></pre>
+<p>You can also add attributes to the input parameters or return value, as the following example shows:</p>
+<pre><code class="csharp">
+var sum = ([Example(1)] int a, [Example(2), Example(3)] int b) => a + b;
+var inc = [return: Example(1)] (int s) => s++;
 </code></pre>
 <h2>What are Minimal APIs?</h2>
 <p>A minimal API has 2 fundamental components:</p>
@@ -348,7 +353,8 @@ public class GetCustomerEndpoint : Endpoint<GetCustomerRequest, CustomerResponse
 </code></pre>
 <p>As you can see this project is perfectly structured but has the minimal amount of built-in code, which is all the purpose of Minimal APIs.</p>
 <h2>To conclude</h2>
-<p>When you think about it, the minimalism and low-ceremony approach seems to be the better one, the "natural one". Call it "Minimal APIs" is maybe a mistake because it infers that it's not the default way to do it, which can be a little scary, when the old fashion is probably the wrong one. Maybe Microsoft should have name "Minimal APIs" just "APIs" and the MVC-way of doing it "Unessential APIs" or "Massive APIs". In any case, .NET 6 brings us an elegant and efficient way of developing APIs that I invite you to discover and try if you haven't already done so. The first step (or second if you are reading theses lines...) should be to watch the brilliant talk of <a href="https://www.youtube.com/watch?v=hPpvlKLeYYA" title="" target="_Blank" rel="nofollow">Nick Chaspas at the NDC London</a>.</p>
+<p>When you think about it, the minimalism and low-ceremony approach seems to be the better one, the "natural one". Call it "Minimal APIs" is maybe a mistake because it infers that it's not the default way to do it, which can be a little scary, when the old fashion is probably the wrong one. Maybe Microsoft should have name "Minimal APIs" just "APIs" and the MVC-way of doing it "Unessential APIs" or "Massive APIs".</p>
+<p>In any case, .NET 6 brings us an elegant and efficient way of developing APIs that I invite you to discover and try if you haven't already done so. The first step (or second if you are reading theses lines...) should be to watch the brilliant talk of <a href="https://www.youtube.com/watch?v=hPpvlKLeYYA" title="" target="_Blank" rel="nofollow">Nick Chaspas at the NDC London</a>.</p>
 <!--
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/" title="" alt="" /></div>
 <p></p>
@@ -370,6 +376,7 @@ public class GetCustomerEndpoint : Endpoint<GetCustomerRequest, CustomerResponse
 				<li><a href="https://github.com/Elfocrash/clean-minimal-api" title="" target="_Blank" rel="nofollow">Clean minimal API sample by Nick Chaspas</a></li>
 				<li><a href="https://github.com/NancyFx/Nancy" title="" target="_Blank" rel="nofollow">NancyFX's GitHub</a></li>
 				<li><a href="https://github.com/dodyg/practical-aspnetcore/tree/net6.0/projects/minimal-api" title="" target="_Blank" rel="nofollow">Minimal APIs samples</a></li>
+				<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-expressions#attributes" title="" target="_Blank" rel="nofollow">Lamda expressions documentation</a></li>
 				<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
 					</ul>
 				</div>
