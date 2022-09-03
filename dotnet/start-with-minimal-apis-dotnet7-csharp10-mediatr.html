@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Start playing with .NET 7, Minimal APIs and MediatR</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="language" content="en" />
+		<meta name="keywords" content=".NET,.NET 6,.NET 7,csharp,C#,Minimal API,Minimal APIs,.NET API development,C# 9, C# 10,MediatR" />
+		<meta name="description" content="Start playing with .NET 7, Minimal APIs and MediatR" />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<!--<meta name="generator" content="SiteUp! 0.1" />-->
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2>
+					<ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/4428633/adrientorris" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="Technical blog of Adrien Torris (Blazor, .NET Core, ASP.NET Core, .NET, ASP.NET, C# ...)">Home</a></li>
+					<li>.NET</li>
+					<li class="active"><a href="https://adrientorris.github.io/dotnet/start-with-minimal-apis-dotnet7-csharp10-mediatr" title="Start playing with .NET 7, Minimal APIs and MediatR">Start playing with .NET 7, Minimal APIs and MediatR</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn">
+			<h1>Start playing with .NET 7, Minimal APIs and MediatR</h1>
+<p>Let's start playing with .NET 7, Minimal APIs and MediatR by creating a basic API to see how all these concepts are feeting together.</p>
+<p>First step, we create an empty .NET 7 ASP.NET Core web project.</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis/minimal-api-mediatr-dotnet7-01.PNG" title="" alt="" /></div>
+<p>Now we add MediatR to the project using NuGet.</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis/minimal-api-mediatr-dotnet7-02.PNG" title="" alt="" /></div>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis/minimal-api-mediatr-dotnet7-03.PNG" title="" alt="" /></div>
+<p>We create our own interface for the HTTP Request which inherit from the MediatR <code>IRequest</code> interface.</p>
+<pre><code class="csharp">
+using MediatR;
+
+namespace MinimalApiWithMediatRLab.Requests;
+
+public interface IHttpRequest : IRequest<IResult>
+{
+}
+</code></pre>
+<p>We add an HTTP request object, let's say we want to add an endpoint to get a customer by his identifier.</p>
+<pre><code class="csharp">
+namespace MinimalApiWithMediatRLab.Requests;
+
+public class GetCustomerRequest : IHttpRequest
+{
+    public int Id { get; set; }
+}
+</code></pre>
+<p>We create a handler to process this request and execute the behavior we want to.</p>
+<pre><code class="csharp">
+using MediatR;
+using MinimalApiWithMediatRLab.Requests;
+
+namespace MinimalApiWithMediatRLab.Handlers;
+
+internal class GetCustomerHandler : IRequestHandler<GetCustomerRequest, IResult>
+{
+    public async Task<IResult> Handle(GetCustomerRequest request, CancellationToken cancellationToken)
+    {
+        await Task.Delay(10); // To simulate some business logic
+
+        return Results.Ok(new
+        {
+            Id = request.Id,
+            FirstName = "Adrien",
+            LastName = "Torris",
+            Message = $"Hello customer #{request.Id}"
+        });
+    }
+}
+</code></pre>
+<p>We create an extension class to configure our MediatR implementation:</p>
+<pre><code class="csharp">
+using MinimalApiWithMediatRLab.Requests;
+using MediatR;
+
+internal static class MediatRExtensions
+{
+    internal static WebApplication MediateGet<TRequest>(this WebApplication app, string template) where TRequest : IHttpRequest
+    {
+        app.MapGet(template, async (IMediator mediator, [AsParameters] TRequest request) => await mediator.Send(request));
+        return app;
+    }
+}
+</code></pre>
+<p>We configure our application to use MediatR:</p>
+<pre><code class="csharp">
+builder.Services.AddMediatR(x => x.AsScoped(), typeof(Program));
+</code></pre>
+<p>Next we declare the endoint we want to add:</p>
+<pre><code class="csharp">
+app.MediateGet<GetCustomerRequest>("customer/{id}");
+</code></pre>
+<p>Now we can run our application and call the endpoint we created:</p>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis/minimal-api-mediatr-dotnet7-04.PNG" title="" alt="" /></div>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis/minimal-api-mediatr-dotnet7-05.PNG" title="" alt="" /></div>
+<p>We have now an API that works but doesn't do much. We have only one GET method, let's implement another HTTP verb, like a POST method. To handle other verbs, you have just to map them in our extension class:</p>
+<pre><code class="csharp">
+using MinimalApiWithMediatRLab.Requests;
+using MediatR;
+
+internal static class MediatRExtensions
+{
+    internal static WebApplication MediateGet<TRequest>(this WebApplication app, string template) where TRequest : IHttpRequest
+    {
+        app.MapGet(template, async (IMediator mediator, [AsParameters] TRequest request) => await mediator.Send(request));
+        return app;
+    }
+
+    internal static WebApplication MediatePost<TRequest>(this WebApplication app, string template) where TRequest : IHttpRequest
+    {
+        app.MapPost(template, async (IMediator mediator, [AsParameters] TRequest request) => await mediator.Send(request));
+        return app;
+    }
+}
+</code></pre>
+<p>Now we can add POST endpoint by doing exactly the same thing than for GET ones but by using the <code>MediatePost</code> method.</p>
+<p>Also, to be more in a real-world scenario where there are often business logic involves, let's add a service and inject it in the handler. To continue with our customer example, let's a Customer service with a Get method:</p>
+<pre><code class="csharp">
+public class Customer
+{
+    public int Id { get; init; }
+    public string FirstName { get; init; }
+    public string LastName { get; init; }
+
+    public Customer(int id, string firstName, string lastName)
+    {
+        this.Id = id;
+        this.FirstName = firstName;
+        this.LastName = lastName;
+    }
+}
+</code></pre>
+<pre><code class="csharp">
+namespace MinimalApiWithMediatRLab.Services;
+
+public class CustomerService : ICustomerService
+{
+    private static readonly Customer[] customers =
+    {
+        new Customer(1, "Adrien", "Torris"),
+        new Customer(2, "Scott", "Parker"),
+        new Customer(3, "Bruce", "Wayne"),
+        new Customer(4, "Tin", "Tin")
+    };
+
+    public async Task<Customer> GetAsync(int id)
+    {
+        await Task.Delay(10);
+        return customers.SingleOrDefault(x => x.Id == id);
+    }
+}
+</code></pre>
+<p>Once our service created, we must register it into the Dependency Injection to make it available for the consumers which want to use it:</p>
+<pre><code class="csharp">
+builder.Services.AddSingleton<ICustomerService, CustomerService>();
+</code></pre>
+<p>Now that our service is ready for use, we inject the CustomerService in our HTTP request handler using the built-in dependency injection framework and use it in our <code>Handle</code> method:</p>
+<pre><code class="csharp">using MediatR;
+using MinimalApiWithMediatRLab.Requests;
+using MinimalApiWithMediatRLab.Services;
+
+namespace MinimalApiWithMediatRLab.Handlers;
+
+internal class GetCustomerHandler : IRequestHandler<GetCustomerRequest, IResult>
+{
+    private readonly ICustomerService _customerService;
+
+    public GetCustomerHandler(ICustomerService customerService)
+    {
+        _customerService = customerService;
+    }
+
+    public async Task<IResult> Handle(GetCustomerRequest request, CancellationToken cancellationToken)
+    {
+        Customer customer = await _customerService.GetAsync(request.Id);
+
+        return customer != null
+            ? Results.Ok(customer)
+            : Results.NotFound();
+    }
+}
+</code></pre>
+<p>The code sample of this minimal project is available on my <a href="https://github.com/AdrienTorris/Entropy/tree/master/src/MinimalApiWithMediatRLab" title="Minimal API, .NET 7 and MediatR code sample" target="_Blank" rel="nofollow">GitHub</a>.</p>
+<!--
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/" title="" alt="" /></div>
+<p></p>
+<pre><code class="csharp">
+</code></pre>-->
+<div id="crdny">August 28, 2022</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>.NET 7</li>
+						<li>C# 10</li>
+						<li>MediatR</li>
+					</ul>
+				</div>
+				<div id="refs_wrapper">
+				<ul>
+					<li><a href="https://github.com/AdrienTorris/Entropy/tree/master/src/MinimalApiWithMediatRLab" title="Minimal API, .NET 7 and MediatR code sample" target="_Blank" rel="nofollow">Code sample</a></li>
+					<li><a href="https://adrientorris.github.io/dotnet/dependency-injection-dotnet-difference-between-add-tryadd-tryaddenumerable-methods" title="" target="_Blank">Article about Dependency Injection</a></li>
+					<li><a href="https://adrientorris.github.io/dotnet/minimal-apis-dotnet6-csharp10" title="" target="_Blank">Article about Minimal APIs in .NET 6</a></li>
+					<li><a href="https://www.youtube.com/watch?v=euUg_IHo7-s" title="" target="_Blank" rel="nofollow">Video about Minimal API, .NET 7 and MediatR</a></li>
+				<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
+					</ul>
+				</div>
+            </div>
+			<!--<div id="relatedpostlist_ctn">
+				<h2>Related posts</h2>
+				<ul>
+					<li>
+						<a href="" title=""></a>
+					</li>
+				</ul>
+			</div>-->
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-85948839-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-F924P8Y6HC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-F924P8Y6HC');
+</script></body></html>
