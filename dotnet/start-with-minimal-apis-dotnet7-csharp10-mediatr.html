@@ -64,7 +64,7 @@ using MediatR;
 
 namespace MinimalApiWithMediatRLab.Requests;
 
-public interface IHttpRequest : IRequest<IResult>
+public interface IHttpRequest : IRequest&#60;IResult&#62;
 {
 }
 </code></pre>
@@ -84,9 +84,9 @@ using MinimalApiWithMediatRLab.Requests;
 
 namespace MinimalApiWithMediatRLab.Handlers;
 
-internal class GetCustomerHandler : IRequestHandler<GetCustomerRequest, IResult>
+internal class GetCustomerHandler : IRequestHandler&#60;GetCustomerRequest, IResult&#62;
 {
-    public async Task<IResult> Handle(GetCustomerRequest request, CancellationToken cancellationToken)
+    public async Task&#60;IResult&#62; Handle(GetCustomerRequest request, CancellationToken cancellationToken)
     {
         await Task.Delay(10); // To simulate some business logic
 
@@ -109,7 +109,7 @@ internal static class MediatRExtensions
 {
     internal static WebApplication MediateGet<TRequest>(this WebApplication app, string template) where TRequest : IHttpRequest
     {
-        app.MapGet(template, async (IMediator mediator, [AsParameters] TRequest request) => await mediator.Send(request));
+        app.MapGet(template, async (IMediator mediator, [AsParameters] TRequest request) =&#62; await mediator.Send(request));
         return app;
     }
 }
@@ -132,13 +132,13 @@ using MediatR;
 
 internal static class MediatRExtensions
 {
-    internal static WebApplication MediateGet<TRequest>(this WebApplication app, string template) where TRequest : IHttpRequest
+    internal static WebApplication MediateGet&#60;TRequest&#62;(this WebApplication app, string template) where TRequest : IHttpRequest
     {
         app.MapGet(template, async (IMediator mediator, [AsParameters] TRequest request) => await mediator.Send(request));
         return app;
     }
 
-    internal static WebApplication MediatePost<TRequest>(this WebApplication app, string template) where TRequest : IHttpRequest
+    internal static WebApplication MediatePost&#60;TRequest&#62;(this WebApplication app, string template) where TRequest : IHttpRequest
     {
         app.MapPost(template, async (IMediator mediator, [AsParameters] TRequest request) => await mediator.Send(request));
         return app;
@@ -175,10 +175,10 @@ public class CustomerService : ICustomerService
         new Customer(4, "Tin", "Tin")
     };
 
-    public async Task<Customer> GetAsync(int id)
+    public async Task&#60;Customer&#62; GetAsync(int id)
     {
         await Task.Delay(10);
-        return customers.SingleOrDefault(x => x.Id == id);
+        return customers.SingleOrDefault(x =&#62; x.Id == id);
     }
 }
 </code></pre>
@@ -193,7 +193,7 @@ using MinimalApiWithMediatRLab.Services;
 
 namespace MinimalApiWithMediatRLab.Handlers;
 
-internal class GetCustomerHandler : IRequestHandler<GetCustomerRequest, IResult>
+internal class GetCustomerHandler : IRequestHandler&#60;GetCustomerRequest, IResult&#62;
 {
     private readonly ICustomerService _customerService;
 
