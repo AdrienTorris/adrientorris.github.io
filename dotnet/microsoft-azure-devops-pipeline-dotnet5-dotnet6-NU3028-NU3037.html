@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>What to do if your Azure DevOps pipeline doesn't publish your .NET project anymore because of errors NU3028 and NU3037?</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="language" content="en" />
+		<meta name="keywords" content=".NET,.NET 6,.NET 5,Microsoft Azure,Azure DevOps,Microsoft Azure DevOps,error NU3028,error NU3037,NU3028,NU3037" />
+		<meta name="description" content="What to do if your Azure DevOps pipeline doesn't publish your .NET project anymore because of errors NU3028 and NU3037?" />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2>
+					<ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/4428633/adrientorris" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="Technical blog of Adrien Torris (Blazor, .NET Core, ASP.NET Core, .NET, ASP.NET, C# ...)">Home</a></li>
+					<li>.NET</li>
+					<li class="active"><a href="https://adrientorris.github.io/dotnet/microsoft-azure-devops-pipeline-dotnet5-dotnet6-NU3028-NU3037" title="What to do if your Azure DevOps pipeline doesn't publish your .NET project anymore because of errors NU3028 and NU3037?">What to do if your Azure DevOps pipeline doesn't publish your .NET project anymore because of errors NU3028 and NU3037?</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn">
+			<h1>What to do if your Azure DevOps pipeline doesn't publish your .NET project anymore because of errors NU3028 and NU3037?</h1>
+<h2>The issue</h2>
+<p>Last week I had a bad time when I wanted to run the Microsoft Azure DevOps pipeline of a .NET 5 project I hadn't done for 6 months. The first .NET publish step failed with hundreds of errors, always the both same: error NU3028 and error NU3037.</p>
+<p>The NU3028 error is a NuGet error about the repository primary signature's timestamp which has a building issue because of an untrested root. The NU3037 error is also a NuGet error which tells that the repository primary signature validity period has expired.</p>
+<pre><code class="csharp">
+/home/vsts/work/1/s/MY_PROJECT/MY_PROJECT.csproj : error NU3028: Package 'System.IO.FileSystem 4.0.1' from source 'https://api.nuget.org/v3/index.json': The repository primary signature's timestamp found a chain building issue: UntrustedRoot: self signed certificate in certificate chain
+/home/vsts/work/1/s/MY_PROJECT/MY_PROJECT.csproj : error NU3037: Package 'System.IO.FileSystem 4.0.1' from source 'https://api.nuget.org/v3/index.json': The repository primary signature validity period has expired.
+/home/vsts/work/1/s/MY_PROJECT/MY_PROJECT.csproj : error NU3028: Package 'Serilog.Sinks.Debug 2.0.0' from source 'https://api.nuget.org/v3/index.json': The repository primary signature's timestamp found a chain building issue: UntrustedRoot: self signed certificate in certificate chain
+/home/vsts/work/1/s/MY_PROJECT/MY_PROJECT.csproj : error NU3037: Package 'Serilog.Sinks.Debug 2.0.0' from source 'https://api.nuget.org/v3/index.json': The repository primary signature validity period has expired.
+/home/vsts/work/1/s/MY_PROJECT/MY_PROJECT.csproj : error NU3028: Package 'System.Console 4.3.0' from source 'https://api.nuget.org/v3/index.json': The repository primary signature's timestamp found a chain building issue: UntrustedRoot: self signed certificate in certificate chain
+/home/vsts/work/1/s/MY_PROJECT/MY_PROJECT.csproj : error NU3037: Package 'System.Console 4.3.0' from source 'https://api.nuget.org/v3/index.json': The repository primary signature validity period has expired.
+</code></pre>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/microsoft-azure-pipeline-dotnet5-NU3037-NU3028-01.webp" title="" alt="" /></div>
+<p>These errors occurred when running dotnet restore.</p>
+<p>The root cause of them is that the certificate used for signed NuGet packages had expired the April 14, 2022. The result is that the validation of the package failed so they can't be referenced.</p>
+<p>These errors only affect .NET 5 projects on Linux environments (not all the Linux distributions but a lot of them, including Debian, Ubuntu and Alpine).</p>
+<h2>The solution</h2>
+<p>Because of existing issues with the .NET 5 signing verification feature, the timestamp verification has been revoked on Unix-based systems within .NET 5+ SDK. The dotnet restore experience is not affected by this, but it will work again.</p>
+<p>For .NET 5, a new .NET build has been provided on April 6, 2022 with NuGet package verification disabled on Linux and macOS: .NET SDK 5.0.202.</p>
+<p>For .NET 6, the .NET 6 Preview 3 has been released on April 8, 2022 with the same feature (or lack of feature).</p>
+<p>The solution for me was to upgrade the DSK used in my project from .NET 5.0.103 to .NET 5.0.202 and the pipeline has runned again.</p>
+<p>You can find the NuGet annoucement on <a href="https://github.com/NuGet/Announcements/issues/56" title="" target="_Blank" rel="nofollow">GitHub</a>.</p>
+<div id="crdny">November 4, 2022</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>.NET 5</li>
+						<li>.NET 6</li>
+						<li>NU3028</li>
+						<li>NU3037</li>
+					</ul>
+				</div>
+				<div id="refs_wrapper">
+				<ul>
+					<li><a href="https://github.com/NuGet/Announcements/issues/56" title="" target="_Blank" rel="nofollow">Notice: .NET 5 NuGet Restore Failures on Linux distributions using NSS or ca-certificates</a></li>
+					</ul>
+				</div>
+            </div>
+			<!--<div id="relatedpostlist_ctn">
+				<h2>Related posts</h2>
+				<ul>
+					<li>
+						<a href="" title=""></a>
+					</li>
+				</ul>
+			</div>-->
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-85948839-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-F924P8Y6HC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-F924P8Y6HC');
+</script></body></html>
