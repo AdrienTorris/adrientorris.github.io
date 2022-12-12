@@ -116,7 +116,7 @@ public class Benchmarks
 |  SealedInt | 0.0074 ns | 0.0113 ns | 0.0106 ns | 0.0000 ns |         - |
 </code></pre>
 <p><i>With an attached debugger.</i></p>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/benchmark-open-vs-selaed-classes-charp-attached-debugger.PNG" title="" /></div>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/benchmark-open-vs-sealed-classes-csharp-attached-debugger.PNG" title="" /></div>
 <pre><code class="csharp">
 |     Method |      Mean |     Error |    StdDev |    Median | Allocated |
 |----------- |----------:|----------:|----------:|----------:|----------:|
@@ -126,7 +126,7 @@ public class Benchmarks
 |  SealedInt | 0.0180 ns | 0.0202 ns | 0.0224 ns | 0.0062 ns |         - |
 </code></pre>
 <p><i>With no attached debugger.</i></p>
-<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/benchmark-open-vs-selaed-classes-charp-release.PNG" title="" /></div>
+<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/benchmark-open-vs-sealed-classes-csharp-release.PNG" title="" /></div>
 <p>As you can see, the methods of the sealed classes are faster to process. It is also the case if you check the type of a class, let's add some methods to measure it:</p>
 <pre><code class="csharp">
 [Benchmark]
