@@ -142,7 +142,7 @@ public bool IsCheckSealed() => baseClass is SealedClass;
 |   IsCheckOpen | 1.7381 ns | 0.0606 ns | 0.0789 ns |         - |
 | IsCheckSealed | 0.0776 ns | 0.0102 ns | 0.0095 ns |         - |
 </code></pre>
-<p>As you can see it's ten time faster, just as sealing it. This is an interesting issue about the performance gain of sealing the classes: <a href="" title="" target="_blank" rel="nofollow"></a></p>
+<p>As you can see it's ten time faster, just as sealing it. This is an interesting issue about the performance gain of sealing the classes: <a href="https://github.com/dotnet/runtime/issues/49944" title="" target="_blank" rel="nofollow">Analyzer Proposal: Seal internal/private types</a></p>
 <p>Why no warm or even throw a compilation exception when a class that could be sealed remains open? You can do it by modifying the configuration of the editor in Visual Studio. To do this, add a file named .editorconfig in your project, then update the value of the CA1852 rule:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/sealed-class-benchmark-add-editor-config-file.PNG" title="" /></div>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/sealed-class-benchmark-add-editor-config-file-compilation-warnings.PNG" title="" /></div>
@@ -155,6 +155,8 @@ public bool IsCheckSealed() => baseClass is SealedClass;
 				</div>
 				<div id="refs_wrapper">
 					<ul><!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
+						<li><a href="https://www.youtube.com/watch?v=d76WWAD99Yo" title="Why all your classes should be sealed by default in C#" target="_Blank" rel="nofollow">Video by Nick Chapsas</a></li>
+						<li><a href="https://github.com/dotnet/runtime/issues/49944" title="" target="_Blank" rel="nofollow">Analyzer Proposal: Seal internal/private types</a></li>
 					</ul>
 				</div>
             </div>
@@ -162,7 +164,6 @@ public bool IsCheckSealed() => baseClass is SealedClass;
 				<h2>Related posts</h2>
 				<ul>
 					<li>
-						<a href="" title=""></a>
 					</li>
 				</ul>
 			</div>-->
