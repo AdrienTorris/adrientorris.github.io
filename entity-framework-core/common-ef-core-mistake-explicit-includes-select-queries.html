@@ -1,0 +1,124 @@
+<!DOCTYPE html><html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head><script async src="https://www.googletagmanager.com/gtag/js?id=UA-85948839-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-85948839-1');
+</script>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Common EF Core mistake: using explicit includes on select queries</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="language" content="en" />
+		<meta name="keywords" content="EF Core,Entity Framework Core,Implicit select query includes,Explicit select query includes" />
+		<meta name="description" content="Common Entity Framework Core mistake: using explicit includes on select queries over implicit ones." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header><div id="header-content"><h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+						<li id="gplus_link">
+							<a href="https://plus.google.com/u/0/+AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Google Plus">
+								<i class="fab fa-google-plus-g fa-2x"></i>
+							</a>
+						</li>
+					</ul></div></header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>Entity Framework Core</li>
+					<li class="active"><a href="https://adrientorris.github.io/entity-framework-core/common-ef-core-mistake-explicit-includes-select-queries.html" title="Common EF Core mistake: using explicit includes on select queries">Common EF Core mistake: using explicit includes on select queries</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn">
+				<h1>Common EF Core mistake: using explicit includes on select queries</h1>
+        <p>Entity Framework Core has the Include operator that can be used to load related data.</p>
+<pre><code class="csharp">
+var blogArticles = context.BlogPosts
+                            .AsNoTracking()
+                            .Include(x => x.Author)
+                            .ToList();
+</code></pre>
+        <p>In this example the query will return a list of blog posts and informations about the author of each of them. It's convenient, short, understandable and clean but it has two tradeoffs:</p>
+        <ul>
+          <li>The related data will always be included even if you don't use it</li>
+          <li>All the columns will systematically be included, even the ones you don't use</li>
+        </ul>
+        <p>With Entity Framework Core, developers are used to some magic happening in the background but they may be think it happens a little more than it does. In this case, developers can think that Entity Framework will analyze the usage of the data they manipulate to optimize the query but it does not so if you ask Entity Framework Core to return some data you don't need, it will do it.</p>
+        <p>An easy and clean way to fix this is to use implicit includes over explicit ones.</p>
+<pre><code class="csharp">
+var blogArticles = context.BlogPosts
+                            .AsNoTracking()
+                            .Include(x => x.Author)
+                            .Select(x=> new BlogPostDetails
+                              {
+                                Id = x.Id,
+                                Title = x.Title,
+                                Published = x.Published,
+                                AuthorFirstName = x.Author.FirstName,
+                                AuthorLastName = x.Author.LastName,
+                                AuthorProfilePicture = x.Author.ProfilePicture
+                              });
+</code></pre>
+        <p>By using implicit includes, only the data you use will be returned by Entity Framework Core. So if some day you remove or comment the three line about the author in our example, the inner join that happen in the background will automatically be deleted.</p>
+        <p>It's a pretty basic EF Core usage but querying more data than needed is a very common mistake that can result to huge useless usage of memory, processing and requests slownesses.</p>
+        <p>Make application better and faster often starts with details.</p>
+        <p style="padding-top:20px;font-style:italic;font-size:0.7em;">Note: if you wonder what is the AsNoTracking() in the query, read the previous post about it: <a href="https://adrientorris.github.io/entity-framework-core/common-ef-core-mistake-tracking-no-tracking-queries" target="_blank" title="Common EF Core mistake: not using the difference between Tracking and No-Tracking Queries">Common EF Core mistake: not using the difference between Tracking and No-Tracking Queries</a></p>
+				<div id="crdny">October 24, 2023</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Entity Framework Core</li>
+						<li>EF Core</li>
+						<li>Implicit includes</li>
+						<li>Explicit includes</li>
+					</ul>
+				</div>
+				<div id="refs_wrapper">
+					<ul>
+						<li><a href="https://learn.microsoft.com/en-us/ef/core/querying/sql-queries" title="" target="_Blank" rel="nofollow">SQL queries documentation</a></li>
+						<li><a href="https://learn.microsoft.com/en-us/ef/core/performance/efficient-querying" title="" target="_Blank" rel="nofollow">Efficient Querying</a></li>
+						<li><a href="https://youtu.be/dDANjr5MCew?si=bZ3cxY1SSSmLfaog&t=976" title="" target="_Blank" rel="nofollow">Common mistakes in EF Core - Jernej Kavka - NDC Oslo 2023</a></li>
+						<li><a href="https://www.youtube.com/watch?v=Q4LtKa_HTHU" title="" target="_Blank" rel="nofollow">Entity Framework Core vs Dapper Performance in 2023</a></li>
+						<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
+					</ul>
+				</div>
+            </div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+		<script
+			  src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+			  integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+			  crossorigin="anonymous"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+</body></html>
