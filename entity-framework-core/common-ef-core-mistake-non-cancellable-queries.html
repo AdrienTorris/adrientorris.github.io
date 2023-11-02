@@ -69,7 +69,7 @@
 </div><p>So how to make the SQL queries from Entity Framework cancellable?</p>
 				<p>This is easy: by using a CancellationToken. The asynchronous methods from Entity Framework Core like ToListAsync, ToDictionaryAsync or ToArrayAsync have an optional argument named cancellationToken of type CancellationToken which is a structure that propagates a notification when an operation should be canceled.</p>
 <pre><code class="csharp">
-public async Task<CustomerSummary> GetCustomerSummariesByCountry(int countryId, CancellationToken cancellationToken)
+public async Task<IEnumerable<CustomerSummary>> GetCustomerSummariesByCountry(int countryId, CancellationToken cancellationToken)
 {
 	var query = _context.Customers
 								.AsNoTracking()
@@ -205,6 +205,22 @@ app.MapGet("/customers", async ([FromRoute]int countryId, CancellationToken toke
 });
 
 app.Run();
+</code></pre>
+	<h3>.NET Core standard Web API</h3>
+	<p>In the same way that with minimal APIs, it's possible to inject CancellationToken in the methods:</p>
+<pre><code class="csharp">
+[HttpGet(Name = "Customers")]
+public async Task<IEnumerable<CustomerSummary>> Get(CancellationToken cancellationToken)
+{
+	try
+	{
+		// Do some stuff here
+	}
+	catch(TaskCanceledException tce)
+	{
+		throw;
+	}
+}
 </code></pre>
 				<p>I put some interesting links below in case you want to learn more about this.</p>
 				<div id="crdny">November 2, 2023</div>
