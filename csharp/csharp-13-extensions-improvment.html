@@ -1,0 +1,170 @@
+<!DOCTYPE html><html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head><script async src="https://www.googletagmanager.com/gtag/js?id=UA-85948839-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-85948839-1');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>C# 13 new feature: Extension types</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="en" />
+		<meta name="keywords" content="csharp, csharp 13,C# 13,expression methods,expression types,msbuild2024,Microsoft Build 2024" />
+		<meta name="description" content="C# 13 introduces a new feature, Extension types, that takes the next step of extension methods" />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+						<li id="gplus_link">
+							<a href="https://plus.google.com/u/0/+AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Google Plus">
+								<i class="fab fa-google-plus-g fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>C#</li>
+					<li class="active"><a href="https://adrientorris.github.io/csharp/csharp-13-extensions-improvment.html" title="C# 13 new feature: Extension types">C# 13 new feature: Extension types</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn">
+            </div>
+			<div id="post_ctn">
+				<h1>C# 13 new feature: Extension types</h1>
+				<p>One of the features demonstrated by Mads Torgersen and Dustin Campbell’s in the "What’s new in C#" talk at the Microsoft Build 2024 that I really like is the introduction of the extension types.</p>
+				<p>Extensions methods are allowed since C# 3 and are widely used by the .NET developers. Their main objective is to allow the developers to add some methods to a type. It's useful if you don't want to modify the type or, in most of the case of the extension usage, if you don't have access to the underlying code. LINQ is an example of a set of extension methods on IEnumerable<T>.</p>
+				<p>If extensions methods are very usefull and widely used, they have some limitations. First you can only add methods, you cannot add properties or other members than methods. Secondly, all the extensions methods have to be static. C# 13 introduces a new version of extensions methods called Extension types that takes the next step. With extension types you can add methods to a type but also any other member. The members you add can be static but also instance, even if instance extension types cannot hold state. Finaly, extension types can be implicit (will be apply to all occurrences of the underlying type) or explicit (you will have to explicitly convert the underlying type to the extension type you want to use).</p>
+				<p>Let's see what it looks like.</p>
+				<p>Assume we use this code we can't change:</p>
+<pre><code class="csharp">
+  public enum MusicInstrumentsEnum
+{
+    Guitar = 1,
+    BassGuitar = 2,
+    Drum = 3
+}
+
+public class Musician()
+{
+    public required string FirstName { get; init; } 
+    public required string LastName { get; init; }
+    public required Band Band { get; init; } 
+    public MusicInstrumentsEnum? Instrument { get; init; }
+    public required bool IsSinger { get; init; } 
+}
+
+// It's pretty reductive about music but it's just for the example!
+public class Band()
+{
+    public required string Name { get; init; }
+    public required IEnumerable<Musician> Musicians { get; init; } 
+    public required IEnumerable<Album> Albums { get; init; }
+}
+
+public class Song()
+{
+    public required string Name { get; init; }
+    public required bool ReleasedOnRadio { get; init; }
+}
+
+public class Album
+{
+    public required string Name { get; init; }
+    public required IEnumerable<Song> Songs { get; init; }
+    public required int SalesCount { get; init; }
+}
+</pre></code>
+				<p>Imagine you want to know if a musician has played on an album which is Gold Record, with extension types you can do it this way:</p>
+<pre><code class="csharp">
+public implicit extension MusicianExtension for Musician
+{
+    public bool HasPlayedOnGlodRecordAlbum
+        => this.Band
+            .Albums
+            .Any(album => album.SalesCount >= 500_000);
+}
+</pre></code>
+				<p>This property would be called as:</p>
+<pre><code class="csharp">
+if(musician.HasPlayedOnGlodRecordAlbum)
+{
+   // ...
+}
+</pre></code>
+				<p>With explicit extensions you can implement other features, like retrive the list of the Gold record albums a musician played on:</p>
+<pre><code class="csharp">
+public explicit extension GlodRecordMusician for Person
+{
+    public IEnumerable<Album> GoldRecords 
+        => this.Band
+            .Albums
+            .Where(album => album.SalesCount >= 500_000);
+}
+</pre></code>
+				<p>This property would be called as:</p>
+<pre><code class="csharp">
+if (musician.HasPlayedOnGlodRecordAlbum)
+{
+    GlodRecordMusician glodRecordMusician = musician;
+    IEnumerable<Album> albums = glodRecordMusician.GoldRecords;
+}
+</pre></code>
+				<p>Extension types are not replacing extension methods introduced in C# 3, it's an add-on, a new tool you can use to simplify your code, or organize it better.</p>
+				<p>For more information about it or other C# new features, watch the talk What’s new in C#.</p>
+				<div id="crdny">May 31, 2024</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>C#</li>
+						<li>Csharp</li>
+						<li>C# 13</li>>
+						<li>Expression types</li>
+					</ul>
+				</div>
+				<div id="refs_wrapper">
+					<ul>
+						<li><a href="https://www.youtube.com/watch?v=O3hx6oPWzX8" title="What’s new in C# 13" target="_Blank" rel="nofollow">What’s new in C# 13</a></li>
+						<li><a href="https://github.com/dotnet/roslyn/issues?q=is%3Aopen+label%3A%22Area-Language+Design%22+label%3A%22Design+Notes%22" title="C# Design notes" target="_Blank" rel="nofollow">C# Design notes</a></li>
+						<!--<li><a href="" title="" target="_Blank"></a></li>-->
+					</ul>
+				</div>
+            </div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>
