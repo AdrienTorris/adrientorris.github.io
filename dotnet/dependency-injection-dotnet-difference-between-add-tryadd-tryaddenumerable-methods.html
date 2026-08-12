@@ -51,11 +51,11 @@
 				</ul>
 			</div>
 			<div id="post_ctn">
-<h1>Dependency Injection with .NET : the difference between the Add, TryAdd and TryAddEnumerable methods</h1>
-<p>Manage the dependencies is one of the most common but complex thing to do in development, and a great opportunity to mess your codebase up if you do it wrong. To help you with this issue .NET has introduced since .NET Core 1.0 a wonderful and powerful built-in IoC container which is now part of the framework.</p>
-<p>We will not covering what Dependency Injection is and how the .NET framework implemented it in this article, if you are not familiar with this pattern you must take several minutes to read some documentation about it: <a href="https://docs.microsoft.com/en-us/dotnet/core/extensions/dependency-injection" title="Documentation of the Dependency Injection with .NET by Microsoft" target="_blank" rel="nofollow">Dependency injection in .NET</a>.</p>
-<p>The overall idea of this IoC container is that you register the dependencies at the application startup, then you resolve them (you ask and the container do the magic for you) at runtime when you need it.</p>
-<p>.NET provides several methods to register a dependency. You can choose one of the three available lifetime (Singleton, Transient and Scoped) but do you know the difference between the Add, TryAdd and TryAddEnumerable methods?<br />Are you able to explain what will differ in the three implementations below?</p>
+<h1>Dependency Injection with .NET: the difference between the Add, TryAdd and TryAddEnumerable methods</h1>
+<p>Managing dependencies is one of the most common but complex things to do in development, and a great opportunity to mess your codebase up if you do it wrong. To help you with this issue, .NET has introduced, since .NET Core 1.0, a wonderful and powerful built-in IoC container which is now part of the framework.</p>
+<p>We will not cover what Dependency Injection is and how the .NET framework implemented it in this article; if you are not familiar with this pattern you should take a few minutes to read some documentation about it: <a href="https://docs.microsoft.com/en-us/dotnet/core/extensions/dependency-injection" title="Documentation of the Dependency Injection with .NET by Microsoft" target="_blank" rel="nofollow">Dependency injection in .NET</a>.</p>
+<p>The overall idea of this IoC container is that you register the dependencies at the application startup, then you resolve them (you ask and the container does the magic for you) at runtime when you need them.</p>
+<p>.NET provides several methods to register a dependency. You can choose one of the three available lifetimes (Singleton, Transient and Scoped), but do you know the difference between the Add, TryAdd and TryAddEnumerable methods?<br />Are you able to explain what will differ in the three implementations below?</p>
 <pre><code class="csharp">
 builder.Services.AddSingleton&#60;IService, FirstService&#62;();
 builder.Services.AddSingleton&#60;IService, SecondService&#62;();
@@ -69,7 +69,7 @@ var firstDescriptor = new ServiceDescriptor(typeof(IService), typeof(FirstServic
 var secondDescriptor = new ServiceDescriptor(typeof(IService), typeof(SecondService), ServiceLifetime.Singleton);
 builder.Services.TryAddEnumerable(new [] { firstDescriptor, secondDescriptor });
 </code></pre>
-<p><u>Note:</u> <i>Singleton is not a relevant choice here, the behavior would be exactly the same with the two others service lifetimes.</i></p>
+<p><u>Note:</u> <i>Singleton is not a relevant choice here, the behavior would be exactly the same with the two other service lifetimes.</i></p>
 <h3>The context</h3>
 <p>Assume we have an interface implemented by two services (we don't care about the implementation here, we just want to see how the Dependency Injection container will register and resolve them):</p>
 <pre><code class="csharp">
@@ -85,7 +85,7 @@ public class SecondService : IService
 {
 }
 </code></pre>
-<p>Assume now we have a basic controller who has a private member of the interface IService and a method who returns the name of the type of the resolved service:</p>
+<p>Assume now we have a basic controller that has a private member of the IService interface and a method that returns the name of the type of the resolved service:</p>
 <pre><code class="csharp">
 public class DependencyInjectionInspectionController : ControllerBase
 {
@@ -110,9 +110,9 @@ builder.Services.AddSingleton&#60;IService, FirstService&#62;();
 builder.Services.AddSingleton&#60;IService, SecondService&#62;();
 </code></pre>
 <p>The answer is: <i>SecondService</i>.</p>
-<p>Why? Because when you register several implementations of the same interface with the Add method to the Dependency Injection container, all the implementations will be registered but it's the last one who will be resolved by default.</p>
-<p>You maybe ask yourself now: Why registering all the instance in order to resolving only the last one? Why just not register the last one?</p>
-<p>It because the Dependency Injection container resolves what you ask. In our example, if you ask for a IService then the DI container will resolve the last service implementation registered but you also can ask for all the registered implementations.</p>
+<p>Why? Because when you register several implementations of the same interface with the Add method in the Dependency Injection container, all the implementations will be registered but it's the last one that will be resolved by default.</p>
+<p>You may now ask yourself: why register all the instances in order to resolve only the last one? Why not just register the last one?</p>
+<p>It's because the Dependency Injection container resolves what you ask for. In our example, if you ask for an IService then the DI container will resolve the last service implementation registered, but you can also ask for all the registered implementations.</p>
 <p>Assume we now have this code for our controller:</p>
 <pre><code class="csharp">
 public class DependencyInjectionInspectionController : ControllerBase
@@ -131,8 +131,8 @@ public class DependencyInjectionInspectionController : ControllerBase
         }
 }
 </code></pre>
-<p>The response of the inspect endpoint will now be different and returning:<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>FirstService</i><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>SecondService</i></p>
-<p>Before using another registration method, just note that we could have use a service descriptor to register our services, the implementation would have been:</p>
+<p>The response of the inspect endpoint will now be different and will return:<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>FirstService</i><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>SecondService</i></p>
+<p>Before using another registration method, just note that we could have used a service descriptor to register our services; the implementation would have been:</p>
 <pre><code class="csharp">
 var firstDescriptor = new ServiceDescriptor(typeof(IService), typeof(FirstService), ServiceLifetime.Singleton);
 builder.Services.Add&#60;IService, firstDescriptor&#62;();
@@ -140,26 +140,26 @@ builder.Services.Add&#60;IService, firstDescriptor&#62;();
 var secondDescriptor = new ServiceDescriptor(typeof(IService), typeof(SecondService), ServiceLifetime.Singleton);
 builder.Services.Add<IService, secondDescriptor>();
 </code></pre>
-Another important aspect of this method is that it allows to add several times the same implementation, so the next code is completely valid:
+Another important aspect of this method is that it allows you to add the same implementation several times, so the following code is completely valid:
 <pre><code class="csharp">
 builder.Services.AddSingleton&#60;IService, FirstService&#62;();
 builder.Services.AddSingleton&#60;IService, FirstService&#62;();
 </code></pre>
-<p>Not only is this code valid but it will effectively register several times the FirstService implementation for the type IService in the Dependency Injection container so if we call our API inspect method (the one who return a collection) it will return:<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>FirstService</i><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>FirstService</i></p>
-<p>Note that this service is not really a singleton anymore because we have several instances of it, we are in a strange case here but it's just to show you the different behaviors of the Dependency injection container methods.</p>
+<p>Not only is this code valid but it will effectively register the FirstService implementation several times for the IService type in the Dependency Injection container, so if we call our API inspect method (the one that returns a collection) it will return:<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>FirstService</i><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>FirstService</i></p>
+<p>Note that this service is not really a singleton anymore because we have several instances of it. We are in a strange case here but it's just to show you the different behaviors of the Dependency Injection container methods.</p>
 <h3>Case two: the TryAdd method</h3>
-<p>Assume we have our first controller which have a IService private member and this basic service registration:</p>
+<p>Assume we have our first controller, which has an IService private member, and this basic service registration:</p>
 <pre><code class="csharp">
 builder.Services.TryAddSingleton&#60;IService, FirstService&#62;();
 </code></pre>
 <p>What will be the output of our inspect method?</p>
-<p>The answer is pretty obvious here, the endpoint will return <i>FirstService</i>.<br />But now, do you know what will be the output if we add a second registration for the same interface?</p>
+<p>The answer is pretty obvious here, the endpoint will return <i>FirstService</i>.<br />But now, do you know what the output will be if we add a second registration for the same interface?</p>
 <pre><code class="csharp">
 builder.Services.TryAddSingleton&#60;IService, FirstService&#62;();
 builder.Services.TryAddSingleton&#60;IService, SecondService&#62;();
 </code></pre>
-<p>With the Add method remember that only the last implementation was returned by the DI container, note now that its behavior is different with the <i>TryAdd</i> method: in this case the DI container will only register the first registration for the interface so the output will be the only instance he has for the asked interface, which is <i>FirstService</i>.</p>
-<p>We just saw a major difference between the Add and the TryAdd methods which is: the Add method will register all the implementations you want for a service type, unlike the TryAdd method which only will register the first one. When you register an implementation using the <i>TryAdd</i> method, if the DI container already has an implementation registrered for the service's type he will ignore your next requests without throwing any exception, even if you try to register several times the same implementation.</p>
+<p>With the Add method, remember that only the last implementation was returned by the DI container; note now that its behavior is different with the <i>TryAdd</i> method: in this case the DI container will only keep the first registration for the interface, so the output will be the only instance it has for the requested interface, which is <i>FirstService</i>.</p>
+<p>We just saw a major difference between the Add and the TryAdd methods, which is: the Add method will register all the implementations you want for a service type, unlike the TryAdd method which will only register the first one. When you register an implementation using the <i>TryAdd</i> method, if the DI container already has an implementation registered for the service type it will ignore your next requests without throwing any exception, even if you try to register the same implementation several times.</p>
 <h3>Case three: the TryAddEnumerable method</h3>
 <p>The <i>TryAddEnumerable</i> method allows you to register multiple implementations in the same call by using service descriptors.</p>
 <p>Assume we have this code:</p>
@@ -169,8 +169,8 @@ var secondDescriptor = new ServiceDescriptor(typeof(IService), typeof(SecondServ
 
 builder.Services.TryAddEnumerable(new [] { firstDescriptor, secondDescriptor });
 </code></pre>
-<p>In our example, the both services will be registered.</p>
-<p>This method also has another overloads so it accept a single service as parameter like the <i>Add</i> and the <i>TryAdd</i> methods:</p>
+<p>In our example, both services will be registered.</p>
+<p>This method also has another overload so that it accepts a single service as a parameter, like the <i>Add</i> and the <i>TryAdd</i> methods:</p>
 <pre><code class="csharp">
 var firstDescriptor = new ServiceDescriptor(typeof(IService), typeof(FirstService), ServiceLifetime.Singleton);
 builder.Services.TryAddEnumerable(firstDescriptor);
@@ -178,7 +178,7 @@ builder.Services.TryAddEnumerable(firstDescriptor);
 var secondDescriptor = new ServiceDescriptor(typeof(IService), typeof(SecondService), ServiceLifetime.Singleton);
 builder.Services.TryAddEnumerable(secondDescriptor);
 </code></pre>
-<p>In this example, the both services will be registered.</p>
+<p>In this example, both services will be registered.</p>
 <p>Now assume we have this code:</p>
 <pre><code class="csharp">
 var firstDescriptor = new ServiceDescriptor(typeof(IService), typeof(FirstService), ServiceLifetime.Singleton);
@@ -188,8 +188,8 @@ var secondDescriptor = new ServiceDescriptor(typeof(IService), typeof(SecondServ
 builder.Services.TryAddEnumerable(secondDescriptor);
 builder.Services.TryAddEnumerable(secondDescriptor);
 </code></pre>
-<p>With this implementation, only the two first services will be registered because the uniqueness of the <i>TryAddEnumerable</i> method is based on the combination of the service type and the implementation type, in opposite to the <i>TryAdd</i> method for which the uniqueness is only based on the service type. So with the <i>TryAddEnumerable</i> method, when in our example we try to register our second service description for the second time, the Dependency Injection container checks if he already has this combination or not, which is the case here, so he just skip this registration.</p>
-<p>Note that the uniqueness check is lifetime agnostic, it means that you can't register the same combination of service type and implementation event if the second one has a different lifetime that de first.</p>
+<p>With this implementation, only the first two services will be registered because the uniqueness of the <i>TryAddEnumerable</i> method is based on the combination of the service type and the implementation type, as opposed to the <i>TryAdd</i> method, for which the uniqueness is only based on the service type. So with the <i>TryAddEnumerable</i> method, when in our example we try to register our second service description for the second time, the Dependency Injection container checks whether it already has this combination or not, which is the case here, so it just skips this registration.</p>
+<p>Note that the uniqueness check is lifetime agnostic; it means that you can't register the same combination of service type and implementation even if the second one has a different lifetime than the first.</p>
 <p>Assume we have this code:</p>
 <pre><code class="csharp">
 var singletonDescriptor = new ServiceDescriptor(typeof(IService), typeof(FirstService), ServiceLifetime.Singleton);
@@ -200,9 +200,9 @@ builder.Services.TryAddEnumerable(transientDescriptor);
 </code></pre>
 <p>In this example, only the first implementation will be registered, the second will not.</p>
 <h3>Summary</h3>
-<ul><li>The Add Method has no check on the uniqueness of the service, it means that it registers the service type and service implementation pair in all the case, even if the DI container already has it.</li>
-<li>The TryAdd method checks the uniqueness but only on the service type, it means that it allows to register only one implementation per service declaration type. You can't register multiple services for a same type, even if their implementation are different.</li>
-<li>The TryAddEnumerable method checks the uniqueness of the service based on the combination of the service type and the implementation type so you can register as many as implementations as you want as long as their implementation are different. Don't forget that the uniqueness check is lifetime agnostic.</li></ul>
+<ul><li>The Add method has no check on the uniqueness of the service; it means that it registers the service type and service implementation pair in all cases, even if the DI container already has it.</li>
+<li>The TryAdd method checks the uniqueness but only on the service type; it means that it allows you to register only one implementation per service declaration type. You can't register multiple services for the same type, even if their implementations are different.</li>
+<li>The TryAddEnumerable method checks the uniqueness of the service based on the combination of the service type and the implementation type, so you can register as many implementations as you want as long as their implementations are different. Don't forget that the uniqueness check is lifetime agnostic.</li></ul>
 <!--<div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/blazor/blazor-templating-dotnet-cli-problem-blazor-templates.png" title="" /></div>-->
 				<div id="crdny">June 06, 2022</div>
 				<div id="tags_wrapper">

@@ -64,12 +64,12 @@ var blogArticles = context.BlogPosts
                             .Include(x => x.Author)
                             .ToList();
 </code></pre>
-        <p>In this example the query will return a list of blog posts and informations about the author of each of them. It's convenient, short, understandable and clean but it has two tradeoffs:</p>
+        <p>In this example the query will return a list of blog posts and information about the author of each of them. It's convenient, short, understandable and clean but it has two tradeoffs:</p>
         <ul>
           <li>The related data will always be included even if you don't use it</li>
           <li>All the columns will systematically be included, even the ones you don't use</li>
         </ul>
-        <p>With Entity Framework Core, developers are used to some magic happening in the background but they may be think it happens a little more than it does. In this case, developers can think that Entity Framework will analyze the usage of the data they manipulate to optimize the query but it does not so if you ask Entity Framework Core to return some data you don't need, it will do it.</p>
+        <p>With Entity Framework Core, developers are used to some magic happening in the background but they may think a little more happens than actually does. In this case, developers can think that Entity Framework will analyze the usage of the data they manipulate to optimize the query, but it does not, so if you ask Entity Framework Core to return some data you don't need, it will do it.</p>
         <p>An easy and clean way to fix this is to use implicit includes over explicit ones.</p>
 <pre><code class="csharp">
 var blogArticles = context.BlogPosts
@@ -85,10 +85,10 @@ var blogArticles = context.BlogPosts
                                 AuthorProfilePicture = x.Author.ProfilePicture
                               });
 </code></pre>
-        <p>By using implicit includes, only the data you use will be returned by Entity Framework Core. So if some day you remove or comment the three line about the author in our example, the inner join that happen in the background will automatically be deleted.</p>
-        <p>It's a pretty basic EF Core usage but querying more data than needed is a very common mistake that can result to huge useless usage of memory, processing and requests slownesses.</p>
-        <p>Make application better and faster often starts with details.</p>
-        <p style="padding-top:20px;font-style:italic;font-size:0.7em;">Note: if you wonder what is the AsNoTracking() in the query, read the previous post about it: <a href="https://adrientorris.github.io/entity-framework-core/common-ef-core-mistake-tracking-no-tracking-queries" target="_blank" title="Common EF Core mistake: not using the difference between Tracking and No-Tracking Queries">Common EF Core mistake: not using the difference between Tracking and No-Tracking Queries</a></p>
+        <p>By using implicit includes, only the data you use will be returned by Entity Framework Core. So if some day you remove or comment out the three lines about the author in our example, the inner join that happens in the background will automatically be removed.</p>
+        <p>It's a pretty basic EF Core usage but querying more data than needed is a very common mistake that can result in huge useless usage of memory and processing, and in slow requests.</p>
+        <p>Making applications better and faster often starts with details.</p>
+        <p style="padding-top:20px;font-style:italic;font-size:0.7em;">Note: if you are wondering what the AsNoTracking() in the query is, read the previous post about it: <a href="https://adrientorris.github.io/entity-framework-core/common-ef-core-mistake-tracking-no-tracking-queries" target="_blank" title="Common EF Core mistake: not using the difference between Tracking and No-Tracking Queries">Common EF Core mistake: not using the difference between Tracking and No-Tracking Queries</a></p>
 				<div id="crdny">October 24, 2023</div>
 				<div id="tags_wrapper">
 					<ul>

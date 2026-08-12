@@ -60,10 +60,10 @@
 			</div>
 			<div id="post_ctn">
 				<h1>Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure</h1>
-				<p>If you are using Visual Studio 2017 RC to develop an ASP.NET Core web application, you maybe will have this stressful problem, which will unload your web application project after updating this project to target the framework <b>.NETCoreApp1.1</b>. This loading project will appear after rebuild your project, and close the Visual Studio 2017 RC instance (you can have some other little issues before closing your VS instance).</p>
-				<p>When you will re-open your project with Visual Studio, your asp.net core web application will be not load and you will have this error message from visual studio :</p>
+				<p>If you are using Visual Studio 2017 RC to develop an ASP.NET Core web application, you may run into this stressful problem, which will unload your web application project after you update this project to target the <b>.NETCoreApp1.1</b> framework. This loading problem will appear after you rebuild your project and close the Visual Studio 2017 RC instance (you may have some other little issues before closing your VS instance).</p>
+				<p>When you re-open your project with Visual Studio, your ASP.NET Core web application will not load and you will get this error message from Visual Studio:</p>
 				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/update-asp-net-core-web-app-to-netcoreapp1-1-project-loading-failure.png" title="Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure" alt="Update ASP.NET Core web application to .NETCoreApp1.1 causes a project loading failure" /></div>
-				<p>In the log file, you will have something like this :</p>
+				<p>In the log file, you will have something like this:</p>
 <pre><code class="csharp">
 =====================
 12/01/2017 13:16:45
@@ -79,12 +79,12 @@ Name of parameter : key
    Microsoft.VisualStudio.ProjectSystem.VS.Implementation.Package.TreeService.&#60;PublishTreeAsync&#62;d__66.MoveNext()&#60;---
 ===================
 </code></pre>
-				<p>The solution is simple, and takes just a few seconds to complete. There is the steps to follow :</p>
+				<p>The solution is simple and takes just a few seconds to complete. Here are the steps to follow:</p>
 				<ul>
 					<li><span>1</span> Close your instance of Visual Studio 2017 RC</li>
 					<li><span>2</span> Delete all bin and obj objects of your web application project</li>
 					<li><span>3</span> Re-open your solution in Visual Studio 2017 RC, your .NETCoreApp 1.1 project will be correctly loaded</li>
-					<li><span>4</span> Add the NuGet package : <i>Microsoft.DiaSymReader.Native</i>, version <i>1.5.0-beta2-24728</i></li>
+					<li><span>4</span> Add the NuGet package <i>Microsoft.DiaSymReader.Native</i>, version <i>1.5.0-beta2-24728</i></li>
 				</ul>
 				<div id="crdny">January 12, 2016</div>
 				<div id="tags_wrapper">

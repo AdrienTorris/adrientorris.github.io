@@ -59,14 +59,14 @@
 			<div id="edit_ctn">
 				<p>
 				<span>22/03/2018</span>
-				No more need of this workaround now, the first public preview of Blazor is released. Read this blog post to learn how to get started with Blazor : <a href="https://blogs.msdn.microsoft.com/webdev/2018/03/22/get-started-building-net-web-apps-in-the-browser-with-blazor/" title="Get started building .NET web apps that run in the browser with Blazor" target="_blank" rel="nofollow">Get started building .NET web apps that run in the browser with Blazor</a>.
+				There is no more need for this workaround now, the first public preview of Blazor is released. Read this blog post to learn how to get started with Blazor: <a href="https://blogs.msdn.microsoft.com/webdev/2018/03/22/get-started-building-net-web-apps-in-the-browser-with-blazor/" title="Get started building .NET web apps that run in the browser with Blazor" target="_blank" rel="nofollow">Get started building .NET web apps that run in the browser with Blazor</a>.
 				</p>
 			</div>
 			<div id="post_ctn">
 				<h1>Workaround to use the Blazor templates with the .NET CLI</h1>
-				<p>There is a little bug with the templating by the DotNet command line interface currently, so maybe you will see the Blazor templates only once after installing them.</p>
+				<p>There is currently a little bug with the templating in the DotNet command line interface, so you may see the Blazor templates only once after installing them.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/aspnet-core/blazor/blazor-templating-dotnet-cli-problem-blazor-templates.png" title="" /></div>
-				<p>If you encounter the problem, a quick and very simple workaround is to run the command line <i>dotnet new --debug:reinit</i>, and reinstall the Blazor templates. After doing this you will see the Blazor templates back in the list.</p>
+				<p>If you encounter the problem, a quick and very simple workaround is to run the command <i>dotnet new --debug:reinit</i> and reinstall the Blazor templates. After doing this, you will see the Blazor templates back in the list.</p>
 <pre><code class="json">
 dotnet new --debug:reinit
 dotnet new -i Microsoft.AspNetCore.Blazor.Templates::0.0.5-* --nuget-source https://dotnet.myget.org/F/blazor-dev/api/v3/index.json

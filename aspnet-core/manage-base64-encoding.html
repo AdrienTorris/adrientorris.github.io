@@ -63,14 +63,14 @@
 			</div>
 			<div id="post_ctn">
 				<h1>Manage base64 encoding with ASP.NET Core</h1>
-				<p>The class <span class="thnclwrd">System.Text.Encoding</span> provides all you need to encrypt to base64 encoding and decrypt from base64 encoding.</p>
-				<h2>Convert string to base64</h2>
+				<p>The <span class="thnclwrd">System.Text.Encoding</span> class provides everything you need to encode to base64 and decode from base64.</p>
+				<h2>Convert a string to base64</h2>
 <pre><code class="csharp">
 string txt = "Test";
 byte[] encodedBytes = System.Text.Encoding.Unicode.GetBytes(txt);
 string encodedTxt = Convert.ToBase64String(encodedBytes);
 </code></pre>
-				<h2>Convert base64 string to string</h2>
+				<h2>Convert a base64 string to a string</h2>
 <pre><code class="csharp">
 string txt = "Test";
 byte[] decodedBytes = Convert.FromBase64String(Convert.ToBase64String(System.Text.Encoding.Unicode.GetBytes(txt)));

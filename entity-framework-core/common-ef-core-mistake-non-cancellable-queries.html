@@ -57,16 +57,16 @@
 			</div>
 			<div id="post_ctn">
 				<h1>Common EF Core mistake: Non-cancellable queries</h1>
-				<p>Queries with Entity Framework can be cancellable, or not. The difference is that a non-cancellable query will run until completion even if its result is no more needed. It results useless queries that are executed for nothing on the database server and also some memory on the application server that is lost because when Entity Framework gets the result of a SQL query it map it before to check if the result is going to be used.</p>
-				<p>This is a schema of what happens when a client makes then cancels an HTTP request and that the EF Core query is not cancellable:</p>
+				<p>Queries with Entity Framework can be cancellable, or not. The difference is that a non-cancellable query will run until completion even if its result is no longer needed. This results in useless queries that are executed for nothing on the database server, and also in some memory on the application server that is lost, because when Entity Framework gets the result of a SQL query it maps it before checking whether the result is going to be used.</p>
+				<p>This is a diagram of what happens when a client makes then cancels an HTTP request and the EF Core query is not cancellable:</p>
 <div class="pic_wrapper">
 		<img src="/wwwroot/images/entity-framework-core/common-ef-corecmistake-non-cancellable-queries-01.png?raw=true" title="" alt="" />
 </div>
-				<p>The question now is: why running an SQL query when you already know that the user won't consume its result anyway?</p>
-				<p>When you implement cancallable queries in EF Core, when a client cancels an HTTP request EF Core will propagate this event to the database provider so it will handle it by cancelling or stopping the SQL query, preventing it to use any useless runtime.</p>
+				<p>The question now is: why run a SQL query when you already know that the user won't consume its result anyway?</p>
+				<p>When you implement cancellable queries in EF Core, when a client cancels an HTTP request EF Core will propagate this event to the database provider, which will handle it by cancelling or stopping the SQL query, preventing it from using any useless runtime.</p>
 				<div class="pic_wrapper">
 		<img src="/wwwroot/images/entity-framework-core/common-ef-corecmistake-non-cancellable-queries-02.png?raw=true" title="" alt="" />
-</div><p>So how to make the SQL queries from Entity Framework cancellable?</p>
+</div><p>So how do you make the SQL queries from Entity Framework cancellable?</p>
 				<p>This is easy: by using a CancellationToken. The asynchronous methods from Entity Framework Core like ToListAsync, ToDictionaryAsync or ToArrayAsync have an optional argument named cancellationToken of type CancellationToken which is a structure that propagates a notification when an operation should be canceled.</p>
 <pre><code class="csharp">
 public async Task<IEnumerable<CustomerSummary>> GetCustomerSummariesByCountry(int countryId, CancellationToken cancellationToken)
@@ -86,7 +86,7 @@ public async Task<IEnumerable<CustomerSummary>> GetCustomerSummariesByCountry(in
 }
 </code></pre>
 				<p>We see here that the CancellationToken argument is passed to the EF queryable extension method ToListAsync.</p>
-				<p>This cancellation token can have different provider, depends of what you are using.</p>
+				<p>This cancellation token can have different providers, depending on what you are using.</p>
         <h3>MediatR</h3>
 				<p>MediatR provides it in the Handle method of the IRequestHandler interface:</p>
 <pre><code class="csharp">
@@ -146,7 +146,7 @@ app.MapGet("/customers", async (CancellationToken token, ILogger<Handler> logger
 
 app.Run();
 </code></pre>
-				<p>We this case, you can pass the token parameter to the methods you will call, like a database repository. </p>
+				<p>In this case, you can pass the token parameter to the methods you will call, like a database repository.</p>
 <pre><code class="csharp">
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -184,7 +184,7 @@ app.MapGet("/customers", async ([FromRoute]int countryId, CancellationToken toke
 
 app.Run();
 </code></pre>
-				<p>Now if the request is canceled a OperationCanceledException exception will be throwned. Note that you don't have to throw an exception, you also can check the cancellation token status more gracefully, by using his IsCancellationRequested property:</p>
+				<p>Now if the request is canceled an OperationCanceledException will be thrown. Note that you don't have to throw an exception, you can also check the cancellation token status more gracefully, by using its IsCancellationRequested property:</p>
 <pre><code class="csharp">
 app.MapGet("/customers", async ([FromRoute]int countryId, CancellationToken token, ILogger<Handler> logger, ICustomerRepository customerRepository) =>
 {
@@ -207,7 +207,7 @@ app.MapGet("/customers", async ([FromRoute]int countryId, CancellationToken toke
 app.Run();
 </code></pre>
 	<h3>.NET Core standard Web API</h3>
-	<p>In the same way that with minimal APIs, it's possible to inject CancellationToken in the methods:</p>
+	<p>In the same way as with minimal APIs, it's possible to inject a CancellationToken in the methods:</p>
 <pre><code class="csharp">
 [HttpGet(Name = "Customers")]
 public async Task<IEnumerable<CustomerSummary>> Get(CancellationToken cancellationToken)

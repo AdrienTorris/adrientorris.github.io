@@ -52,8 +52,8 @@
 			<div id="post_ctn">
 			<h1>What to do if your Azure DevOps pipeline doesn't publish your .NET project anymore because of errors NU3028 and NU3037?</h1>
 <h2>The issue</h2>
-<p>Last week I had a bad time when I wanted to run the Microsoft Azure DevOps pipeline of a .NET 5 project I hadn't done for 6 months. The first .NET publish step failed with hundreds of errors, always the both same: error NU3028 and error NU3037.</p>
-<p>The NU3028 error is a NuGet error about the repository primary signature's timestamp which has a building issue because of an untrested root. The NU3037 error is also a NuGet error which tells that the repository primary signature validity period has expired.</p>
+<p>Last week I had a bad time when I wanted to run the Microsoft Azure DevOps pipeline of a .NET 5 project I hadn't run for 6 months. The first .NET publish step failed with hundreds of errors, always the same two: error NU3028 and error NU3037.</p>
+<p>The NU3028 error is a NuGet error about the repository primary signature's timestamp, which has a chain building issue because of an untrusted root. The NU3037 error is also a NuGet error, which says that the repository primary signature validity period has expired.</p>
 <pre><code class="csharp">
 /home/vsts/work/1/s/MY_PROJECT/MY_PROJECT.csproj : error NU3028: Package 'System.IO.FileSystem 4.0.1' from source 'https://api.nuget.org/v3/index.json': The repository primary signature's timestamp found a chain building issue: UntrustedRoot: self signed certificate in certificate chain
 /home/vsts/work/1/s/MY_PROJECT/MY_PROJECT.csproj : error NU3037: Package 'System.IO.FileSystem 4.0.1' from source 'https://api.nuget.org/v3/index.json': The repository primary signature validity period has expired.
@@ -64,14 +64,14 @@
 </code></pre>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/microsoft-azure-pipeline-dotnet5-NU3037-NU3028-01.webp" title="" alt="" /></div>
 <p>These errors occurred when running dotnet restore.</p>
-<p>The root cause of them is that the certificate used for signed NuGet packages had expired the April 14, 2022. The result is that the validation of the package failed so they can't be referenced.</p>
+<p>The root cause of them is that the certificate used to sign NuGet packages expired on April 14, 2022. The result is that the validation of the packages failed, so they can't be referenced.</p>
 <p>These errors only affect .NET 5 projects on Linux environments (not all the Linux distributions but a lot of them, including Debian, Ubuntu and Alpine).</p>
 <h2>The solution</h2>
-<p>Because of existing issues with the .NET 5 signing verification feature, the timestamp verification has been revoked on Unix-based systems within .NET 5+ SDK. The dotnet restore experience is not affected by this, but it will work again.</p>
+<p>Because of existing issues with the .NET 5 signing verification feature, the timestamp verification has been revoked on Unix-based systems within the .NET 5+ SDK. The dotnet restore experience is no longer affected by this, so it will work again.</p>
 <p>For .NET 5, a new .NET build has been provided on April 6, 2022 with NuGet package verification disabled on Linux and macOS: .NET SDK 5.0.202.</p>
 <p>For .NET 6, the .NET 6 Preview 3 has been released on April 8, 2022 with the same feature (or lack of feature).</p>
-<p>The solution for me was to upgrade the DSK used in my project from .NET 5.0.103 to .NET 5.0.202 and the pipeline has runned again.</p>
-<p>You can find the NuGet annoucement on <a href="https://github.com/NuGet/Announcements/issues/56" title="" target="_Blank" rel="nofollow">GitHub</a>.</p>
+<p>The solution for me was to upgrade the SDK used in my project from .NET 5.0.103 to .NET 5.0.202, and the pipeline ran again.</p>
+<p>You can find the NuGet announcement on <a href="https://github.com/NuGet/Announcements/issues/56" title="" target="_Blank" rel="nofollow">GitHub</a>.</p>
 <div id="crdny">October 4, 2022</div>
 				<div id="tags_wrapper">
 					<ul>

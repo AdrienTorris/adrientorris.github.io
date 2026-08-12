@@ -59,12 +59,12 @@
 			<div id="post_ctn">
 				<h1>Common EF Core mistake: not using the difference between Tracking and No-Tracking Queries</h1>
 				<h3>What is this?</h3>
-				<p>By default, a query is trackable, it means that if your query changes some properties of some entities and saves them, theses modifications will be repercuted on the database.</p>
-				<p>You query a product, you change his name and save the changes. The next time you will query this product his name will be the updated one. Great.</p>
+				<p>By default, a query is trackable; it means that if your query changes some properties of some entities and saves them, these modifications will be reflected in the database.</p>
+				<p>You query a product, you change its name and save the changes. The next time you query this product its name will be the updated one. Great.</p>
 				<h3>What is AsNoTracking?</h3>
 				<p>The AsNoTracking method allows a query to not be trackable, so no changes will ever happen in the database, even if you call the SaveChanges method.</p>
-				<p>There is absolutely no sense in our previous example but what if you already know that your query won't modify the database?</p>
-				<h3>What happens behind the scene?</h3>
+				<p>That makes absolutely no sense in our previous example, but what if you already know that your query won't modify the database?</p>
+				<h3>What happens behind the scenes?</h3>
 				<p>Take this query:</p>
 <pre><code class="csharp">
 return 
@@ -72,8 +72,8 @@ return
 		.Where(x=>x.CategoryId == 1)
 		.ToList()
 </code></pre>
-				<p>EF Core will generate the query, send the query to the database provider that will run it then returns the results to EF Core that will parse and map the data, then EF Core will add the tracking fields it needs to work (basically it will add another field for all the entities fields to track the change, and some more for stuff like the indexes) then it will pass the results to your code than can continues to run.</p>
-				<p>What is the problem? Well, it hasn't but the step that consist for EF Core to add the tracking fields is a big one and can use massive memory space if it processes a lot of data, why doing this if you already know when you send the query that you won't update the database?</p>
+				<p>EF Core will generate the query, send it to the database provider that will run it then return the results to EF Core, which will parse and map the data; then EF Core will add the tracking fields it needs to work (basically it will add another field for every entity field to track the change, and some more for stuff like the indexes), then it will pass the results to your code, which can continue to run.</p>
+				<p>What is the problem? Well, there isn't one, but the step where EF Core adds the tracking fields is a big one and can use a massive amount of memory if it processes a lot of data. Why do this if you already know when you send the query that you won't update the database?</p>
 <div class="pic_wrapper">
 		<img src="/wwwroot/images/entity-framework-core/ef-core-tracking-no-tracking-queries-behind-the-scene-01.png?raw=true" title="" alt="" />
 </div>
@@ -86,18 +86,18 @@ return
 		.Where(x=>x.CategoryId == 1)
 		.ToList()
 </code></pre>
-				<p>What happens now behind the scene? Exaclty the same that for the first query except that the tracking step is skipped:</p>
+				<p>What happens now behind the scenes? Exactly the same as for the first query except that the tracking step is skipped:</p>
 <div class="pic_wrapper">
 		<img src="/wwwroot/images/entity-framework-core/ef-core-tracking-no-tracking-queries-behind-the-scene-02.png?raw=true" title="" alt="" />
 </div>
-				<p>Is there any difference for your code? There is absolutely no difference for your code except that the SaveChanges method won't have any effect now if your are using it, if you don't there is no difference for you.</p>
-				<h3>Why caring about this?</h3>
+				<p>Is there any difference for your code? There is absolutely no difference for your code, except that the SaveChanges method won't have any effect now if you are using it; if you don't, there is no difference for you.</p>
+				<h3>Why care about this?</h3>
 				<p>What are the gains? Performance!</p>
-				<p>Non-tracked queries can run 7 or 8 times faster and use 4 or 5 less memories. If your queries manipulate a lot of data, that can be a massive gain.</p>
+				<p>Non-tracked queries can run 7 or 8 times faster and use 4 or 5 times less memory. If your queries manipulate a lot of data, that can be a massive gain.</p>
 				<p>Note two things:</p>
 				<ul>
-				<li>the first thing is that the gain will be on the .NET part, no gain will be on the database part. It's logic because we saw that the query that is sends to the SQL database provider is exactly the same when your are using AsNoTracking or not, this is the EF Core part that is impacted.</li>
-				<li>the second thing to know and that's very important is that the gain will depends a lot of the database provider you use. The numbers in this post are accurrate for SQL server and the majority of the SQL database providers but Nick Chapsas has demontrated that the AsNoTracking method has barely no effect if you are using SQLite for example. You have to check the SQL provider you are using to know if theses kind of optimizations will have an impact on your performance or not.</li>
+				<li>the first thing is that the gain will be on the .NET side, there will be no gain on the database side. It's logical because we saw that the query that is sent to the SQL database provider is exactly the same whether you are using AsNoTracking or not; it is the EF Core part that is impacted.</li>
+				<li>the second thing to know, and it's very important, is that the gain will depend a lot on the database provider you use. The numbers in this post are accurate for SQL Server and the majority of the SQL database providers, but Nick Chapsas has demonstrated that the AsNoTracking method has almost no effect if you are using SQLite for example. You have to check the SQL provider you are using to know whether these kinds of optimizations will have an impact on your performance or not.</li>
 				</ul>
 				<div id="crdny">October 19, 2023</div>
 				<div id="tags_wrapper">

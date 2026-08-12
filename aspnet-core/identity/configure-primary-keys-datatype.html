@@ -64,12 +64,12 @@
 			</div>
 			<div id="post_ctn">
 				<h1>Configure the data type of the primary keys using ASP.NET Core Identity</h1>
-				<p>By default, ASP.NET Core Identity uses string data type for the primary keys, because like Rick Anderson explained, Microsoft and ASP.NET doesn't want to involve in your business logic, this is your concern, so they are using string data type who is not a strong-typed data-type and allows you to cast him easily.</p>
-				<p>If this choice from ASP.NET's team is totally understandable, you often need (or just want) other data type that string for your primary keys, like integers or Guids. This is very simple to implement with ASP.NET Core, you have just a few lines of code to write.</p>
+				<p>By default, ASP.NET Core Identity uses the string data type for the primary keys because, as Rick Anderson explained, Microsoft and ASP.NET don't want to get involved in your business logic, that's your concern, so they use the string data type, which is not a strongly-typed data type and allows you to cast it easily.</p>
+				<p>While this choice by the ASP.NET team is totally understandable, you often need (or just want) a data type other than string for your primary keys, like integers or GUIDs. This is very simple to implement with ASP.NET Core, you have just a few lines of code to write.</p>
 				<ul class="steps">
 					<li>
 						<span class="step_number">1</span>
-						Implement your own classes for the identity's objects (user and role), and precise in the inheritance the data type you want for their primary keys (Guid here)
+						Implement your own classes for the Identity objects (user and role), and specify in the inheritance the data type you want for their primary keys (Guid here)
 						<pre><code class="csharp">
 public class ApplicationUser : IdentityUser&#60;Guid&#62;
 {
@@ -82,7 +82,7 @@ public class ApplicationRole : IdentityRole&#60;Guid&#62;
 					</li>
 					<li>
 						<span class="step_number">2</span>
-						Inherit the Identity's database context and precise which objects you want to use and the data type of their primary keys
+						Inherit from the Identity database context and specify which objects you want to use and the data type of their primary keys
 						<pre><code class="csharp">
 public class ApplicationDbContext : IdentityDbContext&#60;ApplicationUser, ApplicationRole, Guid&#62;
 {
@@ -103,7 +103,7 @@ public class ApplicationDbContext : IdentityDbContext&#60;ApplicationUser, Appli
 				    </li>
 					<li>
 						<span class="step_number">3</span>
-						In your application startup class, add the identity's service, declaring which classes you want to use and the data type of their primary keys, and this is it
+						In your application startup class, add the Identity service, declaring which classes you want to use and the data type of their primary keys, and that's it
 						<pre><code class="csharp">
 public void ConfigureServices(IServiceCollection services)
 {
@@ -118,7 +118,7 @@ public void ConfigureServices(IServiceCollection services)
 						</code></pre>
 					</li>
 				</ul><br />
-				<p>This implementation doesn't change the data type of the columns in the database, the columns of the primary keys are still NVARCHAR(450) (yes, this is huge) but your objects will be more easy to manipulate because you won't have to cast their identifiers every time you'll have to use them</p>
+				<p>This implementation doesn't change the data type of the columns in the database, the primary key columns are still NVARCHAR(450) (yes, that's huge), but your objects will be easier to manipulate because you won't have to cast their identifiers every time you use them.</p>
 <pre><code class="csharp">
 [HttpGet]
 public async Task&#60;IActionResult&#62; Test()

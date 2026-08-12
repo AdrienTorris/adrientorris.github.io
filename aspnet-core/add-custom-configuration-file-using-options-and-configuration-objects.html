@@ -2,12 +2,12 @@
 <html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-		<title>Add custom configuration file in a ASP.NET Core Web Application using options and configuration objects</title>
+		<title>Add a custom configuration file in an ASP.NET Core Web Application using options and configuration objects</title>
 		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="language" content="en" />
 		<meta name="keywords" content="ASP.NET Core,ASP.NET Core web application,ASP.NET Core Configuration,appsettings.json" />
-		<meta name="description" content="How to add a custom configuration file in a ASP.NET Core Web Application using options and configuration objects" />
+		<meta name="description" content="How to add a custom configuration file in an ASP.NET Core Web Application using options and configuration objects" />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
 		<meta name="generator" content="No404! 0.1" />
@@ -57,10 +57,10 @@
 				</ul>
 			</div>
 			<div id="post_ctn">
-				<h1>Add custom configuration file using options and configuration objects</h1>
-				<p>It can be usefull to have multiple configuration files, and it follows some develoment best practices like the Interface Segregation Principle or the Separation of Concerns. Moreover, it allows you to have the behavior you want on each configuration file.</p>
-				<p>It's very simple and asy to do this using options and configuration objects.</p>
-				<p>The first step is to add a file in your project, here <span class="thnclwrd">customSettings.json</span>, with the content :</p>
+				<h1>Add a custom configuration file using options and configuration objects</h1>
+				<p>It can be useful to have multiple configuration files, and it follows some development best practices like the Interface Segregation Principle or the Separation of Concerns. Moreover, it allows you to have the behavior you want on each configuration file.</p>
+				<p>It's very simple and easy to do this using options and configuration objects.</p>
+				<p>The first step is to add a file to your project, here <span class="thnclwrd">customSettings.json</span>, with the following content:</p>
 <pre><code class="json">
 &#123;
   "CustomSection1": &#123;
@@ -72,7 +72,7 @@
   &#125;
 &#125;
 </code></pre>
-				<p>Create the model of the configuration settings you want to add :</p>
+				<p>Create the model of the configuration settings you want to add:</p>
 <pre><code class="csharp">
 namespace WebApplication1.Models.CustomSettings
 &#123;
@@ -88,7 +88,7 @@ namespace WebApplication1.Models.CustomSettings
     }
 &#125;
 </code></pre>
-				<p>Then, use the configuration provider you want (the <span class="thnclwrd">JSON</span> one here), and add your class to the service container and bound to configuration :</p>
+				<p>Then, use the configuration provider you want (the <span class="thnclwrd">JSON</span> one here), add your class to the service container and bind it to the configuration:</p>
 <pre><code class="csharp">
     public class Startup
     {
@@ -123,7 +123,7 @@ namespace WebApplication1.Models.CustomSettings
             services.AddMvc();
         }
 </code></pre>
-				<p>Work is done ! You can now access your settings from your controllers using <span class="thnclwrd">Dependency Injection</span> on <span class="thnclwrd">IOptions<TOptions></span> :</p>
+				<p>The work is done! You can now access your settings from your controllers using <span class="thnclwrd">Dependency Injection</span> on <span class="thnclwrd">IOptions<TOptions></span>:</p>
 <pre><code class="csharp">
     public class HomeController : Controller
     {

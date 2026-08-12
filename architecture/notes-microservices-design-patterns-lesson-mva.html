@@ -62,21 +62,21 @@
 				<h1>My notes about the "Microservices Design and Patterns" lesson</h1>
 				<h2>Introducing Common Concerns</h2>
 				<h3>A few recurring themes</h3>
-				<p><b>Affinity</b> - The more information your are managing within your system, the more your system will be dictated by the constraint of having so much data</p>
+				<p><b>Affinity</b> - The more information you are managing within your system, the more your system will be dictated by the constraint of having so much data.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/affinity.png" title="" /></div>
-				<p><b>Capacity</b> - This is a constraint we have to deal with, even in a big system the capacity, the resources, are not limitless</p>
+				<p><b>Capacity</b> - This is a constraint we have to deal with: even in a big system, the capacity, the resources, are not limitless.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/capacity.png" title="" /></div>
-				<p><b>Speed of light</b> - Complex interactions between servers who are far away from each others generates latency. When we build global systems, we have to keep this in mind and gigure out how to go and deploy thoses systems in a global way and how to operate thoses systems in a global way</p>
+				<p><b>Speed of light</b> - Complex interactions between servers that are far away from each other generate latency. When we build global systems, we have to keep this in mind and figure out how to deploy those systems in a global way and how to operate them in a global way.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/speed-of-light-latency.png" title="" /></div>
-				<p><b>Failure</b> - Failure happens, we have to deal with it has an explicit thing</p>
+				<p><b>Failure</b> - Failure happens, we have to deal with it as an explicit thing.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/failure.png" title="" /></div>
-				<p><b>Criminals and the Careless</b> - The security and safety are the two aspects that are about really protecting your systems from unwanted interactions</p>
+				<p><b>Criminals and the Careless</b> - Security and safety are the two aspects that are really about protecting your systems from unwanted interactions.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/criminals-and-the-careless.png" title="" /></div>
-				<h3>the "Pets vs Cattle" mindset</h3>
+				<h3>The "Pets vs Cattle" mindset</h3>
 				<p>=> Single machine systems vs cloud systems</p>
 				<p>=> Individual management vs Mass management</p>
-				<p>The pets is the old-school way : you have a few environments, or maybe a single-one, and you know all about them. You know the name of your servers, and a lots of others informations and when one of them has a problem, you do the effort to repair it.</p>
-				<p>The cattle is another attitude. You're no longer running one computer but you run 100 or maybe more and if there's anythinf wrong with one of them, or one instance, you will not repair it but simply turn it off and replace it by a new one. You will never care about the individual computer anymore.</p>
+				<p>The pets approach is the old-school way: you have a few environments, or maybe a single one, and you know all about them. You know the names of your servers and a lot of other information, and when one of them has a problem, you make the effort to repair it.</p>
+				<p>The cattle approach is another attitude. You're no longer running one computer but 100 or maybe more, and if there's anything wrong with one of them, or with one instance, you will not repair it but simply turn it off and replace it with a new one. You will never care about the individual computer anymore.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/pets-vs-cattle.png" title="" /></div>
 				<h2>Designing High-Scale systems</h2>
 				<h3>Distributed Systems Vocabulary</h3>
@@ -85,54 +85,54 @@
 				<ul>
 					<li>
 						<b>Scalability</b>
-						<p>Scale to requirements => If you scale up, your workload growth and this add of work could be useless, if you scale down you will have to deal with resources constraints, so it's really important anticipate your future needs and scale correctly your system.
-						<br /><br />A "scale ramp", is a good practice. Growth your system with your audience.</p>
+						<p>Scale to requirements => If you scale up, your workload grows and this extra work could be useless; if you scale down, you will have to deal with resource constraints. So it's really important to anticipate your future needs and scale your system correctly.
+						<br /><br />A "scale ramp" is a good practice. Grow your system with your audience.</p>
 					</li>
-					<li><b>Availability</b><p>Keep the system available as required for the solution</p></li>
-					<li><b>Consistency</b><p>Provide a view of the information held by a system that is as consistent as needed to fulfill the solution requirements</p></li>
-					<li><b>Reliability</b><p>Operate the system reliably and resilient against failures</p></li>
-					<li><b>Predictability</b><p>Design to achieve predictable system performance</p></li>
-					<li><b>Security</b><p>Identify and explicitly mitigate (or choose not to mitigate) security threats</p></li>
-					<li><b>Agility</b><p>Design the system such that defects can be corrected and new capabilities introduced while meeting operational objectives</p></li>
-					<li><b>Safety</b><p>Provide safety for data and systems by mitigating the risk of disasters impacting the existing environment(s)</p></li>
-					<li><b>Supportability</b><p>Create systems to provide operational transparency for the needs of operations and support staff</p></li>
-					<li><b>Cost</b><p>Do all of the above within a set budget and striving to continually reduce that cost</p></li>
+					<li><b>Availability</b><p>Keep the system available as required for the solution.</p></li>
+					<li><b>Consistency</b><p>Provide a view of the information held by a system that is as consistent as needed to fulfill the solution requirements.</p></li>
+					<li><b>Reliability</b><p>Operate the system reliably and resiliently against failures.</p></li>
+					<li><b>Predictability</b><p>Design to achieve predictable system performance.</p></li>
+					<li><b>Security</b><p>Identify and explicitly mitigate (or choose not to mitigate) security threats.</p></li>
+					<li><b>Agility</b><p>Design the system such that defects can be corrected and new capabilities introduced while meeting operational objectives.</p></li>
+					<li><b>Safety</b><p>Provide safety for data and systems by mitigating the risk of disasters impacting the existing environment(s).</p></li>
+					<li><b>Supportability</b><p>Create systems to provide operational transparency for the needs of operations and support staff.</p></li>
+					<li><b>Cost</b><p>Do all of the above within a set budget, striving to continually reduce that cost.</p></li>
 				</ul>
 				<h3>Defining Services and Microservices</h3>
-				<p>- A "Service" is software that</p>
+				<p>- A "Service" is software that:</p>
 <ul>
-<li>is responsible for holding, processing and/or distributing particular kinds of information withi the scope of a system</li>
+<li>is responsible for holding, processing and/or distributing particular kinds of information within the scope of a system</li>
 <li>can be built, deployed, and run independently, meeting defined operational objectives</li>
 <li>communicates with consumers and other services, presenting information using conventions and/or contract assurances</li>
 <li>protects itself against unwanted access, and its information against loss</li>
 <li>handles failure conditions such that failures cannot lead to information corruption</li>
 </ul>
 <div class="pic_wrapper"><img  src="/wwwroot/images/architecture/notes-microservices-design-patterns-lesson-mva/service-does-not-imply.png" title="" /></div>
-<p>- A service consumer interacts with the service, it may be another service or a proxy to an entity in the physical world :</p>
+<p>- A service consumer interacts with the service; it may be another service or a proxy to an entity in the physical world:</p>
 <ul>
 <li>User Interface</li>
 <li>Sensor</li>
 <li>Actor</li>
 </ul>
-<p>- A system is a federation of services and systems, aiming to provide a composite solution for a well-defined scope</p>
+<p>- A system is a federation of services and systems, aiming to provide a composite solution for a well-defined scope.</p>
 <h3>Designing Layers and Tiers</h3>
 <ul>
-<li>Layers : Code Management</li>
-<li>Tiers : Runtime Management</li>
-<li>Services : Ownership Management</li>
+<li>Layers: Code Management</li>
+<li>Tiers: Runtime Management</li>
+<li>Services: Ownership Management</li>
 </ul>
 <h3>Creating Autonomous Layers</h3>
-<p>- Service are autonomous entities :</p>
+<p>- Services are autonomous entities:</p>
 <ul>
-<li>Defining property of services is that they are autonomous</li>
+<li>The defining property of services is that they are autonomous</li>
 <li>Services shall have no shared state with others</li>
 <li>No sideline communications between services</li>  
 </ul>
-<p>- An autonomous service owns its own uptime</p>
-<p>- An autonomous service honors its contract : it's very important, because the only way how a service can be autonomous is by adhering to contract they given to others as an assurance. It means that even if the service change, he has to continue to respect his contract. For example, a service can change his inside data, the data he's store and he's responsible for, but not the data he exports, his outside data.</p>
-<p>- A service has his own database, that can be decoupled but not shared</p>
+<p>- An autonomous service owns its own uptime.</p>
+<p>- An autonomous service honors its contract: this is very important, because the only way a service can be autonomous is by adhering to the contract it gives to others as an assurance. It means that even if the service changes, it has to continue to respect its contract. For example, a service can change its inside data, the data it stores and is responsible for, but not the data it exports, its outside data.</p>
+<p>- A service has its own database, which can be decoupled but not shared.</p>
 <h3>Enabling Clusters</h3>
-<p>Clustering is about the capacity of having multiple services on a machine, or multiple services on multiple machines, or a service on multiple machines with a load balancer. The constraint is the services can't have shared cross-service state, they have to be autonomous.</p>
+<p>Clustering is about the ability to have multiple services on a machine, or multiple services on multiple machines, or a service on multiple machines with a load balancer. The constraint is that the services can't have shared cross-service state; they have to be autonomous.</p>
 <p>Azure Service Fabric can help.</p>
 <h3>Autonomous Services Benefits</h3>
 <ul>
