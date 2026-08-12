@@ -2,12 +2,12 @@
 <html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-		<title>Configure unicity of user's mail addresses using ASP.NET Core Identity</title>
+		<title>Configure the uniqueness of users' mail addresses using ASP.NET Core Identity</title>
 		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="language" content="en" />
 		<meta name="keywords" content="ASP.NET Core,Identity,ASP.NET Core security,ASP.NET Core Identity" />
-		<meta name="description" content="Configure unicity of user's mail addresses using ASP.NET Core Identity" />
+		<meta name="description" content="Configure the uniqueness of users' mail addresses using ASP.NET Core Identity" />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
 		<meta name="generator" content="No404! 0.1" />
@@ -59,12 +59,12 @@
 					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
 					<li>ASP.NET Core</li>
 					<li>Identity</li>
-					<li class="active"><a href="https://adrientorris.github.io/aspnet-core/identity/configure-mail-unicity.html" title="Configure unicity of user's mail addresses using ASP.NET Core Identity">Configure unicity of user's mail addresses using ASP.NET Core Identity</a></li>
+					<li class="active"><a href="https://adrientorris.github.io/aspnet-core/identity/configure-mail-unicity.html" title="Configure the uniqueness of users' mail addresses using ASP.NET Core Identity">Configure the uniqueness of users' mail addresses using ASP.NET Core Identity</a></li>
 				</ul>
 			</div>
 			<div id="post_ctn">
-				<h1>Configure unicity of user's mail addresses using ASP.NET Core Identity</h1>
-				<p>By default, ASP.NET Core Identity doesn't require mail addresses unicity for the users, so several users can have the same mail. To change this behavior, this is very simple. You have just to configure the policy you want in your application's startup class.</p>
+				<h1>Configure the uniqueness of users' mail addresses using ASP.NET Core Identity</h1>
+				<p>By default, ASP.NET Core Identity doesn't require users' mail addresses to be unique, so several users can have the same mail address. Changing this behavior is very simple: you just have to configure the policy you want in your application's startup class.</p>
 <pre><code class="csharp">
 public void ConfigureServices(IServiceCollection services)
 {

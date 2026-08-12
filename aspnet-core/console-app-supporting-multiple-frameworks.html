@@ -58,15 +58,15 @@
 			</div>
 			<div id="post_ctn">
 				<h1>Creating a .NET Core Console Application supporting multiple frameworks</h1>
-				<p>Yesterday, I had to implement in a .NET Core Console Application a non-ASP.NET Core portable class library. With .NET Core, this manipulation is easy. Indeed, you have just to add a reference to the correct framework in your appliation's project json file, and all will work fine.</p>
-				<p>This is my project.json before any modification (you can note this is the default project.json file) :</p>
+				<p>Yesterday, I had to use a non-ASP.NET Core portable class library in a .NET Core Console Application. With .NET Core, this operation is easy. Indeed, you just have to add a reference to the correct framework in your application's project.json file, and everything will work fine.</p>
+				<p>This is my project.json before any modification (note that this is the default project.json file):</p>
 				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/default-net-core-console-app-project-json.png" title="" /></div>
-				<p>To know which framework you have to target, look in the properties of the portable class library (you can see here I have to target the .NET Framework 4.5) :</p>
+				<p>To know which framework you have to target, look in the properties of the portable class library (you can see here that I have to target the .NET Framework 4.5):</p>
 				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/dotnet-portable-class-library-properties.png" title="" /></div>
-				<p>To target the .NET Framework 4.5 in your .NET Core Console Application, you have just to adjust the frameworks you address to in the "frameworks" section in your <span class="thnclwrd">project.json</span> file. After the modification, it will be looks like this :<p/>
+				<p>To target the .NET Framework 4.5 in your .NET Core Console Application, you just have to adjust the frameworks you target in the "frameworks" section of your <span class="thnclwrd">project.json</span> file. After the modification, it will look like this:<p/>
 				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/multiple-frameworks-net-core-console-app-project-json.png" title="" /></div>
-				<p>You can see here I'm still targeting the .NET Core 1.0.1 framework, but I also reference the .NET 4.5 portable framework, which allows me to reference the two .NET 4.5 portable class libraries I needed to use, libvideo and ClassLibrary2.</p>
-				<p>I needed here to include the portable 4.5 .NET framework but I also could add any other .NET framework, like .NET Framework 4.5.2 for example.</p>
+				<p>You can see here that I'm still targeting the .NET Core 1.0.1 framework, but I also reference the .NET 4.5 portable framework, which allows me to reference the two .NET 4.5 portable class libraries I needed to use, libvideo and ClassLibrary2.</p>
+				<p>Here I needed to include the .NET 4.5 portable framework, but I could also add any other .NET framework, like .NET Framework 4.5.2 for example.</p>
 <pre><code class="csharp">
 &#123;
   "version": "1.0.0-*",
@@ -103,7 +103,7 @@
   &#125;
 &#125;
 </code></pre>
-				<p>With this <span class="thnclwrd">project.json</span>, you can see my console application has the 3 frameworks :</p>
+				<p>With this <span class="thnclwrd">project.json</span>, you can see that my console application has the 3 frameworks:</p>
 				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/multiple-frameworks-net-core-console-app-project-json-refs.png" title="" /></div>
 				<div id="crdny">
 					19/11/2016

@@ -2,12 +2,12 @@
 <html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-		<title>How to get current logged in user's identifier with ASP.NET Core Identity?</title>
+		<title>How to get the currently logged-in user's identifier with ASP.NET Core Identity?</title>
 		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="language" content="en" />
 		<meta name="keywords" content="ASP.NET Core,Identity,ASP.NET Core security,ASP.NET Core Identity" />
-		<meta name="description" content="How to get current logged in user's identifier with ASP.NET Core Identity ?" />
+		<meta name="description" content="How to get the currently logged-in user's identifier with ASP.NET Core Identity?" />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
 		<meta name="generator" content="No404! 0.1" />
@@ -59,12 +59,12 @@
 					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
 					<li>ASP.NET Core</li>
 					<li>Identity</li>
-					<li class="active"><a href="https://adrientorris.github.io/aspnet-core/identity/how-to-get-current-logged-in-user-id.html" title="How to get current logged in user's identifier">Get current logged in user's identifier</a></li>
+					<li class="active"><a href="https://adrientorris.github.io/aspnet-core/identity/how-to-get-current-logged-in-user-id.html" title="How to get the currently logged-in user's identifier">Get the currently logged-in user's identifier</a></li>
 				</ul>
 			</div>
 			<div id="post_ctn">
-				<h1>Get current logged in user's identifier with ASP.NET Core Identity</h1>
-				<p>To get some data about the current logged in user, you have to call the service <span class="thnclwrd">Microsoft.AspNetCore.Identity.UserManager&#60;T&#62;</span>, which implements all the methods you need.</p>
+				<h1>Get the currently logged-in user's identifier with ASP.NET Core Identity</h1>
+				<p>To get some data about the currently logged-in user, you have to call the <span class="thnclwrd">Microsoft.AspNetCore.Identity.UserManager&#60;T&#62;</span> service, which implements all the methods you need.</p>
 				<p>A good practice is to add a private method in your controller, calling this service.</p>
 <pre><code class="csharp">
 public class AccountController &#58; Controller

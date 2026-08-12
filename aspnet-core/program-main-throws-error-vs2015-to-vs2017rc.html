@@ -58,11 +58,11 @@
 			</div>
 			<div id="post_ctn">
 				<h1>Error on start after ASP.NET Core project upgraded from Visual Studio 2015 to Visual Studio 2017 RC</h1>
-				<p>After upgraded an ASP.NET Core Web Application project from Visual Studio 2015 to the new Visual Studio 2017 RC, I've got an error in every start before Program.Main gets hit, with a dialog show the error message :</p>
+				<p>After upgrading an ASP.NET Core Web Application project from Visual Studio 2015 to the new Visual Studio 2017 RC, I got an error on every start before Program.Main was hit, with a dialog showing the error message:</p>
 				<p><i>Object reference not set to an instance of an object.</i></p>
-				<p>Once I've clicked on the OK button, the execution continues and Program.Main was call normally.</p>
-				<p>The problem is a bug in the upgrade tools of Visual Studio 2017 RC, who doesn't handle a modification in the format of the <span class="thnclwrd">Properties/launchSettings.json</span> file.</p>
-				<p>In Visual Studio 2015, this file looks like :</p>
+				<p>Once I clicked the OK button, the execution continued and Program.Main was called normally.</p>
+				<p>The problem is a bug in the upgrade tools of Visual Studio 2017 RC, which doesn't handle a change in the format of the <span class="thnclwrd">Properties/launchSettings.json</span> file.</p>
+				<p>In Visual Studio 2015, this file looks like this:</p>
 <pre><code class="csharp">
 {
   "iisSettings": {
@@ -92,7 +92,7 @@
   }
 }
 </code></pre>
-				<p>In Visual Studio 2017 RC, you have to add the node <span class="thnclwrd">applicationUrl</span> in your profile. It's become :</p>
+				<p>In Visual Studio 2017 RC, you have to add the <span class="thnclwrd">applicationUrl</span> node to your profile. It becomes:</p>
 <pre><code class="csharp">
     "WebApplication2": {
       "commandName": "Project",

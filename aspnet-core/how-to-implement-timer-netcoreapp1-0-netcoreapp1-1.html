@@ -58,8 +58,8 @@
 			</div>
 			<div id="post_ctn">
 				<h1>How to implement a timer with .NETCoreApp1.0 or .NETCoreApp1.1</h1>
-				<p>For a .NET Core project, I needed to implement a timer, to execute some tasks at regular intervals.</p>
-				<p>Before ASP.NET core, I used to use the System.Timers dll, who provides all the things I needed to implement the timer I wanted to, who was something like that :</p>
+				<p>For a .NET Core project, I needed to implement a timer to execute some tasks at regular intervals.</p>
+				<p>Before ASP.NET Core, I used to use the System.Timers DLL, which provides everything I needed to implement the timer I wanted, something like this:</p>
 <pre><code class="csharp">
 public class Class1
 &#123;
@@ -91,9 +91,9 @@ public class Class1
      &#125;
 &#125;
 </code></pre>
-				<p>With ASP.NET Core, you can't use System.Timers anymore, you have to use the package System.Threading.Timer, who provides almost the same things.</p>
+				<p>With ASP.NET Core, you can't use System.Timers anymore; you have to use the System.Threading.Timer package, which provides almost the same things.</p>
 				<div class="pic_wrapper"><img  src="/wwwroot/images/dotnet-core/how-to-implement-timer-netcoreapp1-0-netcoreapp1-1.png" alt="How to implement a timer with .NETCoreApp1.0 or .NETCoreApp1.1" title="How to implement a timer with .NETCoreApp1.0 or .NETCoreApp1.1" /></div>
-				<p>This is a quick example of a timer implemented with this package :</p>
+				<p>This is a quick example of a timer implemented with this package:</p>
 <pre><code class="csharp">
 namespace ConsoleApp
 &#123;
@@ -136,7 +136,7 @@ namespace ConsoleApp
     &#125;
 &#125;
 </code></pre>
-				<p>If after adding the package System.Threading.Timer in your project, your project doesn't build anymore, it's because you have to add a depency to the Microsoft.NETCore.App platform type to your .NET Core framework :</p>
+				<p>If, after adding the System.Threading.Timer package to your project, your project doesn't build anymore, it's because you have to add a dependency to the Microsoft.NETCore.App platform type in your .NET Core framework:</p>
 <pre><code class="json">
 &#123;
   "version": "1.0.0-*",
@@ -162,7 +162,7 @@ namespace ConsoleApp
   &#125;
 &#125;
 </code></pre>
-				<p>Note that if you add the dependency to the netcoreapp framework, you have to remove the first dependency line to the NET Core framework, otherwise you will have the error : <i>An item with the same key has already been added. Key: Microsoft.NETCore.App</i></p>
+				<p>Note that if you add the dependency to the netcoreapp framework, you have to remove the first dependency line to the .NET Core framework, otherwise you will get the error: <i>An item with the same key has already been added. Key: Microsoft.NETCore.App</i></p>
 				<div id="crdny">January 16, 2017</div>
 				<div id="tags_wrapper">
 					<ul>

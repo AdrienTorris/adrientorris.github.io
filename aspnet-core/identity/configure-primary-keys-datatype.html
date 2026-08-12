@@ -64,8 +64,8 @@
 			</div>
 			<div id="post_ctn">
 				<h1>Configure the data type of the primary keys using ASP.NET Core Identity</h1>
-				<p>By default, ASP.NET Core Identity uses string data type for the primary keys, because like Rick Anderson explained, Microsoft and ASP.NET doesn't want to involve in your business logic, this is your concern, so they are using string data type who is not a strong-typed data-type and allows you to cast him easily.</p>
-				<p>If this choice from ASP.NET's team is totally understandable, you often need (or just want) other data type that string for your primary keys, like integers or Guids. This is very simple to implement with ASP.NET Core, you have just a few lines of code to write.</p>
+				<p>By default, ASP.NET Core Identity uses the string data type for the primary keys because, as Rick Anderson explained, Microsoft and ASP.NET don't want to get involved in your business logic, that's your concern, so they use the string data type, which is not a strongly-typed data type and allows you to cast it easily.</p>
+				<p>While this choice by the ASP.NET team is totally understandable, you often need (or just want) a data type other than string for your primary keys, like integers or GUIDs. This is very simple to implement with ASP.NET Core, you have just a few lines of code to write.</p>
 				<ul class="steps">
 					<li>
 						<span class="step_number">1</span>
@@ -118,7 +118,7 @@ public void ConfigureServices(IServiceCollection services)
 						</code></pre>
 					</li>
 				</ul><br />
-				<p>This implementation doesn't change the data type of the columns in the database, the columns of the primary keys are still NVARCHAR(450) (yes, this is huge) but your objects will be more easy to manipulate because you won't have to cast their identifiers every time you'll have to use them</p>
+				<p>This implementation doesn't change the data type of the columns in the database, the primary key columns are still NVARCHAR(450) (yes, that's huge), but your objects will be easier to manipulate because you won't have to cast their identifiers every time you use them.</p>
 <pre><code class="csharp">
 [HttpGet]
 public async Task&#60;IActionResult&#62; Test()

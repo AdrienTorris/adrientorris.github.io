@@ -59,21 +59,21 @@
             </div>
 			<div id="post_ctn">
 				<h1>C# 7.0 improves the expression body feature</h1>
-				<p>C# 6.0 already improved the <b>expession body</b> feature. With this improvement, a read-only property like this :</p>
+				<p>C# 6.0 already improved the <b>expression body</b> feature. With this improvement, a read-only property like this:</p>
 <pre><code class="csharp">
 public string ExampleText
 &#123;
 	get &#123; return "this is my text"; }
 }
 </pre></code>
-				<p>can be rewritten in a shorter way : </p>
+				<p>can be rewritten in a shorter way:</p>
 <pre><code class="csharp">
 public string ExampleText => "this is my text";
 </pre></code>
-				<p>As you can see, with C# 6 th property is more compact, more clear. There is no more brackets, or <i>return</i> keyword anymore; even the <i>get accessor</i> disappeared.</p>
-				<p>Personally, I use very often the C# 6 syntactic sugar, so I was happy to see that this feature was extended to constructors, destructors and setters.</p>
+				<p>As you can see, with C# 6 the property is more compact and clearer. There are no more brackets, and no more <i>return</i> keyword; even the <i>get accessor</i> disappeared.</p>
+				<p>Personally, I use this C# 6 syntactic sugar very often, so I was happy to see that this feature was extended to constructors, destructors and setters.</p>
 				<h2>Expression-Bodied Constructors</h2>
-				<p>If you have a constructor who doesn't need complex implementation, you can now reduce him to only one line.</p>
+				<p>If you have a constructor that doesn't need a complex implementation, you can now reduce it to a single line.</p>
 				<b>C# 6</b>
 <pre><code class="csharp">
 private bool Initialized &#61; false;
@@ -90,7 +90,7 @@ private bool Initialized &#61; false;
 public MyClass() &#61;&#62; Initialized &#61; true;
 </pre></code>
 				<h2>Expression-Bodied Destructors</h2>
-				<p>The same is true for destructors :</p>
+				<p>The same is true for destructors:</p>
 				<b>C# 6</b>
 <pre><code class="csharp">
 public ~MyClass()
@@ -103,8 +103,8 @@ public ~MyClass()
 public ~MyClass() &#61;&#62; Console.WriteLine(&#36;"{nameof(MyClass)}'s destructor called");
 </pre></code>
 				<h2>Expression-Bodied Property Accessors</h2>
-				<p>This feature was available with C# 6 but only for read-only properties, but with C# 7, you can now write your setters in the same compact way than the getters.</p>
-				<p>The next example is a simple case to see what the syntax is, but in the real-life you could be more simple that this using an auto property who will reduces the code more, but let's see how you can implement a very simple property with the C# 7 improvement :</p>
+				<p>This feature was available in C# 6 but only for read-only properties; with C# 7, you can now write your setters in the same compact way as the getters.</p>
+				<p>The next example is a simple case to show what the syntax is. In real life you could be simpler than this by using an auto property, which reduces the code even more, but let's see how you can implement a very simple property with the C# 7 improvement:</p>
 				<b>C# 6</b>
 <pre><code class="csharp">
 private string _exampleText;
@@ -124,8 +124,8 @@ public string ExampleText
 &#125;
 </pre></code>
 				<h2>Summary</h2>
-				<p>It's clear that Microsoft wants to continue with productivity enhancements for the next version of C#, such a good thing. The less words you have in your code, the less time you spend to write, read and understand it.</p>
-				<p>To keep you inform about the evolution of C#, you can read the <a href="https://github.com/dotnet/roslyn/issues?q=is%3Aopen+label%3A%22Area-Language+Design%22+label%3A%22Design+Notes%22" title="" target="_Blank">design notes discussed on GitHub</a>, such interesting.</p>
+				<p>It's clear that Microsoft wants to continue with productivity enhancements for the next version of C#, which is such a good thing. The fewer words you have in your code, the less time you spend writing, reading and understanding it.</p>
+				<p>To keep informed about the evolution of C#, you can read the <a href="https://github.com/dotnet/roslyn/issues?q=is%3Aopen+label%3A%22Area-Language+Design%22+label%3A%22Design+Notes%22" title="" target="_Blank">design notes discussed on GitHub</a>, they are really interesting.</p>
 				<div id="crdny">February 1, 2017</div>
 				<div id="tags_wrapper">
 					<ul>
