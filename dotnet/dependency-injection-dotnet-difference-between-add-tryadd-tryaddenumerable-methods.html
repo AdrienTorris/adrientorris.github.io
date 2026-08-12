@@ -140,7 +140,7 @@ builder.Services.Add&#60;IService, firstDescriptor&#62;();
 var secondDescriptor = new ServiceDescriptor(typeof(IService), typeof(SecondService), ServiceLifetime.Singleton);
 builder.Services.Add<IService, secondDescriptor>();
 </code></pre>
-Another important aspect of this method is that it allows to add several times the same implementation, so the next code is completely valid:
+Another important aspect of this method is that it allows you to add the same implementation several times, so the following code is completely valid:
 <pre><code class="csharp">
 builder.Services.AddSingleton&#60;IService, FirstService&#62;();
 builder.Services.AddSingleton&#60;IService, FirstService&#62;();

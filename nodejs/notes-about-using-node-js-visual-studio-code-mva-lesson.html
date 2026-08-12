@@ -110,14 +110,14 @@
 					<li>Call the function "require" with the path of the file or directory containing the module you would like to load, and it returns a variable containing all the exported functions.</li>
 				</ul>
 				<h3>Node Package Manager (NPM)</h3>
-				<h4>What is NPM ?</h4>
+				<h4>What is NPM?</h4>
 				<ul>
 					<li>Official package manager for Node.</li>
 					<li>Bundled and installed automatically with the environment.</li>
 				</ul>
 <div class="pic_wrapper"><img src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/node-js-notes-npm-version.png" title="" /></div>
 <div style="position:relative;height:0;padding-bottom:56.25%"><iframe src="https://www.youtube.com/embed/x03fjb2VlGY?ecver=2" width="640" height="360" frameborder="0" style="position:absolute;width:100%;height:100%;left:0" allowfullscreen></iframe></div>
-				<h4>How does it work ?</h4>
+				<h4>How does it work?</h4>
 				<ul>
 					<li>Installs the dependencies in the local node_modules folder</li>
 					<li>In global mode (vs local mode), it makes a node module accessible to all</li>
@@ -126,10 +126,10 @@
 					<li>Can also install the dependencies for a project by reading the package.json</li>
 				</ul>
 				<h2>Introduction to Express</h2>
-				<h3>What is Express ?</h3>
+				<h3>What is Express?</h3>
 				<p>Express is a minimal, open source and flexible node.js web app framework designed to make developing websites, web apps and APIs much easier.</p>
 				<p>It's a very popular framework in the Node.js community.</p>
-				<h3>Why use Express ?</h3>
+				<h3>Why use Express?</h3>
 				<ul>
 				<li>Express helps you respond to requests with route support so that you may write responses to specific URLs</li>
 				<li>Supports multiple templating engines to simplify generating HTML</li>
@@ -140,7 +140,7 @@
 <div class="pic_wrapper"><img src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/node-js-express-rest-api-demo.png" title="" /></div>
 				<h2>Express and Databases</h2>
 				<h3>About NoSQL databases</h3>
-				<p>The NoSQL databases are an alternative to the relational databases. In a relational database, you have multiple tables who contains data who are different but can be joint with keys, and the model needs to be a detailed (fine-grained) database model. In the last couple of years, developers start to prefer more sclalable and flexible data models, a lot easier to manage. With a NoSQL database, no need to develop a detailed database model, you can start quickly, with this advantages and disadvantages. Of course, it's a really short and incomplete summary, you can find a lot of resources about this on the Internet.</p>
+				<p>NoSQL databases are an alternative to relational databases. In a relational database, you have multiple tables that contain different data but can be joined with keys, and the model needs to be a detailed (fine-grained) database model. In the last couple of years, developers have started to prefer more scalable and flexible data models, a lot easier to manage. With a NoSQL database, there is no need to develop a detailed database model, you can start quickly, with the advantages and disadvantages that come with it. Of course, this is a really short and incomplete summary, you can find a lot of resources about it on the Internet.</p>
 				<ul>
 					<li>Not only SQL</li>
 					<li>Different types: document based, graph databases, etc.</li>
@@ -150,16 +150,16 @@
 				</ul>
 <div class="pic_wrapper"><img src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/nodejs-mongodb-demo01.png" title="Demo with NodeJS and MongoDB" /></div>
 				<h2>Building a Front End for your Express web apps</h2>
-				<p>Notice that the lesson explains about the Jade templating engine who is now obsolete, and have been replaced by Pug.</p>
+				<p>Notice that the lesson talks about the Jade templating engine, which is now obsolete and has been replaced by Pug.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/nodejs/notes-nodejs-vs-code-lesson-mva/nodejs-pug-01.png" title="" /></div>
 				<h2>Debugging and Deploying Node.js</h2>
 				<h3>Azure Web Apps</h3>
 				<ul>
 					<li>Easy to deploy a variety of different websites: node, asp.net, python, etc.</li>
 					<li>Can install some software from the gallery like WordPress or preconfigured stacks (MEAN stacks).</li>
-					<li>Has a few limitations such as cannot configure ports, compile native modules for Node.</li>
+					<li>Has a few limitations, such as not being able to configure ports or compile native modules for Node.</li>
 					<li>Can configure custom domains</li>
-					<li>Can aff FTP users</li>
+					<li>Can add FTP users</li>
 					<li>Can run multiple web sites</li>
 					<li>Ideal for a production / staging environment</li>
 				</ul>
@@ -168,12 +168,12 @@
 				<ul>
 					<li>Ability to run a "background task" on demand, continuously, or scheduled</li>
 					<li>Deploy using PAAS - Part of websites</li>
-					<li>Ideal for tasks such API aggregation, batch processing, image resizing, etc.</li>
-					<li>Can use Node, Pythno, Bash, etc.</li>
+					<li>Ideal for tasks such as API aggregation, batch processing, image resizing, etc.</li>
+					<li>Can use Node, Python, Bash, etc.</li>
 				</ul>
-				<h3>Indrocution to creating WebJobs for Node</h3>
+				<h3>Introduction to creating WebJobs for Node</h3>
 				<ul>
-					<li>Looks for a file with "run"(run.js). If not found looks for any file with supported extension.</li>
+					<li>Looks for a file named "run" (run.js). If not found, looks for any file with a supported extension.</li>
 					<li>Have as many files as you want, you zip them up.</li>
 					<li>Can have multiple webjobs.</li>
 					<li>Stored alongside your site at ./App_Data/jobs</li>

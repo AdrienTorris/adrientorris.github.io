@@ -59,22 +59,22 @@
 			<div id="post_ctn">
 				<h1>SQL Injection attacks in Entity Framework Core 2.0</h1>
 				<p>Using an ORM framework isn't enough to prevent you from attacks like SQL injections. You have to use the framework with good practices and avoid bad code.</p>
-				<p>There is some <i>(quick)</i> highlights about good and bad practices using Entity Framework Core 2.0.</p>
+				<p>Here are some <i>(quick)</i> highlights about good and bad practices using Entity Framework Core 2.0.</p>
 				<h3>Using the FromSql()</h3>
-				<p>Bad practice : use string concatenation</p>
+				<p>Bad practice: using string concatenation</p>
 <div class="pic_wrapper">
 		<img src="/wwwroot/images/entity-framework-core/entity-framework-core-2-0-sql-injection-bad-practice.png?raw=true" title="" alt="" />
 </div>
-				<p>Good practice : use string interpolation</p>
+				<p>Good practice: using string interpolation</p>
 <div class="pic_wrapper">
 		<img src="/wwwroot/images/entity-framework-core/entity-framework-core-2-0-sql-injection-good-practice.png?raw=true" title="" alt="" />
 </div>
 				<h3>Using the ToSql()</h3>
-				<p>With the ToSql(), be careful about overload</p>
+				<p>With ToSql(), be careful about overloads</p>
 <div class="pic_wrapper">
 		<img src="/wwwroot/images/entity-framework-core/entity-framework-core-2-0-sql-injection-overload-bad-practice.png?raw=true" title="" alt="" />
 </div>
-				<p>Nick Craver wrote some scenarios to illustrate the risk about the overload. The next samples are just some pastes of his work that you can find <a href="https://github.com/NickCraver/EFCoreInjectionSample/blob/master/Program.cs" title="EF Core injection samples by Nick Craver" target="_Blank" rel="nofollow">here</a>.</p>
+				<p>Nick Craver wrote some scenarios to illustrate the risk related to the overloads. The next samples are just excerpts of his work, which you can find <a href="https://github.com/NickCraver/EFCoreInjectionSample/blob/master/Program.cs" title="EF Core injection samples by Nick Craver" target="_Blank" rel="nofollow">here</a>.</p>
 <pre><code class="csharp">
 static class Program
    {
@@ -157,7 +157,7 @@ static class Program
     }
 }
 </code></pre>
-				<p>This is it. Just a little post about a critical subject perfectly explained by the ASP.NET Monsters serie, and brillantly illustrated by Nick Craver.</p>
+				<p>That's it. Just a little post about a critical subject perfectly explained by the ASP.NET Monsters series, and brilliantly illustrated by Nick Craver.</p>
 				<div id="crdny">November 21, 2017</div>
 				<div id="tags_wrapper">
 					<ul>
@@ -174,7 +174,7 @@ static class Program
 						<li><a href="https://github.com/NickCraver/EFCoreInjectionSample/blob/master/Program.cs" title="EF Core injection samples by Nick Craver" target="_Blank" rel="nofollow">EF Core injection samples by Nick Craver</a></li>
 						<li><a href="https://msdn.microsoft.com/en-us/library/system.formattablestring(v=vs.110).aspx" title="FormattableString in MSDN" target="_Blank" rel="nofollow">FormattableString in MSDN</a></li>
 						<li><a href="https://blogs.msdn.microsoft.com/dotnet/2017/08/14/announcing-entity-framework-core-2-0/" title="Announcing Entity Framework Core 2.0" target="_Blank" rel="nofollow">Announcing Entity Framework Core 2.0</a></li>
-						<li><a href="https://channel9.msdn.com/Series/aspnetmonsters" title="ASP.NET Monsters serie on Channel 9" target="_Blank" rel="nofollow">ASP.NET Monsters serie on Channel 9</a></li>
+						<li><a href="https://channel9.msdn.com/Series/aspnetmonsters" title="ASP.NET Monsters series on Channel 9" target="_Blank" rel="nofollow">ASP.NET Monsters series on Channel 9</a></li>
 						<li><a href="https://aspnetmonsters.com/" title="ASP.NET Monsters website" target="_Blank" rel="nofollow">ASP.NET Monsters website</a></li>
 						<li><a href="https://docs.microsoft.com/en-us/ef/core/querying/raw-sql" title="Raw SQL Queries documentation" target="_Blank" rel="nofollow">Raw SQL Queries documentation</a></li>
 						<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->

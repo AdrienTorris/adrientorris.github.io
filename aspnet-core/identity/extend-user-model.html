@@ -68,7 +68,7 @@
 				<ul class="steps">
 					<li>
 						<span class="step_number">1</span>
-						First step to do that, implement the identity user, and add the properties you need.<br />You also have to create the columns in your database, with the same names than the properties.
+						First step to do that: implement the Identity user, and add the properties you need.<br />You also have to create the columns in your database, with the same names as the properties.
 <pre><code class="csharp">
 // Add profile data for application users by adding properties to the ApplicationUser class
 
@@ -82,7 +82,7 @@ public class ApplicationUser : IdentityUser
 					</li>
 					<li>
 						<span class="step_number">2</span>
-						SignInManager<TUser> is a class responsible for signing users into your application. Internally, this class uses a IUserClaimsPrincipalFactory&#60;TUser&#62; to generate a ClaimsPrincipal from your user. To add claims to this factory (by default, IUserClaimsPrincipalFactory<TUser> manages only two claims : username and user's identifier), you have to create you own implementation of IUserClaimsPrincipalFactory<TUser> by inheriting the default one :
+						SignInManager<TUser> is a class responsible for signing users into your application. Internally, this class uses an IUserClaimsPrincipalFactory&#60;TUser&#62; to generate a ClaimsPrincipal from your user. To add claims to this factory (by default, IUserClaimsPrincipalFactory<TUser> manages only two claims: the username and the user's identifier), you have to create your own implementation of IUserClaimsPrincipalFactory<TUser> by inheriting from the default one:
 <pre><code class="csharp">
 public class AppClaimsPrincipalFactory : UserClaimsPrincipalFactory&#60;ApplicationUser, IdentityRole&#62;
 {
@@ -118,7 +118,7 @@ public class AppClaimsPrincipalFactory : UserClaimsPrincipalFactory&#60;Applicat
 					</li>
 					<li>
 						<span class="step_number">3</span>
-						Finally, you have to register the custom factory you just created in your application startup class, after adding Identity service.
+						Finally, you have to register the custom factory you just created in your application startup class, after adding the Identity service.
 <pre><code class="csharp">
 public void ConfigureServices(IServiceCollection services)
 {

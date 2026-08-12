@@ -8,12 +8,12 @@
   gtag('config', 'UA-85948839-1');
 </script>
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-		<title>Common EF Core mistake: inneficient update and delete</title>
+		<title>Common EF Core mistake: inefficient update and delete</title>
 		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="language" content="en" />
 		<meta name="keywords" content="EF Core,Entity Framework Core,ExecuteUpdate,ExecuteDelete,EF Core 7,EF Core 8" />
-		<meta name="description" content="Common Entity Framework Core mistake: inneficient update and delete by using traditional tracking." />
+		<meta name="description" content="Common Entity Framework Core mistake: inefficient update and delete by using traditional tracking." />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
 		<link href="/wwwroot/css/style.css" rel="stylesheet" />
@@ -52,14 +52,14 @@
 				<ul>
 					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
 					<li>Entity Framework Core</li>
-					<li class="active"><a href="https://adrientorris.github.io/entity-framework-core/common-ef-core-mistake-inneficient-update-and-delete.html" title="Common EF Core mistake: inneficient update and delete">Common EF Core mistake: inneficient update and delete</a></li>
+					<li class="active"><a href="https://adrientorris.github.io/entity-framework-core/common-ef-core-mistake-inneficient-update-and-delete.html" title="Common EF Core mistake: inefficient update and delete">Common EF Core mistake: inefficient update and delete</a></li>
 				</ul>
 			</div>
 			<div id="post_ctn">
-				<h1>Common EF Core mistake: inneficient update and delete</h1>
+				<h1>Common EF Core mistake: inefficient update and delete</h1>
         <p>Before Entity Framework Core 7 we had to fetch any data we wanted to update or delete but EF Core 7 came with two awesome features: <b>ExecuteDelete</b> and <b>ExecuteUpdate</b>.</p>
-<p>These two methods allows you to perform data operations in the database without using the traditionnal EF Core change tracking and the SaveChanges method, which results a huge performance gain.</p>
-        <p>Let's compare theses two methods. </p>
+<p>These two methods allow you to perform data operations in the database without using the traditional EF Core change tracking and the SaveChanges method, which results in a huge performance gain.</p>
+        <p>Let's compare these two methods.</p>
         <h2>ExecuteDelete</h2>
         <p>Suppose we want to delete from our database all customers who have not ordered from us for 1 year.</p>
         <p>Before EF 7 we would have written something like this:</p>
@@ -71,20 +71,20 @@ foreach (var customer in context.Customers.Where(c => c.HadOrderedThisYear == fa
 
 context.SaveChanges();
 </code></pre>
-        <p>In this code we fetch all the customers we want to delete (a select query is sent to the database) then we iterate on each of them to delete it, a delete SQL query is sent for each customer, which can be very inneficient with large amount of datas.</p>
-        <p>Since EF Core and thanks to the ExecuteDelete method we can now do the same thinh in a more efficient way:</p>
+        <p>In this code we fetch all the customers we want to delete (a select query is sent to the database) then we iterate over each of them to delete it; a delete SQL query is sent for each customer, which can be very inefficient with a large amount of data.</p>
+        <p>Since EF Core 7 and thanks to the ExecuteDelete method, we can now do the same thing in a more efficient way:</p>
 <pre><code class="csharp">
 context.Customers.Where(c => c.HadOrderedThisYear == false).ExecuteDelete();
 </code></pre>
-        <p>With this way there is no query to select the datas we will manipulate, EF Core will only generate a delete query like this:</p>
+        <p>This way there is no query to select the data we will manipulate, EF Core will only generate a delete query like this:</p>
 <pre><code class="sql">
 DELETE FROM [c]
 FROM [Customers] AS [c]
 WHERE [c].[HadOrderedThisYear] = 0
 </code></pre>
-        <p>Clean, efficent.</p>
+        <p>Clean, efficient.</p>
         <h2>ExecuteUpdate</h2>
-        <p>For example, suppose you have commited a mistake and inverted the customer first names and last names. You now want to fix it by swaping them.</p>
+        <p>For example, suppose you have made a mistake and inverted the customers' first names and last names. You now want to fix it by swapping them.</p>
         <p>With the old EF Core way we would have written some code like this:</p>
 <pre><code class="csharp">
 foreach (var customer in context.Customers)
@@ -96,21 +96,21 @@ foreach (var customer in context.Customers)
 
 context.SaveChanges();
 </code></pre>
-        <p>Let's rewrite this code using the ExecuteUpdate method: </p>
+        <p>Let's rewrite this code using the ExecuteUpdate method:</p>
 <pre><code class="csharp">
   context.Customers
     .ExecuteUpdate(x => 
 		x.SetProperty(c => c.FirstName, b => b.LastName)
 		x.SetProperty(c => c.LastName, b => b.FirstName));
 </code></pre>
-        <p>The SQL query will looks like that:</p>
+        <p>The SQL query will look like this:</p>
 <pre><code class="sql">
   UPDATE [x]
   SET [x].[FirstName] = [x].[LastName],
   [x].[LastName] = [x].[FirstName]
   FROM [Customers] AS [x];
 </code></pre>
-        <p>As using the AsNoTracking method we saw in the previous post <a href="https://adrientorris.github.io/entity-framework-core/common-ef-core-mistake-tracking-no-tracking-queries" title="Common EF Core mistake: not using the difference between Tracking and No-Tracking Queries">Common EF Core mistake: not using the difference between Tracking and No-Tracking Queries</a>, the two method ExecuteDelete and ExecuteUpdate allow you to perform more operations without using the tradictional EF Core change tracking and make some easy performance improvments.</p>
+        <p>Like the AsNoTracking method we saw in the previous post <a href="https://adrientorris.github.io/entity-framework-core/common-ef-core-mistake-tracking-no-tracking-queries" title="Common EF Core mistake: not using the difference between Tracking and No-Tracking Queries">Common EF Core mistake: not using the difference between Tracking and No-Tracking Queries</a>, the two methods ExecuteDelete and ExecuteUpdate allow you to perform more operations without using the traditional EF Core change tracking, and to make some easy performance improvements.</p>
        <div id="crdny">November 1, 2023</div>
 				<div id="tags_wrapper">
 					<ul>

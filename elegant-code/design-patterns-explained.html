@@ -97,16 +97,16 @@
 					</li>
 				</ul>
 				<h2 id="creational_design_pattern_title">Creational Design Patterns</h2>
-				<p>A creational design pattern is focused towards how to instantiate an object or group of related objects.</p>
-				<p>Wikipedia says :</p>
+				<p>A creational design pattern is focused on how to instantiate an object or a group of related objects.</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In software engineering, creational design patterns are design patterns that deal with object creation mechanisms, trying to create objects in a manner suitable to the situation. The basic form of object creation could result in design problems or added complexity to the design. Creational design patterns solve this problem by somehow controlling this object creation.</blockquote>
 				<h3 id="simple_factory_ttl">Simple Factory</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In object-oriented programming (OOP), a factory is an object for creating other objects – formally a factory is a function or method that returns objects of a varying prototype or class from some method call, which is assumed to be "new".</blockquote>
-				<p>In plain words, a factory in its simplest form (it's also exists abstract factory pattern and method factory pattern) is a class which has a method that returns differents type of object.</p>
-				<p>Real world example :<p>
-				<p>Consider you are building vehicles (like cars, motorbikes, trucks and others), it would be painfull if each time you need to put the wheels on the vehicle you need to think about it and start making the new wheels from the start. Instead you get them made from a factory.</p>
-				<p>Programmatic example :<p>
+				<p>In plain words, a factory in its simplest form (there are also the abstract factory pattern and the factory method pattern) is a class which has a method that returns different types of object.</p>
+				<p>Real world example:<p>
+				<p>Consider that you are building vehicles (like cars, motorbikes, trucks and others): it would be painful if each time you need to put the wheels on the vehicle you had to think about it and start making the new wheels from scratch. Instead you get them made by a factory.</p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 &#47;&#47;&#47;&#32;&#60;summary&#62;
 &#47;&#47;&#47;&#32;Contract each wheel for a vehicle have to respect
@@ -158,19 +158,19 @@ public static class WheelFactory {
 
 }
 </code></pre>
-				<p>And then it can be used as :</p>
+				<p>And then it can be used as:</p>
 <pre><code class="csharp">
 IVehicleWheel wheel = WheelFactory.MakeCarWheel(15, 30);
 </code></pre>
-				<p>When to use it ?<p>
-				<p>When creating an object isn't just a few assignements but involves some business logic, it makes sense to put the logic in a dedicated factory instead of repeating the code everywhere.</p>
+				<p>When to use it?<p>
+				<p>When creating an object isn't just a few assignments but involves some business logic, it makes sense to put the logic in a dedicated factory instead of repeating the code everywhere.</p>
 				<h3 id="factory_method_ttl">Factory Method</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In class-based programming, the factory method pattern is a creational pattern that uses factory methods to deal with the problem of creating objects without having to specify the exact class of the object that will be created. This is done by creating objects by calling a factory method—either specified in an interface and implemented by child classes, or implemented in a base class and optionally overridden by derived classes—rather than by calling a constructor.</blockquote>
-				<p>In plain words, a Factory Method provides a way to delegate the instanciation logic to subclasses. It defines an interface for creating an object but let's his subclasses implement this interface and decide which class to instanciate.</p>
-				<p>Real world example :<p>
-				<p>Consider a football player, it's impossible for one person to be very good in each game position, so you have to delegate some parts of the game to others players.</p>
-				<p>Programmatic example :<p>
+				<p>In plain words, a Factory Method provides a way to delegate the instantiation logic to subclasses. It defines an interface for creating an object but lets its subclasses implement this interface and decide which class to instantiate.</p>
+				<p>Real world example:<p>
+				<p>Consider a football player: it's impossible for one person to be very good in every position, so you have to delegate some parts of the game to other players.</p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 #region Skills
 
@@ -347,15 +347,15 @@ public class GoalKeeper : Player {
     }
   }
 </code></pre>
-				<p>When to use it ?<p>
-				<p>When there is some generic processing in a class but you doesn't know what exact subclass it might need, so you let the child class decide.</p>
+				<p>When to use it?<p>
+				<p>When there is some generic processing in a class but you don't know what exact subclass it might need, so you let the child class decide.</p>
 				<h3 id="abstract_factory_ttl">Abstract Factory</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>The abstract factory pattern provides a way to encapsulate a group of individual factories that have a common theme without specifying their concrete classes</blockquote>
 				<p>In plain words, an abstract factory is a factory of factories. It's a class that groups the individual but related/dependent factories together without specifying their concrete classes. </p>
-				<p>Real world example :<p>
-				<p>To stay in the football world, we still have our different kind of players with their own skills, let consider now the coaches. The differents players doesn't need the same coach to progress. A goalkeeper needs a specific coach to his position, as a forward player needs some coaches to work on his shoot, his dribble and his velocity. So as we have different kind of players, we have different kinf of instructors with their specialities and as you can see, there is a dependency between the players and the coaches.</p>
-				<p>Programmatic example :<p>
+				<p>Real world example:<p>
+				<p>To stay in the football world, we still have our different kinds of players with their own skills; let's now consider the coaches. The different players don't need the same coach to progress. A goalkeeper needs a coach specific to their position, while a forward player needs coaches to work on their shooting, their dribbling and their speed. So, just as we have different kinds of players, we have different kinds of instructors with their specialities and, as you can see, there is a dependency between the players and the coaches.</p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 #region Coachs
 
@@ -619,16 +619,16 @@ public class GoalKeeper : Player {
     }
   }
 </code></pre>
-				<p>When to use it ?<p>
+				<p>When to use it?<p>
 				<p>Still to delegate and encapsulate the creation logic complexity, but when you have interrelated dependencies.</p>
 				<h3 id="builder_ttl">Builder</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>The builder pattern is an object creation software design pattern with the intentions of finding a solution to the telescoping constructor anti-pattern.</blockquote>
-				<p>In plain words, a builder avoid the constructor pollution with options. It allows you to create the same object with different configurations.</p>
-				<p>Real world example :<p>
-				<p>Imagine you are at a Lamborghini's dealer and you order a car, let's say the Aventador. If the seller brought a car to you without any questions, this is an example of a simple factory. But there are cases when the creation logic might involve more steps, for example in this case, you probably want a customized car. Which color do you want ? Which options ? Wood or aluminium finish for the dashboard ? Which motor power ? In such cases builder pattern comes to the rescue.</p>
-				<p>Programmatic example :<p>
-				<p>Using a telescoping constructor anti-pattern :</p>
+				<p>In plain words, a builder avoids polluting the constructor with options. It allows you to create the same object with different configurations.</p>
+				<p>Real world example:<p>
+				<p>Imagine you are at a Lamborghini dealer and you order a car, let's say the Aventador. If the seller brought a car to you without any questions, this would be an example of a simple factory. But there are cases when the creation logic might involve more steps; in this case for example, you probably want a customized car. Which color do you want? Which options? Wood or aluminium finish for the dashboard? Which engine power? In such cases the builder pattern comes to the rescue.</p>
+				<p>Programmatic example:<p>
+				<p>Using a telescoping constructor anti-pattern:</p>
 <pre><code class="csharp">
 public class Car {
 
@@ -658,7 +658,7 @@ public class Car {
 
 }
 </code></pre>
-				<p>Using a builder design pattern :</p>
+				<p>Using a builder design pattern:</p>
 <pre><code class="csharp">
 public class Car {
 
@@ -694,33 +694,33 @@ public class CarBuilder {
 
 }
 </code></pre>
-				<p>And you can use it like :</p>
+				<p>And you can use it like this:</p>
 <pre><code class="csharp">
 CarBuilder carBuilder = new CarBuilder("Lamborghini", "Aventador");
 carBuilder.SetNbDoors(3);
 carBuilder.SetColor("orange");
 Car myDreamCar = carBuilder.Build();
 </code></pre>
-				<p>When to use it ?<p>
-				<p>When the creation logic of an object includes several steps. This is the difference between a factory, in which the creation logic is a one step process, and a builder who is used when the same construction process can create different representations of the same object.</p>
+				<p>When to use it?<p>
+				<p>When the creation logic of an object includes several steps. This is the difference between a factory, in which the creation logic is a one-step process, and a builder, which is used when the same construction process can create different representations of the same object.</p>
 				<h3 id="prototype_ttl">Prototype</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>The prototype pattern is a creational design pattern in software development. It is used when the type of objects to create is determined by a prototypical instance, which is cloned to produce new objects.</blockquote>
 				<p>In plain words, a prototype creates an object based on an existing object through cloning.</p>
-				<p>Real world example :<p>
-				<p>Remember dolly? The sheep that was cloned! Lets not get into the details but the key point here is that it is all about cloning</p>
-				<!--<p>Programmatic example :<p>
+				<p>Real world example:<p>
+				<p>Remember Dolly? The sheep that was cloned! Let's not get into the details, but the key point here is that it is all about cloning.</p>
+				<!--<p>Programmatic example:<p>
 <pre><code class="csharp">
 </code></pre>-->
-				<p>When to use it ?<p>
+				<p>When to use it?<p>
 				<p>When you need the exact same object as an existing object.</p>
 				<h3 id="singleton_ttl">Singleton</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In software engineering, the singleton pattern is a software design pattern that restricts the instantiation of a class to one object. This is useful when exactly one object is needed to coordinate actions across the system.</blockquote>
 				<p>In plain words, a singleton ensures that only one instance of an object is ever created.</p>
-				<p>Real world example :<p>
+				<p>Real world example:<p>
 				<p>Consider there is only one Universe, all the solar systems and planets are sharing the same Universe, so the Universe is a singleton.</p>
-				<p>Programmatic example :<p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 public class Universe 
 {
@@ -747,20 +747,20 @@ public class Universe
 
 }
 </code></pre>
-				<p>When to use it ?<p>
-				<p>When you need that an object have to have only one instance at a time in your application (file logger, ...)</p>
+				<p>When to use it?<p>
+				<p>When you need an object to have only one instance at a time in your application (file logger, ...).</p>
 				<h2 id="structural_design_pattern_title">Structural Design Patterns</h2>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In software engineering, structural design patterns are design patterns that ease the design by identifying a simple way to realize relationships between entities.</blockquote>
-				<p>In plain words :</p>
+				<p>In plain words:</p>
 				<blockquote>The concern of the structural patterns is how the entities can use each other.</blockquote>
 				<h3 id="adapter_ttl">Adapter</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In software engineering, the adapter pattern is a software design pattern that allows the interface of an existing class to be used as another interface. It is often used to make existing classes work with others without modifying their source code.</blockquote>
-				<p>In plain words, an adapter let's you wrap an otherwise incompatible object in an adapter to make it compatible with another class.</p>
-				<p>Real world example :<p>
-				<p>A good example is when you need to plug something in a foreign country, let's say France and Scotland. This both countries have differents plug interface, so you absolutely not plug your french charger in a plug in Scotland. So you go to a store and buy an <b>adapter</b> : a charger who have a side to communicate with a French charger, and another who can communicate with a scottish one, without modify any of this both objects.</p>
-				<p>Programmatic example :<p>
+				<p>In plain words, an adapter lets you wrap an otherwise incompatible object to make it compatible with another class.</p>
+				<p>Real world example:<p>
+				<p>A good example is when you need to plug something in in a foreign country, let's say France and Scotland. These two countries have different plug interfaces, so you absolutely cannot plug your French charger into a socket in Scotland. So you go to a store and buy an <b>adapter</b>: a device that has one side to communicate with a French charger, and another that can communicate with a Scottish socket, without modifying either of these two objects.</p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 public class Player
 {
@@ -929,15 +929,15 @@ public class SkillBank
 	}
 }
 </code></pre>
-				<p>When to use it ?<p>
-				<p>When you need that some classes have to collaborate but have incompatible interfaces.</p>
+				<p>When to use it?<p>
+				<p>When you need some classes to collaborate but they have incompatible interfaces.</p>
 				<h3 id="bridge_ttl">Bridge</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>The bridge pattern is a design pattern used in software engineering that is meant to "decouple an abstraction from its implementation so that the two can vary independently"</blockquote>
 				<p>In plain words, the bridge pattern is about preferring composition over inheritance.</p>
-				<p>Real world example :<p>
-				<p>In the football management game you develop, you can pick any Premier League team to manage it. Each team has his own logo, his graphic theme and other graphical elements. Your game has 25 differents user interfaces so what are you doing ? You develop all the interface in all the themes available, and display the interfaces corresponding to the team the user choose ? Or you develop the interfaces and the themes independently, and load the good theme when you display a user interface ? If you choose the second option, it's a Bridge pattern. Otherwise, if you choose the first option, it's a Mess anti-pattern and just stay away from me...</p>
-				<p>Programmatic example :<p>
+				<p>Real world example:<p>
+				<p>In the football management game you develop, you can pick any Premier League team to manage. Each team has its own logo, its graphic theme and other graphical elements. Your game has 25 different user interfaces, so what do you do? Do you develop all the interfaces in all the available themes, and display the interfaces corresponding to the team the user chose? Or do you develop the interfaces and the themes independently, and load the right theme when you display a user interface? If you choose the second option, it's a Bridge pattern. Otherwise, if you choose the first option, it's a Mess anti-pattern and just stay away from me...</p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 /// <summary>
 /// The 'Bridge/Implementor' interface
@@ -1060,15 +1060,15 @@ public sealed class CoachMessage : Message
     }
   }
 </code></pre>
-				<!--<p>When to use it ?<p>
+				<!--<p>When to use it?<p>
 				<p></p>-->
 				<h3 id="composite_ttl">Composite</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In software engineering, the composite pattern is a partitioning design pattern. The composite pattern describes that a group of objects is to be treated in the same way as a single instance of an object. The intent of a composite is to "compose" objects into tree structures to represent part-whole hierarchies. Implementing the composite pattern lets clients treat individual objects and compositions uniformly.</blockquote>
 				<p>In plain words, the composite pattern composes objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly.</p>
-				<p>Real world example : <p>
-				<p>Think about the Universe. It is composed by planets, stars, galaxies, and so much things. All this things are space elements with common attributes, like a Name, a density, a chimical composition, ... and it exists a hierarchy between them : a universe owns some galaxies, who owns some systems who owns some planets.</p>
-				<p>Programmatic example :<p>
+				<p>Real world example: <p>
+				<p>Think about the Universe. It is composed of planets, stars, galaxies, and so many things. All these things are space elements with common attributes, like a name, a density, a chemical composition, ... and there is a hierarchy between them: a universe owns galaxies, which own systems, which own planets.</p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 public abstract class SpaceElement
 {
@@ -1183,15 +1183,15 @@ public class Planet : SpaceElement
     }
   }
 </code></pre>
-				<!--<p>When to use it ?<p>
+				<!--<p>When to use it?<p>
 				<p></p>-->
 				<h3 id="decorator_ttl">Decorator</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In object-oriented programming, the decorator pattern is a design pattern that allows behavior to be added to an individual object, either statically or dynamically, without affecting the behavior of other objects from the same class. The decorator pattern is often useful for adhering to the Single Responsibility Principle, as it allows functionality to be divided between classes with unique areas of concern.</blockquote>
-				<p>In plain words, the decorator pattern lets you dynamically attach additional responsabilities to an object. A decorator is an alternative to inheritance.</p>
-				<!--<p>Real world example :<p>
+				<p>In plain words, the decorator pattern lets you dynamically attach additional responsibilities to an object. A decorator is an alternative to inheritance.</p>
+				<!--<p>Real world example:<p>
 				<p></p>-->
-				<p>Programmatic example :<p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 public class RentalAgency
 {
@@ -1320,15 +1320,15 @@ public class Borrowable : Decorator
     }
   }
 </code></pre>
-				<p>When to use it ?<p>
-				<p>When you want to add some behaviors to an object without modify or extend it.</p>
+				<p>When to use it?<p>
+				<p>When you want to add some behaviors to an object without modifying or extending it.</p>
 				<h3 id="facade_ttl">Facade</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>A facade is an object that provides a simplified interface to a larger body of code, such as a class library.</blockquote>
-				<p>In plain words, facade pattern provides a simplified interface to a complex subsystem.</p>
-				<p>Real world example :<p>
-				<p>Facade are everywhere ! When you turn on your car you just turn a key, such a simple movement. But there are dozens of things who appends in the car to turn on the motor. The key's movement hides all the subsystem complexity, it's a facade.</p>
-				<p>Programmatic example :<p>
+				<p>In plain words, the facade pattern provides a simplified interface to a complex subsystem.</p>
+				<p>Real world example:<p>
+				<p>Facades are everywhere! When you start your car you just turn a key, such a simple movement. But there are dozens of things that happen in the car to start the engine. The key's movement hides all the subsystem complexity, it's a facade.</p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 public class Car
 {
@@ -1413,15 +1413,15 @@ public class Car
     }
   }
 </code></pre>
-				<p>When to use it ?<p>
-				<p>When for some reason you prefer keep the complexity of a system secret.</p>
+				<p>When to use it?<p>
+				<p>When for some reason you prefer to keep the complexity of a system hidden.</p>
 				<h3 id="flyweight_ttl">Flyweight</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>A flyweight is an object that minimizes memory use by sharing as much data as possible with other similar objects; it is a way to use objects in large numbers when a simple repeated representation would use an unacceptable amount of memory.</blockquote>
-				<p>In plain words, use sharing to minimize memory usage and support a large numbers of fine-grained objects efficiently.</p>
-				<p>Real world example :<p>
-				<p>The canonical example of the flyweight pattern is the text editor. Image an english text editor without numbers or any special character, you have just 26 characters, but you can use them a multiple times. If you open a book text file, you will have tens of thousands characters, but same 26 ones. So, what do you do ? Are you create a new complete object for each of thems, knowing that you will have thousands of times the same characters ? Or you create one instance for each of the 26 characters, and you use it when you need ? The second option is called a flyweight pattern, about sharing resources.</p>
-				<p>Programmatic example :<p>
+				<p>In plain words, use sharing to minimize memory usage and support a large number of fine-grained objects efficiently.</p>
+				<p>Real world example:<p>
+				<p>The canonical example of the flyweight pattern is the text editor. Imagine an English text editor without numbers or any special characters: you have just 26 characters, but you can use them multiple times. If you open a book text file, you will have tens of thousands of characters, but the same 26 ones. So, what do you do? Do you create a new complete object for each of them, knowing that you will have the same characters thousands of times? Or do you create one instance for each of the 26 characters, and use it when you need it? The second option is called the flyweight pattern, and it is about sharing resources.</p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 public abstract class Letter
 {
@@ -1526,15 +1526,15 @@ public class LetterFactory
     }
   }
 </code></pre>
-				<p>When to use it ?<p>
-				<p>When you have a few light objects but used a multiple times.</p>
+				<p>When to use it?<p>
+				<p>When you have a few light objects that are used many times.</p>
 				<h3 id="proxy_ttl">Proxy</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>A proxy, in its most general form, is a class functioning as an interface to something else. A proxy is a wrapper or agent object that is being called by the client to access the real serving object behind the scenes. Use of the proxy can simply be forwarding to the real object, or can provide additional logic. In the proxy extra functionality can be provided, for example caching when operations on the real object are resource intensive, or checking preconditions before operations on the real object are invoked.</blockquote>
 				<p>In plain words, a proxy provides a surrogate or placeholder for another object to control access to it.</p>
-				<p>Real world example :<p>
-				<p>Have you ever try to watch a parent restricted channel on the TV when you were a child ? This is a perfect proxy example. All the TV channels have things in common but when you want to watch it, you pass by a proxy who check if you have the right to watch it, adding some access logic to the channel that the channel itself doesn't know.</p>
-				<p>Placeholder programmatic example (add some behavior to access) :<p>
+				<p>Real world example:<p>
+				<p>Have you ever tried to watch a parent-restricted channel on TV when you were a child? This is a perfect proxy example. All the TV channels have things in common but when you want to watch one, you go through a proxy that checks whether you have the right to watch it, adding some access logic to the channel that the channel itself doesn't know about.</p>
+				<p>Placeholder programmatic example (adding some behavior to access):<p>
 <pre><code class="csharp">
 public interface ITVChannel
 {
@@ -1655,7 +1655,7 @@ public class TVChannelsProxy
     }
   }
 </code></pre>
-				<p>Surrogate programmatic example (just control access) :<p>
+				<p>Surrogate programmatic example (just controlling access):<p>
 <pre><code class="csharp">
 public interface ISomeAPI
 {
@@ -1693,19 +1693,19 @@ public class APIProxy : ISomeAPI
     }
   }
 </code></pre>
-				<p>When to use it ?<p>
+				<p>When to use it?<p>
 				<p>When you want to control access to an object.</p>
 				<h2 id="behavioral_design_pattern_title">Behavioral Design Patterns</h2>
-				<p>A behavioral design pattern is about the assignments of responsabilies between the objects.</p>
-				<p>Wikipedia says :</p>
+				<p>A behavioral design pattern is about the assignment of responsibilities between objects.</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In software engineering, behavioral design patterns are design patterns that identify common communication patterns between objects and realize these patterns. By doing so, these patterns increase flexibility in carrying out this communication.</blockquote>
 				<h3 id="chain_of_responsability_ttl">Chain of Responsibility</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In object-oriented design, the Chain of Responsibility pattern is a design pattern consisting of a source of command objects and a series of processing objects. Each processing object contains logic that defines the types of command objects that it can handle; the rest are passed to the next processing object in the chain.</blockquote>
-				<p>In plain words, the Chain of Responsibility pattern handles a chain of objects. It's handle a request from one and manage the chain from object to object until the response.</p>
-				<p>Real world example :<p>
-				<p>Imagine you apply to a job in the military forces, you have to respond to some criterias like, have passed with success the test, have passed an interview with a recruiter and have an empty criminal record. If you apply to a job, a person will vérify all of this criterias and will call the good interlocutor for each of them (police to check the criminnal record, the recruiter for his opinion after the interview and the administration to get the result of the test).</p>
-				<p>Programmatic example :<p>
+				<p>In plain words, the Chain of Responsibility pattern handles a chain of objects. It takes a request from one of them and manages the chain from object to object until the response.</p>
+				<p>Real world example:<p>
+				<p>Imagine you apply for a job in the military forces: you have to meet some criteria, like having successfully passed the test, having passed an interview with a recruiter and having a clean criminal record. If you apply for a job, a person will verify all of these criteria and will call the right contact for each of them (the police to check the criminal record, the recruiter for their opinion after the interview and the administration to get the result of the test).</p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 public abstract class ApplicationManager
 {
@@ -1865,14 +1865,14 @@ public class PoliceApplicationManager : ApplicationManager
     }
   }
 </code></pre>
-				<!--<p>When to use it ?<p><p></p>-->
+				<!--<p>When to use it?<p><p></p>-->
 				<h3 id="command_ttl">Command</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In object-oriented programming, the command pattern is a behavioral design pattern in which an object is used to encapsulate all information needed to perform an action or trigger an event at a later time. This information includes the method name, the object that owns the method and values for the method parameters.</blockquote>
 				<p>In plain words, a command pattern encapsulates a method call as an object.</p>
-				<p>Real world example :<p>
+				<p>Real world example:<p>
 				<p>A very common example is you (i.e. Client) switching on (i.e. Command) the television (i.e. Receiver) using a remote control (Invoker).</p>
-				<p>Programmatic example :<p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 // Receiver
 public class Television
@@ -1953,14 +1953,14 @@ public class RemoteControl
     }
   }
 </code></pre>
-				<!--<p>When to use it ?<p><p></p>-->
+				<!--<p>When to use it?<p><p></p>-->
 				<h3 id="iterator_ttl">Iterator</h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote>In object-oriented programming, the iterator pattern is a design pattern in which an iterator is used to traverse a container and access the container's elements. The iterator pattern decouples algorithms from containers; in some cases, algorithms are necessarily container-specific and thus cannot be decoupled.</blockquote>
 				<p>In plain words, an iterator provides a way to access the elements of an aggregate object sequentially without exposing its underlying representation.</p>
-				<p>Real world example :<p>
+				<p>Real world example:<p>
 				<p>A television with a "next" and a "previous" button is a good example. You can click on "next" and "previous" to iterate on all the channels.</p>
-				<p>Programmatic example :<p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 public class Channel
 {
@@ -1992,18 +1992,18 @@ public class Television
 	public Channel GetChannel() => _channels[_currentChannelIndex];
 }
 </code></pre>
-				<!--<p>When to use it ?<p><p></p>-->
+				<!--<p>When to use it?<p><p></p>-->
 				<!--
 				<h3></h3>
-				<p>Wikipedia says :</p>
+				<p>Wikipedia says:</p>
 				<blockquote></blockquote>
 				<p>In plain words, </p>
-				<p>Real world example :<p>
+				<p>Real world example:<p>
 				<p></p>
-				<p>Programmatic example :<p>
+				<p>Programmatic example:<p>
 <pre><code class="csharp">
 </code></pre>
-				<p>When to use it ?<p>
+				<p>When to use it?<p>
 				<p></p>
 				-->
 				<div id="crdny">February 26, 2017</div>
