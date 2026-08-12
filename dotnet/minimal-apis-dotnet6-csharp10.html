@@ -7,7 +7,7 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="language" content="en" />
 		<meta name="keywords" content=".NET,.NET 6,.NET 7,csharp,C#,Minimal API,Minimal APIs,.NET API development,C# 9, C# 10,NancyFX,GO GIN,Python FastAPI" />
-		<meta name="description" content="Overview of Minimal APIs with .NET 6 and C# 10. What is it? How it works? Is it great?" />
+		<meta name="description" content="Overview of Minimal APIs with .NET 6 and C# 10. What are they? How do they work? Are they great?" />
 		<meta name="author" content="Adrien Torris" />
 		<meta name="robots" content="index,follow" />
 		<!--<meta name="generator" content="SiteUp! 0.1" />-->
@@ -52,12 +52,12 @@
 			</div>
 			<div id="post_ctn">
 			<h1>Overview of Minimal APIs with .NET 6 and C# 10</h1>
-<h2>What are minimal APIs ?</h2>
+<h2>What are Minimal APIs?</h2>
 <q>An unopiniatonated way to build high performance APIs in .NET with the minimal amount of implicitly added features and the maximal amount of flexibility to explicitly opt in the features and the structure that you need</q>
-<p style="font-size:10px;font-style:italic;text-align:right;float:right;">- Nick Chaspas, NDC London 2022</p>
-<p>The Minimal APIs journey start with the will of the .NET development team to allow developers to embrace minimalism. We speak a lot for years now about how to avoid massive monotlithic applications and to prefer microservices but .NET never offered a way to really create minimal APIs. The reason is because APIs are based on the MVC layer so they ineherit from a lot of useless code which make them more complex and resources-cosuming than they should be. Minimal APIs are the answer of the .NET team of all this useless complexity. Now, .NET, like the majority of the others development languages, offers a way to create really minimal APIs with just what you need inside. Regarding that, Minimal APIs are a major .NET feature.</p>
-<h2>Minimal APIs is not a new concept</h2>
-<p>Even if they didn't exist in .NET, minimal APIs are existing for years now in other development environments.</p>
+<p style="font-size:10px;font-style:italic;text-align:right;float:right;">- Nick Chapsas, NDC London 2022</p>
+<p>The Minimal APIs journey starts with the will of the .NET development team to allow developers to embrace minimalism. We have been talking a lot for years now about how to avoid massive monolithic applications and to prefer microservices, but .NET never offered a way to really create minimal APIs. The reason is that APIs are based on the MVC layer, so they inherit a lot of useless code which makes them more complex and resource-consuming than they should be. Minimal APIs are the .NET team's answer to all this useless complexity. Now .NET, like the majority of the other development languages, offers a way to create really minimal APIs with just what you need inside. In that respect, Minimal APIs are a major .NET feature.</p>
+<h2>Minimal APIs are not a new concept</h2>
+<p>Even if they didn't exist in .NET, minimal APIs have existed for years now in other development environments.</p>
 <p style="font-weight:700;padding-left:25px;">Node.JS</p>
 <pre><code class="javascript">
 const express = require('express')
@@ -95,7 +95,7 @@ app = FastAPI()
 def read_root():
      return { "hello": "Hello World!" }
 </code></pre>
-<p>To be fair it is not exactly right to say that Minimal APIs weren't existing in .NET before .NET 6 and C# 10, it was existing but you needed to use a package named NancyFX, a lightweight and low-ceremony framework for building HTTP based services on .Net and Mono but it was pretty confidential:</p>
+<p>To be fair, it is not exactly right to say that Minimal APIs didn't exist in .NET before .NET 6 and C# 10: they did exist, but you needed to use a package named NancyFX, a lightweight and low-ceremony framework for building HTTP-based services on .NET and Mono, and it was pretty confidential:</p>
 <p style="font-weight:700;padding-left:25px;">.NET - NancyFX</p>
 <pre><code class="csharp">
 public class SampleModule : Nancy.NancyModule
@@ -106,9 +106,9 @@ public class SampleModule : Nancy.NancyModule
 }
 }
 </code></pre>
-<p>If NancyFX is still available notice that this project has been archived on GitHub since .NET Core and is not longer maintained: <a href="https://github.com/NancyFx/Nancy#-announcement----nancy-is-no-longer-being-maintained" title="" target="_Blank" rel="nofollow">** Announcement ** - Nancy is no longer being maintained!</a>.</p>
+<p>Although NancyFX is still available, notice that this project has been archived on GitHub since .NET Core and is no longer maintained: <a href="https://github.com/NancyFx/Nancy#-announcement----nancy-is-no-longer-being-maintained" title="" target="_Blank" rel="nofollow">** Announcement ** - Nancy is no longer being maintained!</a>.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis-dotnet6-csharp10-nancyfx-github.png" title="" alt="" /></div>
-<p>The code samples below are just a few examples of Minimal APIs in other developments environments but they exists in pretty much of the languages, .NET and C# is one of the last to incorporate them with official support.</p>
+<p>These code samples are just a few examples of Minimal APIs in other development environments, but they exist in pretty much all languages; .NET and C# are among the last to incorporate them with official support.</p>
 <h2>How can they work?</h2>
 <p>The Minimal APIs are based on several C# 9 and C# 10 features, mainly C# 10 features:</p>
 <ul>
@@ -118,7 +118,7 @@ public class SampleModule : Nancy.NancyModule
 <li>Inferred lambda types <span style="font-size:10px;font-style:italic;">- C# 10 feature</span></li>
 <li>Attributes on lambdas <span style="font-size:10px;font-style:italic;">- C# 10 feature</span></li>
 </ul>
-<p>Let's dig a little about theses features.</p>
+<p>Let's dig a little into these features.</p>
 <h3>Top-level statements</h3>
 <p>Top-level statements enable you to avoid the extra ceremony required by placing your program's entry point in a static method in a class.</p>
 <p>Before C# 9, a minimal console application was written with 11 lines:</p>
@@ -136,12 +136,12 @@ namespace Application
     }
 }
 </code></pre>
-<p>Since Top-level statements and Implicit and Global using statements you can write a minimal console application with only one line, the only one who actually do something:</p>
+<p>Since Top-level statements and Implicit and Global using statements, you can write a minimal console application with only one line, the only one that actually does something:</p>
 <pre><code class="csharp">
 Console.WriteLine("Hello, World!");
 </code></pre>
 <h3>Global using statements</h3>
-<p>Global using statements, ame with .NET 6 and C# 10, is the possibility to place all the common using statements in a single file which make them available for use within the entire project so you won't have to put them in the top of each file anymore.</p>
+<p>Global using statements, which came with .NET 6 and C# 10, are the possibility to place all the common using statements in a single file, which makes them available for use within the entire project, so you won't have to put them at the top of each file anymore.</p>
 <pre><code class="csharp">
 global using System;
 global using System.Collections.Generic;
@@ -149,8 +149,8 @@ global using System.IO;
 global using System.Linq;
 </code></pre>
 <h3>Implicit using statements</h3>
-<p>.NET 6 with C# 10 introduced the support of the implicit namespace for C# projects, which was already existing for Visual Basic projects by the way.</p>
-<p>Implicit usings is the possibility for .NET to bring used namespace into the default ones so you don't have to explicitly declare them. Behind the scenes, .NET stores them as global usings into an hidden auto generated file in your obj folder.</p>
+<p>.NET 6 with C# 10 introduced support for implicit namespaces in C# projects, which already existed for Visual Basic projects, by the way.</p>
+<p>Implicit usings are the possibility for .NET to bring used namespaces into the default ones so you don't have to explicitly declare them. Behind the scenes, .NET stores them as global usings in a hidden auto-generated file in your obj folder.</p>
 <pre><code class="csharp">
 global using global::System;
 global using global::System.Collections.Generic;
@@ -158,7 +158,7 @@ global using global::System.IO;
 global using global::System.Linq;
 </code></pre>
 <h3>Inferred lambda types</h3>
-<p>The Inferred lambda types feature allow you to use var or inline return type in lambdas. Prior to C# 10 you had to explicitly define the delegate type such as Func<T> or Action<T>:</p>
+<p>The Inferred lambda types feature allows you to use var or an inline return type in lambdas. Prior to C# 10 you had to explicitly define the delegate type, such as Func<T> or Action<T>:</p>
 <pre><code class="csharp">
 Func<string, string> func = (string firstName, string lastName) => $"Hi! I am {firstName} {lastName}";
 
@@ -169,13 +169,13 @@ Action<string, string> writeName = (string firstName, string lastName) =>
 writeName("Adrien", "Torris");
 Console.ReadLine();
 </code></pre>
-<p>It was a bit frustrating to write all this code but since C# 10 the type can be inferred by the compiler. If the compiler cannot determine the type to use it will throw an error so you can define it for him.</p>
-<p>So our <code>Func<string, string> func = (string firstName, string lastName) => $"Hi! I am {firstName} {lastName}";</code> line in C# 9 become with C# 10:</p>
+<p>It was a bit frustrating to write all this code but since C# 10 the type can be inferred by the compiler. If the compiler cannot determine the type to use, it will throw an error so that you can define it explicitly.</p>
+<p>So our <code>Func<string, string> func = (string firstName, string lastName) => $"Hi! I am {firstName} {lastName}";</code> line in C# 9 becomes, with C# 10:</p>
 <pre><code class="csharp">
 var func = (string firstName, string lastName) => $"Hi! I am {firstName} {lastName}";
 </code></pre>
 <h3>Attributes on lambdas</h3>
-<p>Beginning with C# 10, you can add attributes to a lambda expression and its parameters. Here an example with an <code>obsolete</code> tag:</p>
+<p>Beginning with C# 10, you can add attributes to a lambda expression and its parameters. Here is an example with an <code>obsolete</code> tag:</p>
 <pre><code class="csharp">
 var func = [Obsolete](string firstName, string lastName) => $"Hi! I am {firstName} {lastName}";
 </code></pre>
@@ -201,7 +201,7 @@ var app = builder.Build();
 app.Run();
 </code></pre>
 <p>At this point, the application is totally valid and works, but it has no endpoint so it's pretty useless for now.</p>
-<p>Before we add some behaviors to this API, notice that you can treat the lines between our tow first as the ConfigureServices of the startup.cs file of our old/current fashion to do web API, and the lines between our two last lines as the Configure method of the startup file.</p>
+<p>Before we add some behaviors to this API, notice that you can treat the lines between our first two as the ConfigureServices method of the startup.cs file in our old/current way of doing web APIs, and the lines between our last two as the Configure method of the startup file.</p>
 <pre><code class="csharp">
 var builder = WebApplication.CreateBuilder(args);
 
@@ -236,7 +236,7 @@ app.MapGet("hello2", () => new
 
 app.Run();
 </code></pre>
-<p>We also can use the Results class which handle some results behaviors:</p>
+<p>We can also use the Results class, which handles some result behaviors:</p>
 <pre><code class="csharp">
 var builder = WebApplication.CreateBuilder(args);
 
@@ -248,7 +248,7 @@ app.Run();
 
 record User(string fullName);
 </code></pre>
-<p>We also can use the HTTP context or the HTTP request objects, and use the HTTP response object to customize our response:</p>
+<p>We can also use the HTTP context or the HTTP request objects, and use the HTTP response object to customize our response:</p>
 <pre><code class="csharp">
 var builder = WebApplication.CreateBuilder(args);
 
@@ -262,7 +262,7 @@ app.MapGet("hello", async (HttpRequest request, HttpResponse response) =>
 app.Run();
 </code></pre>
 <p>We made some GET examples but you have a Map method for several HTTP verbs like POST, PUT or DELETE.</p>
-<p>The minimal API is capable of dealing with route parameters the same ways than controllers:</p>
+<p>The minimal API is capable of dealing with route parameters the same way as controllers:</p>
 <pre><code class="csharp">
 var builder = WebApplication.CreateBuilder(args);
 
@@ -290,31 +290,31 @@ app.Run();
 
 record User(string fullName);
 </code></pre>
-<p>To see more of the possibilities offers by the Minimal APIs you should take the time to browse the Dodyg samples on it, there are just a goldmine (like all his samples): <a href="https://github.com/dodyg/practical-aspnetcore/tree/net6.0/projects/minimal-api" title="" target="_Blank" rel="nofollow">Minimal APIs samples</a>.</p>
-<h2>What minimal API does not support?</h2>
+<p>To see more of the possibilities offered by Minimal APIs you should take the time to browse the Dodyg samples about them, they are just a goldmine (like all his samples): <a href="https://github.com/dodyg/practical-aspnetcore/tree/net6.0/projects/minimal-api" title="" target="_Blank" rel="nofollow">Minimal APIs samples</a>.</p>
+<h2>What do Minimal APIs not support?</h2>
 <ul>
-<li>No support for filters (It seems that an equivalent of them will coming pretty soon but it won't be the exactly same thing as today so we probably won't use the filters we have in our actual MVC projects).</li>
+<li>No support for filters (it seems that an equivalent will be coming pretty soon but it won't be exactly the same thing as today, so we probably won't be able to use the filters we have in our current MVC projects).</li>
 <li>No built-in support for validation</li>
 <li>No support for JsonPatch</li>
 <li>No support for OData</li>
-<li>No support for APIversioning</li>
+<li>No support for API versioning</li>
 </ul>
-<p>All the Minimal APIs stuff could seems weird at start because it's a real breaking change compared to the way we developped APIs before .NET 6 but when you think about it, is it not the natural way to do it? After all, all the major environnements has adopted this approach for years and .NET didn't do it sooner for simplicity, because the functionnalities has already been developed in a stack so it was simpler to just use it. But are Controllers and all the MVC stuff really great for APIs? Are APIs that close to MVC websites?</p>
-<h2>Why the Controllers approach is weird for APIs?</h2>
+<p>All the Minimal APIs stuff may seem weird at first because it's a real breaking change compared to the way we developed APIs before .NET 6, but when you think about it, isn't it the natural way to do it? After all, all the major environments have adopted this approach for years, and .NET didn't do it sooner for simplicity, because the functionality had already been developed in a stack so it was simpler to just use it. But are Controllers and all the MVC stuff really great for APIs? Are APIs that close to MVC websites?</p>
+<h2>Why is the Controllers approach weird for APIs?</h2>
 <ul>
-<li>Controllers are coming from MVC, for which they were designed but APIs does not needs all the MVC stuff</li>
-<li>They have method that never call one another, and it's good because generaly there purposes are totally different, so why always put them in the same object?</li>
-<li>They violate the Single Responsability principle (depending of your definition of "Single")</li>
-<li>They can have services injected that aren't used by all Actions, which is a waste of ressources</li>
-<li>They never share states bewteen Actions, so what is the whole point of having them together?</li>
+<li>Controllers come from MVC, for which they were designed, but APIs do not need all the MVC stuff</li>
+<li>They have methods that never call one another, and that's fine because generally their purposes are totally different, so why always put them in the same object?</li>
+<li>They violate the Single Responsibility principle (depending on your definition of "Single")</li>
+<li>They can have services injected that aren't used by all Actions, which is a waste of resources</li>
+<li>They never share state between Actions, so what is the whole point of having them together?</li>
 <li>Most of the time even the private methods are used by only one Action</li>
-<li>They invoke Middlewares and Filters you do not need, they invoke them because the all stuff comes from MVC (like the validation for example)</li>
+<li>They invoke Middlewares and Filters you do not need; they invoke them because all this stuff comes from MVC (like the validation for example)</li>
 <li>They can grow a lot leading to "fat controllers"</li>
 </ul>
 <h2>Can Minimal APIs have some structure?</h2>
-<p>The complaint I hear the most about Minimal APIs is that it has no structure, but this complaint just doesn't make any sense! Minimal APIs are not "Single File API's", they are Minimal APIs. If you develop an MVC-way API and put all your code in a single file, it doesn't make the MVC-way bad, it's just you who doesn't make things right. It the same for Minimal APIs, they can be developped in a single file, which will most of the time a bad practice, and they can structured like any .NET project in an elegant and coherent structure. I invite you to consult the <a href="https://github.com/Elfocrash/clean-minimal-api" title="" target="_Blank" rel="nofollow">clean minimal API sample by Nick Chaspas</a> which is a structured Minimal API project :</p>
+<p>The complaint I hear the most about Minimal APIs is that they have no structure, but this complaint just doesn't make any sense! Minimal APIs are not "Single File APIs", they are Minimal APIs. If you develop an MVC-way API and put all your code in a single file, it doesn't make the MVC way bad, it's just you who isn't doing things right. It's the same for Minimal APIs: they can be developed in a single file, which will most of the time be a bad practice, and they can be structured like any .NET project in an elegant and coherent structure. I invite you to consult the <a href="https://github.com/Elfocrash/clean-minimal-api" title="" target="_Blank" rel="nofollow">clean minimal API sample by Nick Chapsas</a>, which is a structured Minimal API project:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/structured-clean-minimal-api-dotnet-nick-chaspas.png" title="" alt="" /></div>
-<p>In this sample, Nick Chaspas has created separates endpoint classes to avoid useless coupling between them.</p>
+<p>In this sample, Nick Chapsas has created separate endpoint classes to avoid useless coupling between them.</p>
 <p>This is an example for the endpoint to get an item, a consumer here:</p>
 <pre><code class="csharp">
 using Customers.Api.Contracts.Requests;
@@ -351,10 +351,10 @@ public class GetCustomerEndpoint : Endpoint<GetCustomerRequest, CustomerResponse
     }
 }
 </code></pre>
-<p>As you can see this project is perfectly structured but has the minimal amount of built-in code, which is all the purpose of Minimal APIs.</p>
+<p>As you can see, this project is perfectly structured but has the minimal amount of built-in code, which is the whole purpose of Minimal APIs.</p>
 <h2>To conclude</h2>
-<p>When you think about it, the minimalism and low-ceremony approach seems to be the better one, the "natural one". Call it "Minimal APIs" is maybe a mistake because it infers that it's not the default way to do it, which can be a little scary, when the old fashion is probably the wrong one. Maybe Microsoft should have name "Minimal APIs" just "APIs" and the MVC-way of doing it "Unessential APIs" or "Massive APIs".</p>
-<p>In any case, .NET 6 brings us an elegant and efficient way of developing APIs that I invite you to discover and try if you haven't already done so. The first step (or second if you are reading theses lines...) should be to watch the brilliant talk of <a href="https://www.youtube.com/watch?v=hPpvlKLeYYA" title="" target="_Blank" rel="nofollow">Nick Chaspas at the NDC London</a>.</p>
+<p>When you think about it, the minimalism and low-ceremony approach seems to be the better one, the "natural" one. Calling it "Minimal APIs" is maybe a mistake because it implies that it's not the default way to do it, which can be a little scary, when the old way is probably the wrong one. Maybe Microsoft should have named "Minimal APIs" just "APIs" and the MVC way of doing it "Unessential APIs" or "Massive APIs".</p>
+<p>In any case, .NET 6 brings us an elegant and efficient way of developing APIs that I invite you to discover and try if you haven't already done so. The first step (or the second one if you are reading these lines...) should be to watch the brilliant talk by <a href="https://www.youtube.com/watch?v=hPpvlKLeYYA" title="" target="_Blank" rel="nofollow">Nick Chapsas at NDC London</a>.</p>
 <!--
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/" title="" alt="" /></div>
 <p></p>
@@ -370,13 +370,13 @@ public class GetCustomerEndpoint : Endpoint<GetCustomerRequest, CustomerResponse
 					</ul>
 				</div>
 				<div id="refs_wrapper">
-				<li><a href="https://www.youtube.com/watch?v=hPpvlKLeYYA" title="" target="_Blank" rel="nofollow">Nick Chaspas at the NDC London</a></li>
+				<li><a href="https://www.youtube.com/watch?v=hPpvlKLeYYA" title="" target="_Blank" rel="nofollow">Nick Chapsas at NDC London</a></li>
 				<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/top-level-statements" title="" target="_Blank" rel="nofollow">Top-level statements documentation</a></li>
 				<li><a href="https://www.hanselman.com/blog/implicit-usings-in-net-6" title="" target="_Blank" rel="nofollow">Article from Scott Hanselman about Implicit using statements</a></li>
-				<li><a href="https://github.com/Elfocrash/clean-minimal-api" title="" target="_Blank" rel="nofollow">Clean minimal API sample by Nick Chaspas</a></li>
+				<li><a href="https://github.com/Elfocrash/clean-minimal-api" title="" target="_Blank" rel="nofollow">Clean minimal API sample by Nick Chapsas</a></li>
 				<li><a href="https://github.com/NancyFx/Nancy" title="" target="_Blank" rel="nofollow">NancyFX's GitHub</a></li>
 				<li><a href="https://github.com/dodyg/practical-aspnetcore/tree/net6.0/projects/minimal-api" title="" target="_Blank" rel="nofollow">Minimal APIs samples</a></li>
-				<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-expressions#attributes" title="" target="_Blank" rel="nofollow">Lamda expressions documentation</a></li>
+				<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-expressions#attributes" title="" target="_Blank" rel="nofollow">Lambda expressions documentation</a></li>
 				<!--<li><a href="" title="" target="_Blank" rel="nofollow"></a></li>-->
 					</ul>
 				</div>

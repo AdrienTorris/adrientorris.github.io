@@ -52,17 +52,17 @@
 			</div>
 			<div id="post_ctn">
 			<h1>C# feature highlight: Span&#60;T&#62;</h1>
-<p><span class="thnclwrd">Span&#60;T&#62;</span> is a type-safe and memory-safe representation of a contiguous region of arbitrary memory, you can think of it like a window that you position on a memory location, whatever this memory is located on the heap, the stack or even be formed of unmanaged memory.</p>
-<p>Span&#60;T&#62;, which was introduced with C# 7.2, is a ref struct, which also began with C# 7.2. A <span class="thnclwrd">ref struct</span> is allocated on the stack and can't escape on the heap which introduces some limitations to their usage :<ul><li>You can't use a Span&#60;T&#62; or a ReadOnlySpan&#60;T&#62; field in a class, or even in non-ref-like struct (it also means that you can't use these two types in places where they might implicitly become fields on classes, by capturing them into lambdas or by declaring them into an async method for example)</li>
-<li>Span&#60;T&#62; and ReadOnlySpan&#60;T&#62; can't be boxed (it also means that you can't use them as generic arguments because in some situation they can be stored to the heap or they can getting boxed)</li></ul><br />
+<p><span class="thnclwrd">Span&#60;T&#62;</span> is a type-safe and memory-safe representation of a contiguous region of arbitrary memory. You can think of it as a window that you position on a memory location, whether this memory is located on the heap, on the stack, or is even made of unmanaged memory.</p>
+<p>Span&#60;T&#62;, which was introduced with C# 7.2, is a ref struct, which also started with C# 7.2. A <span class="thnclwrd">ref struct</span> is allocated on the stack and can't escape to the heap, which introduces some limitations to its usage:<ul><li>You can't use a Span&#60;T&#62; or a ReadOnlySpan&#60;T&#62; field in a class, or even in a non-ref-like struct (it also means that you can't use these two types in places where they might implicitly become fields on classes, by capturing them in lambdas or by declaring them in an async method for example)</li>
+<li>Span&#60;T&#62; and ReadOnlySpan&#60;T&#62; can't be boxed (it also means that you can't use them as generic arguments because in some situations they can be stored on the heap or get boxed)</li></ul><br />
 However, Span&#60;T&#62; can be used as a type of method arguments or return values.</p>
-<p>If you need an equivalent of Span&#60;T&#62; but that can be stored to the heap <a href="https://docs.microsoft.com/en-us/dotnet/api/system.memory-1?view=net-6.0" title="Memory<T> Struct" target="_Blank" rel="nofollow">Memory&#60;T&#62;</a> is probably the option that will suits the best for you but I won't cover this type in this article.</p>
-<p>Span&#60;T&#62; has a variant type called System.ReadOnlySpan&#60;T&#62; which enabled read-only access and works with immutable data types like System.String.</p>
+<p>If you need an equivalent of Span&#60;T&#62; that can be stored on the heap, <a href="https://docs.microsoft.com/en-us/dotnet/api/system.memory-1?view=net-6.0" title="Memory<T> Struct" target="_Blank" rel="nofollow">Memory&#60;T&#62;</a> is probably the option that will suit you best, but I won't cover this type in this article.</p>
+<p>Span&#60;T&#62; has a variant type called System.ReadOnlySpan&#60;T&#62; which enables read-only access and works with immutable data types like System.String.</p>
 <p>Span&#60;T&#62; and ReadOnlySpan&#60;T&#62; can be represented like this:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-01.png" title="" alt="" /></div>
-<p>When to use Span&#60;T&#62; and ReadOnlySpan&#60;T&#62;? These two types are very useful tools when you need to improve the speed and/or when you need to reduce the allocations of your code. Let's see some examples by using it with strings and arrays, which are probably the most common usecases for "standard" developers.</p>
+<p>When should you use Span&#60;T&#62; and ReadOnlySpan&#60;T&#62;? These two types are very useful tools when you need to improve the speed and/or when you need to reduce the allocations of your code. Let's see some examples using them with strings and arrays, which are probably the most common use cases for "standard" developers.</p>
 <h2>Using ReadOnlySpan&#60;T&#62; with System.String</h2>
-<p>Assume the following scenario: you receive an invoice number which is composed by the year of the invoice, the month, an id for the customer and the amount of the invoice (let's say <i>"2022-06-123-600"</i> for example) and you want to parse the string to deconstruct these 4 informations.</p>
+<p>Assume the following scenario: you receive an invoice number which is composed of the year of the invoice, the month, an id for the customer and the amount of the invoice (let's say <i>"2022-06-123-600"</i> for example) and you want to parse the string to deconstruct these 4 pieces of information.</p>
 <p>Without using Span&#60;T&#62; you could do something like this:</p>
 <pre><code class="csharp">
 private static readonly string _invoiceReference = "2022-06-123-600";
@@ -83,8 +83,8 @@ public static (int year, int month, int customerId, int amount) ParseInvoiceRefe
 }
 </code></pre>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-02.png" title="" alt="" /></div>
-<p>This method will work but because <span class="thnclwrd">System.String</span> is an immutable type each time you extract a part of <i>_invoiceReference</i> you create a new string that will be store in memory so your memory allocation will be pretty much significant (here it won't be massive but the same method in a loop could have an impact on the performance o the memory consumption).</p>
-<p>Now we can rewrite this method using <span class="thnclwrd">ReadOnlySpan&#60;T&#62;</span> and by replacing the <span class="thnclwrd">.Substring()</span> by some <span class="thnclwrd">.Slice()</span> methods:</p>
+<p>This method will work but, because <span class="thnclwrd">System.String</span> is an immutable type, each time you extract a part of <i>_invoiceReference</i> you create a new string that will be stored in memory, so your memory allocation will be pretty significant (here it won't be massive but the same method in a loop could have an impact on the performance or the memory consumption).</p>
+<p>Now we can rewrite this method using <span class="thnclwrd">ReadOnlySpan&#60;T&#62;</span>, replacing the <span class="thnclwrd">.Substring()</span> calls with <span class="thnclwrd">.Slice()</span> methods:</p>
 <pre><code class="csharp">
 private static readonly string _invoiceReference = "2022-06-123-600";
 
@@ -105,27 +105,27 @@ public static(int year, int month, int customerId, int amount) ParseInvoiceRefer
 }
 </code></pre>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-03.png" title="" alt="" /></div>
-<p>As you can see the code is very close to our first method but the memory allocation is far less important here because when you slice a Span&#60;T&#62; you don't reallocate what the original memory contains, you just position a tighter window on the original Span&#60;T&#62;:</p>
+<p>As you can see, the code is very close to our first method but the memory allocation is far lower here because when you slice a Span&#60;T&#62; you don't reallocate what the original memory contains, you just position a tighter window on the original Span&#60;T&#62;:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-04.png" title="" alt="" /></div>
-<p>You can add as many as Span&#60;T&#62; as you want from Slice you can see than they add no new memory allocation:</p>
+<p>You can add as many Span&#60;T&#62; as you want from Slice and you can see that they add no new memory allocation:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-05.png" title="" alt="" /></div>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-06.png" title="" alt="" /></div>
-<p>Notice that Span&#60;T&#62; and ReadOnlySpan&#60;T&#62; have a static property Empty you can use if you want an empty variable and a property IsEmpty:</p>
+<p>Notice that Span&#60;T&#62; and ReadOnlySpan&#60;T&#62; have a static Empty property you can use if you want an empty variable, and an IsEmpty property:</p>
 <pre><code class="csharp">
 ReadOnlySpan&#60;char&#62; invoiceReferenceAsSpan = _invoiceReference ?? ReadOnlySpan&#60;char&#62;.Empty;
 ReadOnlySpan&#60;char&#62; year = invoiceReferenceAsSpan.IsEmpty ? ReadOnlySpan&#60;char&#62;.Empty : invoiceReferenceAsSpan.Slice(0, 4);
 </code></pre>
 <h2>Using Span&#60;T&#62; with arrays</h2>
-<p>Span&#60;T&#62; is pretty close to arrays and a lots of developer sees Span&#60;T&#62; like a new fashion-way to do arrays but it's not that simple. This confusion comes from the fact that Span&#60;T&#62; is a view on some data and most of the time this data is represented through an array. So array is still needed and Span&#60;T&#62; is a just a convenient view on it. But Span&#60;T&#62; has some superpowers that arrays and even ArraySegment<T> doesn't have:
+<p>Span&#60;T&#62; is pretty close to arrays and a lot of developers see Span&#60;T&#62; as a new fashionable way to do arrays, but it's not that simple. This confusion comes from the fact that Span&#60;T&#62; is a view on some data and most of the time this data is represented through an array. So arrays are still needed and Span&#60;T&#62; is just a convenient view on them. But Span&#60;T&#62; has some superpowers that arrays and even ArraySegment<T> don't have:
 <ul><li>Span&#60;T&#62; has an efficient Garbage Collector tracking which makes the GC very effective when dealing with Span&#60;T&#62;</li>
 <li>Span&#60;T&#62; can handle unmanaged memory while the arrays cannot</li>
 <li>Span&#60;T&#62; provides a read-only variant, ReadOnlySpan&#60;T&#62;</li></ul></p>
-<p>You can instanciate a Span&#60;T&#62; directly from an Array:</p>
+<p>You can instantiate a Span&#60;T&#62; directly from an Array:</p>
 <pre><code class="csharp">
 var invoiceDataArray = new int[4] { 2022, 06, 123, 600 };
 ReadOnlySpan&#60;int&#62; invoiceData = new ReadOnlySpan&#60;int&#62;(invoiceDataArray);
 </code></pre>
-<p>You can also write this line shorter like this now:</p>
+<p>You can also write this line more concisely now, like this:</p>
 <pre><code class="csharp">
 ReadOnlySpan&#60;int&#62; invoiceData = new (invoiceDataArray);
 </code></pre>
@@ -133,11 +133,11 @@ ReadOnlySpan&#60;int&#62; invoiceData = new (invoiceDataArray);
 <pre><code class="csharp">
 ReadOnlySpan&#60;int&#62; invoiceData = invoiceDataArray;
 </code></pre>
-<p>As we saw Span&#60;T&#62; supports slicing, you can use it in his instanciation:</p>
+<p>As we saw, Span&#60;T&#62; supports slicing, and you can use it in its instantiation:</p>
 <pre><code class="csharp">
 ReadOnlySpan&#60;int&#62; invoiceData = new (invoiceDataArray, 1, 2); // Equivalent to: new (invoiceDataArray, start:1, length:2)
 </code></pre>
-<p>To get back to our invoice example, out method could be write with something like this:</p>
+<p>To get back to our invoice example, our method could be written with something like this:</p>
 <pre><code class="csharp">
 private static readonly string _invoiceReference = "2022-06-123-600";
 
@@ -150,8 +150,8 @@ public static (int year, int month, int customerId, int amount) ParseArrayWithSp
 }
 </code></pre>
 <h2>Benchmarking our string scenario</h2>
-<p>Because Span<T> doesn't allocate new memory when he slices it has great performance regarding to speed execution and memory allocation, but why don't we benchmark it to see exactly what's going on?</p>
-<p>I took our two previous methods which were parsing some invoice scenario from string invoice references and took them in a basic benchmark class. This is my program class:</p>
+<p>Because Span<T> doesn't allocate new memory when it slices, it has great performance regarding execution speed and memory allocation, but why don't we benchmark it to see exactly what's going on?</p>
+<p>I took our two previous methods, which were parsing our invoice scenario from string invoice references, and put them in a basic benchmark class. This is my program class:</p>
 <pre><code class="csharp">
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Columns;
@@ -233,8 +233,8 @@ public class InvoiceParserBenchmarks
 </code></pre>
 <p>This is the result of the benchmark (in debug mode on a developer local machine):</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/csharp-feature-highlight-span-t-readonlyspan-t-benchmark-output.png" title="" alt="" /></div>
-<p>As you can see, the method using Span&#60;T&#62; is slightly faster but but above all it consumes much less memory with no memory allocated againt 128 bytes.</p>
-<p>There are still a lot of things to say about this subject but I hope to have enlightened you a little on it and I invite you to learn more about this powerful stuff, I have put a list of links below the article.</p>
+<p>As you can see, the method using Span&#60;T&#62; is slightly faster but, above all, it consumes much less memory, with no memory allocated against 128 bytes.</p>
+<p>There are still a lot of things to say about this subject but I hope I have enlightened you a little on it, and I invite you to learn more about this powerful stuff; I have put a list of links below the article.</p>
 <p>Keep coding! ;)</p>
 				<div id="crdny">June 17, 2022</div>
 				<div id="tags_wrapper">

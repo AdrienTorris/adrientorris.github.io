@@ -52,7 +52,7 @@
 			</div>
 			<div id="post_ctn">
 			<h1>How to expose private ids without really exposing them</h1>
-<p>In a lots of project this is one of the questions that comes at the beginning: your entities are stored and have unique identifiers. The shorter the better for the database system but how to handle these keys when you expose an object? Do you expose the key? What if your key is deterministic like an integer? Do you add a public key with a random generation like a GUID? Or do you use a GUID as primay key?</p>
+<p>In a lot of projects this is one of the questions that comes up at the beginning: your entities are stored and have unique identifiers. The shorter the better for the database system, but how do you handle these keys when you expose an object? Do you expose the key? What if your key is deterministic, like an integer? Do you add a public key with a random generation, like a GUID? Or do you use a GUID as the primary key?</p>
 <p>Let's build a basic .NET 6 web API that exposes orders, using their integer unique identifier.</p>
 <p>We have a basic Order object:</p>
 <pre><code class="csharp">
@@ -68,7 +68,7 @@ public class Order
     }
 }
 </code></pre>
-<p>And a simple service that have only one method that get an order by its id:</p>
+<p>And a simple service that has only one method, which gets an order by its id:</p>
 <pre><code class="csharp">
 public class OrderService
 {
@@ -82,7 +82,7 @@ public class OrderService
     public Order Get(int id) => orders.SingleOrDefault(u =&#62; u.Id == id);
 }
 </code></pre>
-<p>And finaly a controller that calls our service and exposes one method:</p>
+<p>And finally a controller that calls our service and exposes one method:</p>
 <pre><code class="csharp">
 [Route("api/[controller]")]
 [ApiController]
@@ -110,9 +110,9 @@ public class OrdersController : ControllerBase
 </code></pre>
 <p>You can call the route /api/orders/int/1 that will return the data of the order #1:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/How-to-expose-private-ids-without-exposing-them-with-hashids-dotnet-01.png" title="" alt="" /></div>
-<p>The problem here is pretty obvious and a major security breach if you don't pay attention to this: if this url becomes public (like send in a mail to a customer or something), then a curious person could ask himself what the API ill do if the 1 in the url becomes a 2 or a 3 and the response is bad: it will return the detail of another order.</p>
+<p>The problem here is pretty obvious and a major security breach if you don't pay attention to it: if this URL becomes public (for example sent in an email to a customer), then a curious person could wonder what the API will do if the 1 in the URL becomes a 2 or a 3, and the answer is bad: it will return the details of another order.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/How-to-expose-private-ids-without-exposing-them-with-hashids-dotnet-02.png" title="" alt="" /></div>
-<p>A common answer to this issue is to use as primary key or add as public key  a unique identifier based on a non-deterministic format, ni .NET the GUID is perfect for that.</p>
+<p>A common answer to this issue is to use as a primary key, or to add as a public key, a unique identifier based on a non-deterministic format; in .NET the GUID is perfect for that.</p>
 <p>Let's add a public key to our order object and add an API endpoint to get an order by it:</p>
 <pre><code class="csharp">
 public class Order
@@ -181,11 +181,11 @@ public class OrdersController : ControllerBase
     }
 }
 </code></pre>
-<p>Now our order have a public key and we can get his detail using it:</p>
+<p>Now our order has a public key and we can get its details using it:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/How-to-expose-private-ids-without-exposing-them-with-hashids-dotnet-03.png" title="" alt="" /></div>
-<p>Using a GUID or an UUID as primary key or another unique identifier is commonly used and effective but it's not perfect because of the GUID composition: a GUID is 16 byte long and can be longer in his string format so it's more data that your database will have to store and manipulate, your API too. Another tradeoff is that a GUID is not optimized for comparison so a search on a GUID column can be expensive if the schema is not well managed.</p>
+<p>Using a GUID or a UUID as a primary key or as another unique identifier is common and effective, but it's not perfect because of the GUID composition: a GUID is 16 bytes long and can be longer in its string format, so it's more data that your database will have to store and manipulate, and your API too. Another tradeoff is that a GUID is not optimized for comparison, so a search on a GUID column can be expensive if the schema is not well managed.</p>
 <p>So is there a way to have sequential unique identifiers in our system but unguessable exposed ids without additional cost to our databse or our API? The answer is yes and has a name: <a href="https://github.com/ullmark/hashids.net" title="" target="_Blank" rel="nofollow">Hashids</a>.</p>
-<p><a href="https://github.com/ullmark/hashids.net" title="" target="_Blank" rel="nofollow">Hashids</a> is a small NuGet package that creates short unique unguessable string identifiers from integers. Identifiers generated with Hashids are pretty close to YouTube ones. This package has some options you can discover on its documentation like the possibility to use custom alphabet or to use longs and not integers. Also an important thing is that you will configure a custom salt so the generated ids will be specific to your project.</p>
+<p><a href="https://github.com/ullmark/hashids.net" title="" target="_Blank" rel="nofollow">Hashids</a> is a small NuGet package that creates short, unique, unguessable string identifiers from integers. Identifiers generated with Hashids are pretty close to YouTube ones. This package has some options you can discover in its documentation, like the possibility to use a custom alphabet or to use longs instead of integers. Another important thing is that you will configure a custom salt, so the generated ids will be specific to your project.</p>
 <p>Let's use it in our API. We start by adding this package to our project:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/How-to-expose-private-ids-without-exposing-them-with-hashids-dotnet-04.png" title="" alt="" /></div>
 <p>Then we add the Hashids service in our controller:</p>
@@ -206,8 +206,8 @@ public class OrdersController : ControllerBase
 <pre><code class="csharp">
 builder.Services.AddSingleton&#60;IHashids&#62;(_ =&#62; new Hashids(salt: "thisismyexamplesalt", minHashLength: 5));
 </code></pre>
-<p>Finaly we add a method that takes hashid is identifier and returns the detail of the order.</p>
-<p>The Hashids method that convert an encoded string into a sequential integer is called Decode and returns an array because you can pass one or several encoded srings as argument, so you will have to handle this array thing.</p>
+<p>Finally we add a method that takes a hashid as identifier and returns the details of the order.</p>
+<p>The Hashids method that converts an encoded string into a sequential integer is called Decode and returns an array, because you can pass one or several encoded strings as arguments, so you will have to handle this array thing.</p>
 <pre><code class="csharp">
 [HttpGet("hashid/{id}")]
 public IActionResult Get([FromRoute] string id)
@@ -227,9 +227,9 @@ public IActionResult Get([FromRoute] string id)
     return Ok(order);
 }
 </code></pre>
-<p>Now I can call my API endpoint to get an order by his hashid:</p>
+<p>Now I can call my API endpoint to get an order by its hashid:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/How-to-expose-private-ids-without-exposing-them-with-hashids-dotnet-05.png" title="" alt="" /></div>
-<p>Using hashids as public identifier without storing them will allow you to save database memory and operations but the tradeoff, because there are always some, is that your API or your service will have to work a little more because it will have to call the Hashids service to encode and decode the ids.</p>
+<p>Using hashids as public identifiers without storing them will allow you to save database memory and operations, but the tradeoff, because there is always one, is that your API or your service will have to work a little more, because it will have to call the Hashids service to encode and decode the ids.</p>
 <p>Let's benchmark these two methods to have an idea of their runtime cost:</p>
 <pre><code class="csharp">
 var benchmarkConfig = new ManualConfig()
@@ -256,7 +256,7 @@ public class HashidsBenchmark
     }
 }
 </code></pre>
-<p>This package could be optimized, for example by allowing us to encode and decode unique values so we won't have to handle arrays neither than the package, it could save some nanoseconds and bytes but as you see theses two operations are really efficients:</p>
+<p>This package could be optimized, for example by allowing us to encode and decode single values so that neither we nor the package would have to handle arrays; it could save some nanoseconds and bytes, but as you can see these two operations are really efficient:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/How-to-expose-private-ids-without-exposing-them-with-hashids-dotnet-06.png" title="Hashids NuGet package benchmark on .NET 6" alt="Hashids NuGet package benchmark on .NET 6" /></div>
 <pre><code class="csharp">
 |      Method |     Mean |    Error |   StdDev | Allocated |
@@ -264,8 +264,8 @@ public class HashidsBenchmark
 | IntFromHash | 20.98 us | 0.407 us | 0.515 us |     70 KB |
 | HashFromInt | 13.38 us | 0.252 us | 0.449 us |     47 KB |
 </code></pre>
-<p>Note that we speak about microseconds and few kilobites here so even if you are calling these methods thousands of times it shouldn't hurt your application's performance.</p>
-<p>Anyway I think Hashids is a really nice little NuGet package every .NET developer should know about it to have it in his toolbox.</p>
+<p>Note that we are talking about microseconds and a few kilobytes here, so even if you are calling these methods thousands of times it shouldn't hurt your application's performance.</p>
+<p>Anyway, I think Hashids is a really nice little NuGet package that every .NET developer should know about, to have it in their toolbox.</p>
 <div id="crdny">July 03, 2022</div>
 				<div id="tags_wrapper">
 					<ul>

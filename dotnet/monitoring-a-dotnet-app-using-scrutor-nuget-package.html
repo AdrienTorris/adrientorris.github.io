@@ -52,16 +52,16 @@
 			</div>
 			<div id="post_ctn">
 			<h1>Monitoring a .NET app using Scrutor</h1>
-<p><a href="https://github.com/khellang/Scrutor" title="Scrutor" target="_Blank" rel="nofollow">Scrutor</a> is a NuGet package which extend the ASP.NET built-in dependency injection container with assembly scanning and decoration extensions for <i>Microsoft.Extensions.DependencyInjection</i>.</p>
+<p><a href="https://github.com/khellang/Scrutor" title="Scrutor" target="_Blank" rel="nofollow">Scrutor</a> is a NuGet package which extends the ASP.NET built-in dependency injection container with assembly scanning and decoration extensions for <i>Microsoft.Extensions.DependencyInjection</i>.</p>
 <p>The library adds two extension methods to <i>IServiceCollection</i>:<ul><li>
 Scan, which is the entry point to set up your assembly scanning.</li><li>
 Decorate, which is used to decorate already registered services.</li></ul></p>
-<p>Assembly scanning is not what we are interested in here so I won't detail it here, just know that the Scan method allow you to browse some assemblies and to register some implementations of services in the lifetime you want. The Scrutor package has limited functionnality but it's very powerful, for example the assembly scanning is that great design that you can specify options like the registration strategy you want to apply which is how you want handling dupllicates services or implementation, anyway if you don't know it you should take a moment to discover it (there is a great and very detailled blog post from Andrew Lock about it: <a href="https://andrewlock.net/using-scrutor-to-automatically-register-your-services-with-the-asp-net-core-di-container/" title="Using Scrutor to automatically register your services with the ASP.NET Core DI container" target="_blank" rel="nofollow">Using Scrutor to automatically register your services with the ASP.NET Core DI container</a>.</p>
-<p>The method we want to use here is the Decorate method which allows to decorate already registered services. You register your decorated service, than you can decorate it with a decorator service, and you can still add some decorator's decorators if you need to.</p>
-<p>What we want to do here is  basic need : we want to know how much time some methods takes to complete.</p>
+<p>Assembly scanning is not what we are interested in here so I won't detail it, just know that the Scan method allows you to browse some assemblies and to register some implementations of services with the lifetime you want. The Scrutor package has limited functionality but it's very powerful; for example, the assembly scanning is so well designed that you can specify options like the registration strategy you want to apply, which is how you want to handle duplicate services or implementations. Anyway, if you don't know it you should take a moment to discover it (there is a great and very detailed blog post by Andrew Lock about it: <a href="https://andrewlock.net/using-scrutor-to-automatically-register-your-services-with-the-asp-net-core-di-container/" title="Using Scrutor to automatically register your services with the ASP.NET Core DI container" target="_blank" rel="nofollow">Using Scrutor to automatically register your services with the ASP.NET Core DI container</a>).</p>
+<p>The method we want to use here is the Decorate method, which allows you to decorate already registered services. You register your decorated service, then you can decorate it with a decorator service, and you can still add decorators of decorators if you need to.</p>
+<p>What we want to do here is a basic need: we want to know how much time some methods take to complete.</p>
 <p>Assume we have the default .NET 6 Api application.</p>
-<p>The first thing we do is to create a service interface and his implementation to get the get forecast logic out of the controller.</p>
-<p>We have this :</p>
+<p>The first thing we do is to create a service interface and its implementation, to get the forecast logic out of the controller.</p>
+<p>We have this:</p>
 <pre><code class="csharp">
 public interface IWeatherService
 {
@@ -90,7 +90,7 @@ public class WeatherService : IWeatherService
     }
 }
 </code></pre>
-<p>We clean the controller to resolve the service and call the method he exposes:</p>
+<p>We clean up the controller to resolve the service and call the method it exposes:</p>
 <pre><code class="csharp">
 [ApiController]
 [Route("[controller]")]
@@ -112,15 +112,15 @@ public class WeatherForecastController : ControllerBase
     }
 }
 </code></pre>
-<p>And in the program class we register our service and his implementation, like this:</p>
+<p>And in the program class we register our service and its implementation, like this:</p>
 <pre><code class="csharp">
 builder.Services.AddSingleton&#60;IWeatherService, WeatherService&#62;();
 </code></pre>
-<p>How can we now add some monitoring to our app? We could add some measures in our service but it has nothing to do there, and if we do this we should add a mechanism to allow us to disable it if we want so it becomes complex and invasive. This is where Scrutor comes: this package allows us to add a decorator to our <i>WeatherForecastService</i> which will take the responsability of the measuring stuff and only this, so our service won't have to change, it won't even know that he's measured!</p>
+<p>How can we now add some monitoring to our app? We could add some measurements in our service but they have nothing to do there, and if we do this we should add a mechanism to allow us to disable it if we want, so it becomes complex and invasive. This is where Scrutor comes in: this package allows us to add a decorator to our <i>WeatherForecastService</i> which will take the responsibility of the measuring stuff and only this, so our service won't have to change, it won't even know that it's being measured!</p>
 
 <p>How to do this? It's pretty simple.</p>
 
-<p>We add another service, let's call it <i>MeasuredWeatherService</i> which implements the same interface that our <i>WeatherService</i> and takes the <i>IWeatherService</i> in constructor's parameter. Then you implement the interface by assuming the monitoring logic and calling the decorated service for the core logic:</p>
+<p>We add another service, let's call it <i>MeasuredWeatherService</i>, which implements the same interface as our <i>WeatherService</i> and takes the <i>IWeatherService</i> as a constructor parameter. Then you implement the interface by taking care of the monitoring logic and calling the decorated service for the core logic:</p>
 <pre><code class="csharp">
 public class MeasuredWeatherService : IWeatherService
 {
@@ -148,11 +148,11 @@ public class MeasuredWeatherService : IWeatherService
     }
 }
 </code></pre>
-<p>We don't even have to change the controller, the only thing we have to do is to register ou decorator:</p>
+<p>We don't even have to change the controller, the only thing we have to do is to register our decorator:</p>
 <pre><code class="csharp">
 builder.Services.Decorate&#60;IWeatherService, MeasuredWeatherService&#62;();
 </code></pre>
-<p>At the runtime the Dependency Injection container will resolve the decorator service which references the decorated so at the execution we will find our measures in the traces:</p>
+<p>At runtime the Dependency Injection container will resolve the decorator service, which references the decorated one, so at execution we will find our measurements in the traces:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/monitoring-a-dotnet-app-using-scrutor-nuget-package-01.png" title="" /></div>
 <p>You can check the source code on my GitHub: <a href="https://github.com/AdrienTorris/Entropy/tree/master/src/DynamicProxyLab/DynamicProxyLab.Api" title="" target="_Blank" rel="nofollow">@AdrienTorris</a></p>
 				<div id="crdny">June 10, 2022</div>

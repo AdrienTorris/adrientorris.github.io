@@ -52,23 +52,23 @@
 			</div>
 			<div id="post_ctn">
 			<h1>Overview of Async and Await in C#</h1>
-<p>.NET introduced the Task Parallel Library in .NET 4 to write multithreaded and parallel code. The main goal of the TPL is to make developers more productive by simplifying the process of adding parallelism and concurrency to applications. By using the Task Parallel Library you can maximize the performance of your code while focusing on the work that your program is designed to accomplish without handling all the things that comes with asynchronous and parallelism code like the partitioning of the work, the state management or the continuation.</p>
-<p>In this article we will cover what the TPL is and does, what are the advantages of the Await and Async keywords and what are the tradeoffs of this because all code is not a good candidate for parallelization. We saw a lot of "Make all async" recently in companies but it's often a mistake.</p>
-<p>Like I just said, the Task Parallel Library allows you to ask for some code to run on a separated thread. For example this code creates and launches a Task on a separated thread, even if nothing is executed:</p>
+<p>.NET introduced the Task Parallel Library in .NET 4 to write multithreaded and parallel code. The main goal of the TPL is to make developers more productive by simplifying the process of adding parallelism and concurrency to applications. By using the Task Parallel Library you can maximize the performance of your code while focusing on the work that your program is designed to accomplish, without having to handle all the things that come with asynchronous and parallel code, like the partitioning of the work, the state management or the continuation.</p>
+<p>In this article we will cover what the TPL is and does, what the advantages of the Await and Async keywords are and what the tradeoffs are, because not all code is a good candidate for parallelization. We have seen a lot of "make everything async" in companies recently but it's often a mistake.</p>
+<p>Like I just said, the Task Parallel Library allows you to ask for some code to run on a separate thread. For example, this code creates and launches a Task on a separate thread, even if nothing is executed:</p>
 <pre><code class="csharp">
 Task.Run(() =&#62; { });
 </code></pre>
-<p>A Task distributes a work to a different thread. Be careful because unlike when your are handling the threads yourself, with the TPL the threads can be reused so be very careful with objects that could be shared between executions like static data, or just don't use it.</p>
-<p>The TPL also provides a lot of features like the possibility to subscribe to when the work is completed (this is know as something called "continuation"):</p>
+<p>A Task distributes work to a different thread. Be careful because, unlike when you are handling the threads yourself, with the TPL the threads can be reused, so be very careful with objects that could be shared between executions like static data, or just don't use them.</p>
+<p>The TPL also provides a lot of features like the possibility to subscribe to when the work is completed (this is known as "continuation"):</p>
 <pre><code class="csharp">
 Task&#60;string&#62;.Run(() =&#62; 
 {
    return "Hello from a Task!";
 });
 </code></pre>
-<p>In this code sample, we are asking a Task to execute some code on a separated thread and to return the result which would be a string. Here the TPL will take care of the continuation for you (state management, ...), will run the code, wait until it's done then return the result to you.</p>
-<p>Before digging into others features, let's play a little with the Task Parallel Library, I will use here a .NET 5 WPF application but I could have used any .NET application, the TPL is absolutely not a WPF specific technology.</p>
-<p>Assume we have a app that contain a button and a text block, and when you click on it a method is called that writes something into the textblock and in the debug trace.</p>
+<p>In this code sample, we are asking a Task to execute some code on a separate thread and to return the result, which would be a string. Here the TPL will take care of the continuation for you (state management, ...), will run the code, wait until it's done, then return the result to you.</p>
+<p>Before digging into other features, let's play a little with the Task Parallel Library. I will use a .NET 5 WPF application here but I could have used any .NET application, the TPL is absolutely not a WPF-specific technology.</p>
+<p>Assume we have an app that contains a button and a text block, and when you click on it a method is called that writes something into the textblock and in the debug trace.</p>
 <p>We have this XAML:</p>
 <pre><code class="csharp">
 &#60;Window x:Class="WpfApp1.MainWindow"
@@ -111,21 +111,21 @@ public partial class MainWindow : Window
     }
 }
 </code></pre>
-<p>As you can see, it's difficult to do simpler. When you launch the app it does nothing, and when you click on the button you can see some traces in the debug console and in a textblock on the UI:</p>
+<p>As you can see, it's hard to make it any simpler. When you launch the app it does nothing, and when you click on the button you can see some traces in the debug console and in a textblock on the UI:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-01.png" title="" alt="" /></div>
-<p>As you noticed, I added a thread pause to simulate some code execution here, it results that during a little more that 2 seconds our application is entirely blocked because all this code is running on the UI thread. It means that you can't do something else on the app, you can't even move the application's window on the screen, and if the execution takes too much times so Windows will inform you that this application may have encountered a problem and will ask you if you want to close it.</p>
-<p>How can we do to avoid this bad user interface? A solution is to move this code execution on another thread that the UI's one.</p>
-<p>Let's see what happens if we just pass our DoSomeWork() method as delegate's parameter when creating a new Task. Our button's click method becomes:</p>
+<p>As you noticed, I added a thread pause to simulate some code execution here, and the result is that for a little more than 2 seconds our application is entirely blocked because all this code is running on the UI thread. It means that you can't do anything else in the app, you can't even move the application's window on the screen, and if the execution takes too long, Windows will inform you that this application may have encountered a problem and will ask you if you want to close it.</p>
+<p>How can we avoid this bad user interface behavior? One solution is to move this code execution to a thread other than the UI one.</p>
+<p>Let's see what happens if we just pass our DoSomeWork() method as the delegate parameter when creating a new Task. Our button's click method becomes:</p>
 <pre><code class="csharp">
 private void Button_Click(object sender, RoutedEventArgs e)
 {
     Task.Run(DoSomeWork);
 }
 </code></pre>
-<p>Our DoSomeWork method is still the same that beside.</p>
-<p>Now when we launch our application all is working but when we click on the button the app encounters an exception: The calling thread cannot access this object because a different thread owns it. This is explained by the fact that the UI thread is the main one while our method is now running on another thread that have no access to the UI, so when our method tries to update the user interface our application encounters a threading isolation exception.</p>
+<p>Our DoSomeWork method is still the same as before.</p>
+<p>Now when we launch our application everything works, but when we click on the button the app encounters an exception: The calling thread cannot access this object because a different thread owns it. This is explained by the fact that the UI thread is the main one while our method is now running on another thread that has no access to the UI, so when our method tries to update the user interface our application encounters a threading isolation exception.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-02.png" title="" alt="" /></div>
-<p>What happens if we move the creation of our dedicated thread inside the method DoSomeWork(), where our code is taking some time to execute (here our Thread.Sleep()):</p>
+<p>What happens if we move the creation of our dedicated thread inside the DoSomeWork() method, where our code takes some time to execute (here our Thread.Sleep()):</p>
 <pre><code class="csharp">
 private void Button_Click(object sender, RoutedEventArgs e)
 {
@@ -143,8 +143,8 @@ private void DoSomeWork()
     Debug.WriteLine("Just ended the execution of the method DoSomeWork...");
 }
 </code></pre>
-<p>Now all is working fine but the end of the method DoSomeWork is executed before the end of our task, it's completely normal because we don't await the Task's result so the .NET Framework creates a new Task dedicated to our code, starts it and does not await to see what happens before continuing to execute the rest of the code.</p>
-<p>It could not be a problem if this piece of code is an atomic operation but if it's not, and if the code behind needs it to be completed to be executed then we have a bug here. To solve it, we could await for the end of this Task before executing the end of our method. To do this, we can use the Task.ContinueWith method:</p>
+<p>Now everything works fine but the end of the DoSomeWork method is executed before the end of our task. It's completely normal because we don't await the Task's result, so the .NET Framework creates a new Task dedicated to our code, starts it and does not wait to see what happens before continuing to execute the rest of the code.</p>
+<p>It may not be a problem if this piece of code is an atomic operation, but if it's not, and if the code behind needs it to be completed before running, then we have a bug here. To solve it, we could wait for the end of this Task before executing the end of our method. To do this, we can use the Task.ContinueWith method:</p>
 <pre><code class="csharp">
 private void Button_Click(object sender, RoutedEventArgs e)
 {
@@ -164,10 +164,10 @@ private void DoSomeWork()
 }
 </code></pre>
 <p>The Task.ContinueWith method creates a continuation that executes asynchronously when the target Task completes.</p>
-<p>Now our code is waiting for our Task to complete before executing the two last lines, but what's the difference between this implementation and the one that just passed DoSomeWork method as delegate's parameter to a Task?</p>
+<p>Now our code is waiting for our Task to complete before executing the last two lines, but what's the difference between this implementation and the one that just passed the DoSomeWork method as the delegate parameter to a Task?</p>
 <p>There is no difference so our application will encounter the same problem:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-03.png" title="" alt="" /></div>
-<p>We now are in a WPF specific implementation but it exists a way to update the UI from another thread that the main one that owns the UI, we can use what is called a Dispatcher:</p>
+<p>We are now in a WPF-specific implementation, but there is a way to update the UI from a thread other than the main one that owns the UI: we can use what is called a Dispatcher:</p>
 <pre><code class="csharp">
 private void Button_Click(object sender, RoutedEventArgs e)
 {
@@ -189,9 +189,9 @@ private void DoSomeWork()
     });
 }
 </code></pre>
-<p>If we launch our application now, all will work as expected: when we click on the button, the first line appears, then the second one appears two seconds later without blocking our UI.</p>
+<p>If we launch our application now, everything will work as expected: when we click on the button, the first line appears, then the second one appears two seconds later without blocking our UI.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-04.png" title="" alt="" /></div>
-<p>We also could use some data returned by the Task, here an example of implementation with a string result:</p>
+<p>We could also use some data returned by the Task; here is an example of an implementation with a string result:</p>
 <pre><code class="csharp">
 private void Button_Click(object sender, RoutedEventArgs e)
 {
@@ -216,7 +216,7 @@ private void DoSomeWork()
     });
 }
 </code></pre>
-<p>Notice that moving the place where we are using the Task's result can make a big difference in the execution. For example if we use the result outside the ContinueWith then we will wait for the task to complete, it's logic because the task has to do what it has to do so we can have the result:</p>
+<p>Notice that moving the place where we use the Task's result can make a big difference in the execution. For example, if we use the result outside the ContinueWith then we will wait for the task to complete; it's logical because the task has to do what it has to do so we can have the result:</p>
 <pre><code class="csharp">
 private void DoSomeWork()
 {
@@ -239,9 +239,9 @@ private void DoSomeWork()
     });
 }
 </code></pre>
-<p>You can think all this information about the Tasks and the Taks Parallel Library is not relevant because we want to speak about async and await keywords, but it is important. You have to know all this stuff because we will see it later but async and await keywords does nothing else that using the Task Parallel Library for you to make asynchronous implementation simpler.</p>
-<p>The last think you have to know about is how the Task Parallel Library is dealing with exceptions. You saw above some exceptions but it's only because I was executed the application in debug mode, in a release mode all theses exceptions would have been ignored so the application would have continue to work but not as excepected and no one would have noticed nothing. It's because you have to care about exceptions to be informed if an exception occured.</p>
-<p>If we take one of our first implementation that was (I removed the debug lines to be shorter):</p>
+<p>You may think all this information about Tasks and the Task Parallel Library is not relevant because we want to talk about the async and await keywords, but it is important. You have to know all this stuff because we will see it later: the async and await keywords do nothing else than use the Task Parallel Library for you, to make asynchronous implementation simpler.</p>
+<p>The last thing you have to know about is how the Task Parallel Library deals with exceptions. You saw some exceptions above but it's only because I was running the application in debug mode; in release mode all these exceptions would have been ignored, so the application would have continued to work but not as expected, and no one would have noticed anything. This is why you have to take care of exceptions, to be informed when an exception occurs.</p>
+<p>If we take one of our first implementations, which was (I removed the debug lines to be shorter):</p>
 <pre><code class="csharp">
 private void DoSomeWork()
 {
@@ -254,7 +254,7 @@ private void DoSomeWork()
     });
 }
 </code></pre>
-<p>And if we replace our thread pause by an exception, like this:</p>
+<p>And if we replace our thread pause with an exception, like this:</p>
 <pre><code class="csharp">
 private void DoSomeWork()
 {
@@ -267,7 +267,7 @@ private void DoSomeWork()
     });
 }
 </code></pre>
-<p>It will does nothing if you aren't executing it in debug mode. The exception only lives on the Task's thread so it will not interfer with the UI thread. It could be, but you have to explicitly implement it, like this:</p>
+<p>It will do nothing if you aren't running it in debug mode. The exception only lives on the Task's thread so it will not interfere with the UI thread. It could, but you have to implement it explicitly, like this:</p>
 <pre><code class="csharp">
 private void DoSomeWork()
 {
@@ -287,7 +287,7 @@ private void DoSomeWork()
     });
 }
 </code></pre>
-<p>I added a test to check the IsFaulted property on the Task, if any exception has occured his value would be true, so I log a message then return. It works, but now, how to know if any exception occurs in the Task.ContinueWith method?</p>
+<p>I added a test to check the IsFaulted property on the Task; if any exception has occurred its value would be true, so I log a message then return. It works, but now, how do we know if any exception occurs in the Task.ContinueWith method?</p>
 <pre><code class="csharp">
 private void DoSomeWork()
 {
@@ -306,7 +306,7 @@ private void DoSomeWork()
     });
 }
 </code></pre>
-<p>As the Task.ContinueWith method also returns a task as result, you can use a Task.ContinueWith on the first one and check inside it if a the previous Task is faulted:</p>
+<p>As the Task.ContinueWith method also returns a task as its result, you can use a Task.ContinueWith on the first one and check inside it whether the previous Task is faulted:</p>
 <pre><code class="csharp">
 private void DoSomeWork()
 {
@@ -333,8 +333,8 @@ private void DoSomeWork()
 }
 </code></pre>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-07.png" title="" alt="" /></div>
-<p>But if you want to know if any exception has occurred in the second Task.ContinueWith method so you have to add another one, and so one. It doesn't like very pretty and it can be quickly become a code that is hard to understand and to maintain. This is why the Task Parallel Libray is powerful but not that easy to work with.</p>
-<p>The very last thing I want to tell about the TLP is that the Parallel.For method is not asynchonous. It will deport the code execution one other threads but not his own orchestration so if you have some big processings with a lots of iteration, you may encapsulate the Parralel.For in his own Task:</p>
+<p>But if you want to know whether any exception has occurred in the second Task.ContinueWith method, you have to add another one, and so on. It doesn't look very pretty and it can quickly become code that is hard to understand and to maintain. This is why the Task Parallel Library is powerful but not that easy to work with.</p>
+<p>The very last thing I want to say about the TPL is that the Parallel.For method is not asynchronous. It will offload the code execution to other threads but not its own orchestration, so if you have some big processing with a lot of iterations, you may want to encapsulate the Parallel.For in its own Task:</p>
 <pre><code class="csharp">
 private void DoSomeWork()
 {
@@ -350,16 +350,16 @@ private void DoSomeWork()
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-08.png" title="" alt="" /></div>
 <p>Let's talk about async and await now :)</p>
 <h2>Async &amp; Await</h2>
-<p>Async and Await are just additional keywords, all you can do with them you can also do it without them, they are just providing some compilation magic for you.</p>
-<p>It's important because it means that async and await are not avoiding some threading complexity, they are just hidding them to you (in something called a state-machine).</p>
-<p>The main goal of async and await is to provide readability and maintenability. They allow you to write more fluent "top to bottom" code without nested calls that can become complex to work with.</p>
-<p>Also async and await are more error-prone, the exceptions will no longer be ignored if you don't want to.</p>
-<p>The async keyword is not working alone. If you are just using the async keywords what he does it that he introduces a lot of complexity by moving you entired method body into a generated class but it does not execute anything on a separated thread.</p>
-<p>The await keyword allows to do some work somewhere else. It could be any processing like doing an http request, loading a file from the disk, ...</p>
-<p>You can have an async method which not contains any await (which is bad but it works), but you can't have a not async method that implements an await.</p>
-<p>You should always use the async and await keywords together. They have been designed to be use together.</p>
+<p>Async and Await are just additional keywords; everything you can do with them you can also do without them, they just provide some compilation magic for you.</p>
+<p>It's important because it means that async and await do not remove any threading complexity, they just hide it from you (in something called a state machine).</p>
+<p>The main goal of async and await is to provide readability and maintainability. They allow you to write more fluent "top to bottom" code without nested calls that can become complex to work with.</p>
+<p>Also, async and await are less error-prone: the exceptions will no longer be ignored, unless you want them to be.</p>
+<p>The async keyword doesn't work alone. If you only use the async keyword, what it does is introduce a lot of complexity by moving your entire method body into a generated class, but it does not execute anything on a separate thread.</p>
+<p>The await keyword allows you to do some work somewhere else. It could be any processing, like making an HTTP request, loading a file from the disk, ...</p>
+<p>You can have an async method that doesn't contain any await (which is bad but it works), but you can't have a non-async method that implements an await.</p>
+<p>You should always use the async and await keywords together. They have been designed to be used together.</p>
 <p>Await:</p>
-<ul><li>Marks a continuation</li><li>Validates the success or failure of a Task</li><li>Returns to the caller, with a reference  to the ongoing method</li></ul>
+<ul><li>Marks a continuation</li><li>Validates the success or failure of a Task</li><li>Returns to the caller, with a reference to the ongoing method</li></ul>
 <p>Let's take our previous code example and modify it to make the DoSomeWorkAsync asynchronous using the Await and Async keywords.</p>
 <p>Our previous code implementation was:</p>
 <pre><code class="csharp">
@@ -405,8 +405,8 @@ private async void DoSomeWorkAsync()
     TracesTextBlock.Text += task.Result;
 }
 </code></pre>
-<p>I just added an async keyword on the method and I await the task to wait it to complete before executing the rest of the method which needs the results.</p>
-<p>I always could have write <code>var taskResult = await task;</code> to wait for the result and store it somewhere.</p>
+<p>I just added an async keyword on the method and I await the task to wait for it to complete before executing the rest of the method, which needs the results.</p>
+<p>I could also have written <code>var taskResult = await task;</code> to wait for the result and store it somewhere.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-09.png" title="" alt="" /></div>
 <p>When we launch our application we can see that it works the same as before, but what will be the behavior if we write some text in the textblock outside of the DoSomeWorkAsync method?</p>
 <pre><code class="csharp">
@@ -418,7 +418,7 @@ private void Button_Click(object sender, RoutedEventArgs e)
 }
 </code></pre>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-10.png" title="" alt="" /></div>
-<p>As you can see the text addition from the Button_Click method is hit before the last one into the DoSomeWorkAsync method, because the Task is awaited inside this method, and it's not all this method which is awaited. We can't await this implementation of DoSomeWorkAsync because this method hs a void return type, and it's not possible to wait a void method because it returns nothing. To be able to await this method we have to make it return something, we can use any return type, the "default" is Task (we also have to make the Button_Click method async):</p>
+<p>As you can see, the text addition from the Button_Click method is hit before the last one in the DoSomeWorkAsync method, because the Task is awaited inside this method, and it's not the whole method that is awaited. We can't await this implementation of DoSomeWorkAsync because this method has a void return type, and it's not possible to await a void method because it returns nothing. To be able to await this method we have to make it return something; we can use any return type, the "default" one is Task (we also have to make the Button_Click method async):</p>
 <pre><code class="csharp">
 private async void Button_Click(object sender, RoutedEventArgs e)
 {
@@ -441,8 +441,8 @@ private async Task DoSomeWorkAsync()
     TracesTextBlock.Text += task.Result;
 }
 </code></pre>
-<p>This is why you should never use async void, it does not allow his consumer to track for the result or if any exception has occurred during the process. By returning a Task, you don't have to change anything on your method but you can await it now, and if an exception occurs it will be return on the Task.</p>
-<p>The things that can be a little tricky to understand is that you have to await the Task to get his result, that can be an exception.</p>
+<p>This is why you should never use async void: it does not allow its consumer to track the result or to know whether any exception has occurred during the process. By returning a Task, you don't have to change anything in your method but you can await it now, and if an exception occurs it will be returned on the Task.</p>
+<p>The thing that can be a little tricky to understand is that you have to await the Task to get its result, which can be an exception.</p>
 <p>Assume this code:</p>
 <pre><code class="csharp">
 private async void Button_Click(object sender, RoutedEventArgs e)
@@ -475,10 +475,10 @@ private async Task DoSomeWorkAsync()
     TracesTextBlock.Text += task.Result;
 }
 </code></pre>
-<p>When you execute the application with a debugger attached, the debugger will inform you that an exception has occurred but then the application will continue to work but the catch block won't be hit, it's because the Task is not awaited.</p>
+<p>When you run the application with a debugger attached, the debugger will inform you that an exception has occurred, but then the application will continue to work and the catch block won't be hit; it's because the Task is not awaited.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-11.png" title="" alt="" /></div>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-12.png" title="" alt="" /></div>
-<p>If we await the Task we will be noticed that an exception has occurred:</p>
+<p>If we await the Task we will be notified that an exception has occurred:</p>
 <pre><code class="csharp">
 private async void Button_Click(object sender, RoutedEventArgs e)
 {
@@ -495,7 +495,7 @@ private async void Button_Click(object sender, RoutedEventArgs e)
 }
 </code></pre>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-13.png" title="" alt="" /></div>
-<p>Another thing to know is that it's not because a method is awaited that it's will be executed on a separated thread.</p>
+<p>Another thing to know is that just because a method is awaited doesn't mean it will be executed on a separate thread.</p>
 <p>Assume this code:</p>
 <pre><code class="csharp">
 private async void Button_Click(object sender, RoutedEventArgs e)
@@ -563,15 +563,15 @@ private async Task DoSomeWorkAsync()
     TracesTextBlock.Text += task.Result;
 }
 </code></pre>
-<p>This behavior is normal, nothing offloads some work on a different thread except for the Task.Run in the DoSomeWorkAsync method.</p>
-<p>Async and Await are very easy to use but you will use them in a better way by knowing what happens behind the scene, it will avoid to create some behaviors that seems unexpected (that will lead to bugs!).</p>
-<p>To keep track of all the asynchronous code that have been executed and all the work that happening on different threads, the Await keyword is using something called a State Machine.</p>
+<p>This behavior is normal, nothing offloads any work to a different thread except for the Task.Run in the DoSomeWorkAsync method.</p>
+<p>Async and Await are very easy to use, but you will use them better by knowing what happens behind the scenes; it will avoid creating behaviors that seem unexpected (and that lead to bugs!).</p>
+<p>To keep track of all the asynchronous code that has been executed and all the work that is happening on different threads, the Await keyword uses something called a State Machine.</p>
 <h2>The State Machine</h2>
-<p>The State Machine is like a queue of asynchonous code blocks to execute, and the State Machine is adding itself between each block of code to keep track of what happenned and where it is in the continuation.</p>
-<p>The State Machine also handles the results and potential errors of the different asynchronous block codes. Finaly the State Machine will ensure that the code after the await keyword will be executed.</p>
-<p>So let's recap, what really happen when you add an await keyword?</p>
+<p>The State Machine is like a queue of asynchronous code blocks to execute, and the State Machine adds itself between each block of code to keep track of what happened and where it is in the continuation.</p>
+<p>The State Machine also handles the results and potential errors of the different asynchronous code blocks. Finally, the State Machine will ensure that the code after the await keyword will be executed.</p>
+<p>So let's recap: what really happens when you add an await keyword?</p>
 <ul><ol>First it will generate a State Machine</ol><ol>Then the body of the method that is awaited will be moved into this State Machine</ol></ul>
-<p>Let's see what will be the compilated code for a basic async method:</p>
+<p>Let's see what the compiled code will be for a basic async method:</p>
 <pre><code class="csharp">
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -680,14 +680,14 @@ public class C
     }
 }
 </code></pre>
-<p>The first thing to notice is that there is no async and await in this compilated code, it's because these 2 keywords does not really exists, they do not mean anything for the CLR they are just syntaxic sugar (a massive one) for the developers.</p>
-<p>You can see the code that instanciates the State Machine, set his state then starts it in the GetMyName method, you also can notice that it returns the State Machine's Task, which allows to access to the result of his execution: <code>return stateMachine.&#60;&#62;t__builder.Task</code>.</p>
-<p>Our original code has been moved into the State Machine as I said before, in the MoveNext method. The method loops until the Task.Delay's GetAwaiter is done, then it get and set the result.</p>
-<p>This compilated code is a little bit more difficult to apprehend that our original method that only has 3 lines in the method body, and the more your method will do the more the compilation will have to do for you.</p>
-<p>Now there is a danger we have to speack about, the deadlocks.</p>
+<p>The first thing to notice is that there is no async or await in this compiled code; it's because these 2 keywords don't really exist, they do not mean anything to the CLR, they are just syntactic sugar (a massive one) for developers.</p>
+<p>You can see the code that instantiates the State Machine, sets its state then starts it in the GetMyName method; you can also notice that it returns the State Machine's Task, which gives access to the result of its execution: <code>return stateMachine.&#60;&#62;t__builder.Task</code>.</p>
+<p>Our original code has been moved into the State Machine as I said before, in the MoveNext method. The method loops until the Task.Delay's GetAwaiter is done, then it gets and sets the result.</p>
+<p>This compiled code is a little bit more difficult to grasp than our original method, which only has 3 lines in the method body, and the more your method does, the more the compilation will have to do for you.</p>
+<p>Now there is a danger we have to talk about: deadlocks.</p>
 <h2>Deadlocks</h2>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-deadlocks.jpg" title="" alt="" /></div>
-<p>A deadlock can completely crash your application. It happens when you create a circular awaiting dependency between different threads. If a thread A awaits the thread B to complete, the thread B awaits the thread C to complete and the thread C awaits the thread A to complete, nothing will happens and your application is crashed.</p>
+<p>A deadlock can completely crash your application. It happens when you create a circular waiting dependency between different threads. If thread A waits for thread B to complete, thread B waits for thread C to complete and thread C waits for thread A to complete, nothing will happen and your application has crashed.</p>
 <p>Let's take a very basic example:</p>
 <pre><code class="csharp">
 Task.Delay(1).ContinueWith((t) =&#62;
@@ -699,9 +699,9 @@ Task.Delay(1).ContinueWith((t) =&#62;
 }).Wait();
 </code></pre>
 <p>Can you see the deadlock here?</p>
-<p>It's a little sneaky but it shows how easy it is to implement a deadlock situation. Here we ask to execute some work on a different thread (Task.Delay), then we want to continue on the UI thread (Task.ContinueWith -> Dispatcher.Invoke). It seems pretty good and we are coming back to the UI thread the right way, by using a Dispatcher, but here's the issue: at the bottom of all this we ask the UI's thread to block until all this code is complete (Task.Wait). Here is the point: if the UI's thread is blocked and awaits for this task to complete, how the Dispatcher.Invoke will be able to complete? In fact it cannot, because we have a deadlock here: the Dispatcher.Invoke will awaits the UI thread to be available to interact with it, but the UI thread will awaits the Dispatcher.Invoke to get his job done to move on.</p>
+<p>It's a little sneaky but it shows how easy it is to implement a deadlock situation. Here we ask to execute some work on a different thread (Task.Delay), then we want to continue on the UI thread (Task.ContinueWith -> Dispatcher.Invoke). It seems pretty good and we are coming back to the UI thread the right way, by using a Dispatcher, but here's the issue: at the bottom of all this we ask the UI thread to block until all this code is complete (Task.Wait). Here is the point: if the UI thread is blocked and waits for this task to complete, how will the Dispatcher.Invoke be able to complete? In fact it cannot, because we have a deadlock here: the Dispatcher.Invoke waits for the UI thread to be available to interact with it, but the UI thread waits for the Dispatcher.Invoke to get its job done to move on.</p>
 <p>This code can be difficult to understand because it does nothing but we can create the same situation with our previous implementation.</p>
-<p>Here one of our previous example:</p>
+<p>Here is one of our previous examples:</p>
 <pre><code class="csharp">
 private async void Button_Click(object sender, RoutedEventArgs e)
 {
@@ -734,10 +734,10 @@ private async Task DoSomeWorkAsync()
     TracesTextBlock.Text += task.Result;
 }
 </code></pre>
-<p>Now, for some reason, I need to make this code synchronous, I will use the Task.Wait method so <code>await DoSomeWorkAsync();</code> will become <code>DoSomeWorkAsync().Wait();</code>. But we have now the same issue that just above: the UI thread is awaiting the DoSomeWorkAsync method to complete but it cannot because this method needs the UI thread to be available to interact with his components. It just cannot work. A solution to make an asynchronous code synchronous is to wrap it in a dedicated Task, in our example it would be <code>Task.Run(DoSomeWorkAsync).Wait();</code> (in our case we would have an exception because our method has some UI interactions while the UI thread is awaiting but it would work without the UI interactions).</p>
-<h2>Avoid unecessary parallelized code</h2>
-<p>Executing asynchronous code requires a lot of CPU because of all it needs to run the State Machines. A lot of asynchronous code could make your application look efficient because the UI will never be block but consuming a lot of CPU can result of very few efficient applications, that can drill the battery on a mobile for example. To make applications more efficients you need to use async and await only when you need to execute asynchronous code and not all the time, despite of what you can hear sometimes ("make all your code asynchronous!", "use async and await everywhere!").</p>
-<p>Let's see an example of unecessary asynchronous code:</p>
+<p>Now, for some reason, I need to make this code synchronous. I will use the Task.Wait method, so <code>await DoSomeWorkAsync();</code> will become <code>DoSomeWorkAsync().Wait();</code>. But we now have the same issue as just above: the UI thread is waiting for the DoSomeWorkAsync method to complete but it cannot, because this method needs the UI thread to be available to interact with its components. It just cannot work. One solution to make asynchronous code synchronous is to wrap it in a dedicated Task; in our example it would be <code>Task.Run(DoSomeWorkAsync).Wait();</code> (in our case we would get an exception because our method has some UI interactions while the UI thread is waiting, but it would work without the UI interactions).</p>
+<h2>Avoid unnecessary parallelized code</h2>
+<p>Executing asynchronous code requires a lot of CPU because of everything it needs to run the State Machines. A lot of asynchronous code could make your application look efficient because the UI will never be blocked, but consuming a lot of CPU can result in very inefficient applications, which can drain the battery on a mobile for example. To make applications more efficient you need to use async and await only when you need to execute asynchronous code and not all the time, despite what you can hear sometimes ("make all your code asynchronous!", "use async and await everywhere!").</p>
+<p>Let's see an example of unnecessary asynchronous code:</p>
 <pre><code class="csharp">
 private async Task SomeAsyncMethod()
 {
@@ -754,8 +754,8 @@ private async Task ThirdAsyncMethod()
     await Task.Delay(500);
 }
 </code></pre>
-<p>It could seems ridiculous here because the methods are all in the same place and are doing nothing but it's not uncommon to see some long runs of async method in enterprise legacies.</p>
-<p>Let's take a look of what this code looks like when its compiles:</p>
+<p>It may seem ridiculous here because the methods are all in the same place and are doing nothing, but it's not uncommon to see long chains of async methods in enterprise legacy code.</p>
+<p>Let's take a look at what this code looks like when it compiles:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-18.png" title="" alt="" /></div>
 <pre><code class="csharp">
 using System;
@@ -1007,8 +1007,8 @@ public class C
 }
 </code></pre>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-0.png" title="" alt="" /></div>
-<p>As you can see, each method has his own State Machine so the compilated code is complex and which require a lot of resources to run.</p>
-<p>How could we improve this code? If we look at theses methods there is only one asynchronous code so we can remove all the others just by removing the await keyword and by returning the tasks. Here what's we got:</p>
+<p>As you can see, each method has its own State Machine, so the compiled code is complex and requires a lot of resources to run.</p>
+<p>How could we improve this code? If we look at these methods there is only one piece of asynchronous code, so we can remove all the others just by removing the await keyword and by returning the tasks. Here is what we get:</p>
 <pre><code class="csharp">
 private async void Button_Click(object sender, RoutedEventArgs e)
 {
@@ -1030,7 +1030,7 @@ private async Task ThirdAsyncMethod()
     await Task.Delay(500);
 }
 </code></pre>
-<p>For the method ThirdAsyncMethod we also can removing his State Machine and returning a Task, like this:</p>
+<p>For the ThirdAsyncMethod method we can also remove its State Machine and return a Task, like this:</p>
 <pre><code class="csharp">
 private Task ThirdAsyncMethod()
 {
@@ -1045,14 +1045,14 @@ private async Task ThirdAsyncMethod()
     await Task.Delay(2000);
 }
 </code></pre>
-<p>We could have use the Task.WhenAll to say that we want to return the Task when all the subprocesses are completed:</p>
+<p>We could have used Task.WhenAll to say that we want to return the Task when all the subprocesses are completed:</p>
 <pre><code class="csharp">
 private Task ThirdAsyncMethod()
 {
     return Task.WhenAll(Task.Delay(500), Task.Delay(2000));
 }
 </code></pre>
-<p>Now we see that the compilated code is way more shorter, there is not all of the generated code we had before:</p>
+<p>Now we see that the compiled code is much shorter, there is not all of the generated code we had before:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/async-await-dotnet-csharp-task-parallel-library-19.png" title="" alt="" /></div>
 <pre><code class="csharp">
 using System;
@@ -1101,9 +1101,9 @@ public class C
     }
 }
 </code></pre>
-<p>Here we see that sometines the good approach is to not introducing Await and Async in your code.</p>
-<p>The last topic about Async and Await is the cancellation. How to cancel a Task? There is no method Cancel or Abort on a Task but your can provide a Token that you can cancel. Be careful because it's not automatic, you have to implement in your task the behavior you want when the cancellation has been asked.</p>
-<p>By instanciating a CancellationTokenSource you can have a token (CancellationTokenSource.Token), which you can cancel like <code>var cts = new CancellationTokenSource(); cts.Cancel();</code>. To stop the process, you can throw an exception if the cancellation is requested like this:</p>
+<p>Here we see that sometimes the right approach is to not introduce Await and Async in your code.</p>
+<p>The last topic about Async and Await is cancellation. How do you cancel a Task? There is no Cancel or Abort method on a Task but you can provide a Token that you can cancel. Be careful because it's not automatic, you have to implement in your task the behavior you want when the cancellation has been requested.</p>
+<p>By instantiating a CancellationTokenSource you can get a token (CancellationTokenSource.Token), which you can cancel like this: <code>var cts = new CancellationTokenSource(); cts.Cancel();</code>. To stop the process, you can throw an exception if the cancellation is requested, like this:</p>
 <pre><code class="csharp">
 CancellationTokenSource cts = new CancellationTokenSource();
 private async Task LongRunningOperationAsync()
@@ -1118,7 +1118,7 @@ private async Task LongRunningOperationAsync()
     }
 }
 </code></pre>
-<p>Or you can check if the cancellation has been asked then do whatever you want:</p>
+<p>Or you can check if the cancellation has been requested, then do whatever you want:</p>
 <pre><code class="csharp">
 CancellationTokenSource cts = new CancellationTokenSource();
 private async Task LongRunningOperationAsync()
@@ -1136,7 +1136,7 @@ private async Task LongRunningOperationAsync()
     }
 }
 </code></pre>
-<p>You also can pass the Token as argument to your method:</p>
+<p>You can also pass the Token as an argument to your method:</p>
 <pre><code class="csharp">
 private async void Button_Click(object sender, RoutedEventArgs e)
 {

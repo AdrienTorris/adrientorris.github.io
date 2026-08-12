@@ -52,11 +52,11 @@
 			</div>
 			<div id="post_ctn">
 			<h1>Monitoring a .NET app using Castle Core</h1>
-<p>We saw on a previous post <a href="https://adrientorris.github.io/dotnet/monitoring-a-dotnet-app-using-scrutor-nuget-package" target="_blank" title="Monitoring a .NET app using Scrutor">Monitoring a .NET app using Scrutor</a> and the decorator pattern. This is a great but it comes with a big limitation: this is not scalable. Indeed, as the decorators classes have to implement the interface they decorate, each time you add a method you will have to update all the decorators. It's not a really big issue but it's clearly not elegant and only the elegant methods are really good. This is where comes Castle, his dynamic proxies and the interceptor pattern.</p>
-<p><b>Castle DynamicProxy</b> is a library for generating lightweight .NET proxies on the fly at runtime. They allow us to intercept calls to the original class and to overwrite their behavior. As you can see below, it's a common practice in the software development. For example, NHibernate uses them to provide lazy loading of data and several mocking frameworks use them to intercept method/property calls, like that:</p>
+<p>We saw in a previous post, <a href="https://adrientorris.github.io/dotnet/monitoring-a-dotnet-app-using-scrutor-nuget-package" target="_blank" title="Monitoring a .NET app using Scrutor">Monitoring a .NET app using Scrutor</a>, the decorator pattern. It's great but it comes with a big limitation: it is not scalable. Indeed, as the decorator classes have to implement the interface they decorate, each time you add a method you will have to update all the decorators. It's not a really big issue but it's clearly not elegant, and only elegant methods are really good. This is where Castle, its dynamic proxies and the interceptor pattern come in.</p>
+<p><b>Castle DynamicProxy</b> is a library for generating lightweight .NET proxies on the fly at runtime. They allow us to intercept calls to the original class and to overwrite their behavior. As you can see below, it's a common practice in software development. For example, NHibernate uses them to provide lazy loading of data and several mocking frameworks use them to intercept method/property calls, like this:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/monitoring-a-dotnet-app-using-castle-core-nuget-package-02.PNG" title="Castle DynamicProxy used by the mocking library Moq" alt="Castle DynamicProxy used by the mocking library Moq" /></div>
 <p><b>Castle DynamicProxy</b> allows you to proxy a class to add additional features without modifying it like logging or security checking. Let's see how to use it to add diagnostics monitoring traces.</p>
-<p>We start with an empty API .NET 6 application (like in the post <a href="https://adrientorris.github.io/dotnet/monitoring-a-dotnet-app-using-scrutor-nuget-package" target="_blank" title="Monitoring a .NET app using Scrutor">Monitoring a .NET app using Scrutor</a>) and we do the same, which is create a WeatherService called in the controller.</p>
+<p>We start with an empty .NET 6 API application (like in the post <a href="https://adrientorris.github.io/dotnet/monitoring-a-dotnet-app-using-scrutor-nuget-package" target="_blank" title="Monitoring a .NET app using Scrutor">Monitoring a .NET app using Scrutor</a>) and we do the same thing, which is to create a WeatherService called in the controller.</p>
 <pre><code class="csharp">
 public interface IWeatherService
 {
@@ -106,7 +106,7 @@ public class WeatherForecastController : ControllerBase
     }
 }
 </code></pre>
-<p>Now we add the <a href="https://www.nuget.org/packages/castle.core/" title="Castle.Core Nuget package" target="_blank" rel="nofollow">Castle.Core Nuget package</a> to our application, and create our diagnostic proxy :</p>
+<p>Now we add the <a href="https://www.nuget.org/packages/castle.core/" title="Castle.Core Nuget package" target="_blank" rel="nofollow">Castle.Core NuGet package</a> to our application, and create our diagnostic proxy:</p>
 <pre><code class="csharp">
 public class DurationInterceptor : IInterceptor
 {
@@ -132,8 +132,8 @@ public class DurationInterceptor : IInterceptor
     }
 }
 </code></pre>
-<p>As you can see it's a basic behavior: we just decorate the original method processing with a diagnostic monitoring to log how much time the method took to execute.</p>
-<p>That last thing to do is to register our proxy in the Dependency Injection container. We could do it directly in the main program class but to it in the clean way we will create an extension method which can handle as many as interceptor class registering as we need.</p>
+<p>As you can see, it's a basic behavior: we just decorate the original method processing with diagnostic monitoring to log how much time the method took to execute.</p>
+<p>The last thing to do is to register our proxy in the Dependency Injection container. We could do it directly in the main program class but, to do it the clean way, we will create an extension method which can handle registering as many interceptor classes as we need.</p>
 <pre><code class="csharp">
 using Castle.DynamicProxy;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -165,7 +165,7 @@ namespace DynamicProxyLab.CastleCore.Api.Extensions
 <pre><code class="csharp">
 builder.Services.AddInterceptedSingleton&#60;IWeatherService, WeatherService, DurationInterceptor&#62;();
 </code></pre>
-<p>If we execute our web application now, we can see that our WeatherService is intercepted by our DurationInterceptor so we can find traces about his completion time:</p>
+<p>If we run our web application now, we can see that our WeatherService is intercepted by our DurationInterceptor, so we can find traces about its completion time:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/monitoring-a-dotnet-app-using-castle-core-nuget-package-01.PNG" title="" /></div>
 <p>You can check the source code on my GitHub: <a href="https://github.com/AdrienTorris/Entropy/tree/master/src/DynamicProxyLab/DynamicProxyLab.CastleCore.Api" title="" target="_Blank" rel="nofollow">@AdrienTorris</a></p>
 				<div id="crdny">June 13, 2022</div>

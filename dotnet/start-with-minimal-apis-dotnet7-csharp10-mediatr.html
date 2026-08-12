@@ -52,13 +52,13 @@
 			</div>
 			<div id="post_ctn">
 			<h1>Start playing with .NET 7, Minimal APIs and MediatR</h1>
-<p>Let's start playing with .NET 7, Minimal APIs and MediatR by creating a basic API to see how all these concepts are feeting together.</p>
+<p>Let's start playing with .NET 7, Minimal APIs and MediatR by creating a basic API to see how all these concepts fit together.</p>
 <p>First step, we create an empty .NET 7 ASP.NET Core web project.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis/minimal-api-mediatr-dotnet7-01.PNG" title="" alt="" /></div>
 <p>Now we add MediatR to the project using NuGet.</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis/minimal-api-mediatr-dotnet7-02.PNG" title="" alt="" /></div>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis/minimal-api-mediatr-dotnet7-03.PNG" title="" alt="" /></div>
-<p>We create our own interface for the HTTP Request which inherit from the MediatR <code>IRequest</code> interface.</p>
+<p>We create our own interface for the HTTP request, which inherits from the MediatR <code>IRequest</code> interface.</p>
 <pre><code class="csharp">
 using MediatR;
 
@@ -68,7 +68,7 @@ public interface IHttpRequest : IRequest&#60;IResult&#62;
 {
 }
 </code></pre>
-<p>We add an HTTP request object, let's say we want to add an endpoint to get a customer by his identifier.</p>
+<p>We add an HTTP request object, let's say we want to add an endpoint to get a customer by their identifier.</p>
 <pre><code class="csharp">
 namespace MinimalApiWithMediatRLab.Requests;
 
@@ -77,7 +77,7 @@ public class GetCustomerRequest : IHttpRequest
     public int Id { get; set; }
 }
 </code></pre>
-<p>We create a handler to process this request and execute the behavior we want to.</p>
+<p>We create a handler to process this request and execute the behavior we want.</p>
 <pre><code class="csharp">
 using MediatR;
 using MinimalApiWithMediatRLab.Requests;
@@ -118,14 +118,14 @@ internal static class MediatRExtensions
 <pre><code class="csharp">
 builder.Services.AddMediatR(x => x.AsScoped(), typeof(Program));
 </code></pre>
-<p>Next we declare the endoint we want to add:</p>
+<p>Next we declare the endpoint we want to add:</p>
 <pre><code class="csharp">
 app.MediateGet<GetCustomerRequest>("customer/{id}");
 </code></pre>
 <p>Now we can run our application and call the endpoint we created:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis/minimal-api-mediatr-dotnet7-04.PNG" title="" alt="" /></div>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/minimal-apis/minimal-api-mediatr-dotnet7-05.PNG" title="" alt="" /></div>
-<p>We have now an API that works but doesn't do much. We have only one GET method, let's implement another HTTP verb, like a POST method. To handle other verbs, you have just to map them in our extension class:</p>
+<p>We now have an API that works but doesn't do much. We have only one GET method, let's implement another HTTP verb, like a POST method. To handle other verbs, you just have to map them in our extension class:</p>
 <pre><code class="csharp">
 using MinimalApiWithMediatRLab.Requests;
 using MediatR;
@@ -145,8 +145,8 @@ internal static class MediatRExtensions
     }
 }
 </code></pre>
-<p>Now we can add POST endpoint by doing exactly the same thing than for GET ones but by using the <code>MediatePost</code> method.</p>
-<p>Also, to be more in a real-world scenario where there are often business logic involves, let's add a service and inject it in the handler. To continue with our customer example, let's a Customer service with a Get method:</p>
+<p>Now we can add a POST endpoint by doing exactly the same thing as for the GET ones, but by using the <code>MediatePost</code> method.</p>
+<p>Also, to be closer to a real-world scenario where there is often business logic involved, let's add a service and inject it into the handler. To continue with our customer example, let's create a Customer service with a Get method:</p>
 <pre><code class="csharp">
 public class Customer
 {
@@ -182,7 +182,7 @@ public class CustomerService : ICustomerService
     }
 }
 </code></pre>
-<p>Once our service created, we must register it into the Dependency Injection to make it available for the consumers which want to use it:</p>
+<p>Once our service is created, we must register it in the Dependency Injection container to make it available to the consumers that want to use it:</p>
 <pre><code class="csharp">
 builder.Services.AddSingleton<ICustomerService, CustomerService>();
 </code></pre>

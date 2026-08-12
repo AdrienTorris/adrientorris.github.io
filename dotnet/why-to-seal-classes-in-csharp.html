@@ -51,11 +51,11 @@
 			</div>
 			<div id="post_ctn">
 			<h1>Why all your classes should be sealed by default in C#</h1>
-<p>I never understood why the classes in C# weren't sealed by default when you create a new one. In every company I worked for I'm know as the "seal your classe" and "make everything private or internal" guy, and I'm ok with that. A sealed class just seems to be the default behavior to me. By default, I consider that everything needs to be the more private and the less inheritable as possible, because it just make sense to me. Why exposing objects that they don't need to? Or why letting people inherits from your classes if you don't need them to do so?</p>
-<p>Firstable, it's a question of common sense to me, close everything that does not required to be open, and do it immediatly because if you do it later that could be a breaking change, if you maintain a package for example. It's a way better to open a sealed class that needs to be inherithed some days that doing the opposite. Furthermore, inheritance is often considered as an anti-pattern, a lot of people and organizations prefers composition over inheritance.</p>
-<p>But also, do you know that sealing the classes that can (must) be will have a positive effect on your application's performance?</p>
+<p>I never understood why classes in C# weren't sealed by default when you create a new one. In every company I have worked for I'm known as the "seal your classes" and "make everything private or internal" guy, and I'm ok with that. A sealed class just seems to be the default behavior to me. By default, I consider that everything needs to be as private and as little inheritable as possible, because it just makes sense to me. Why expose objects that don't need to be exposed? Or why let people inherit from your classes if you don't need them to do so?</p>
+<p>First of all, it's a question of common sense to me: close everything that is not required to be open, and do it immediately because if you do it later it could be a breaking change, if you maintain a package for example. It's much better to open a sealed class that needs to be inherited from one day than to do the opposite. Furthermore, inheritance is often considered an anti-pattern, and a lot of people and organizations prefer composition over inheritance.</p>
+<p>But also, did you know that sealing the classes that can (and must) be sealed will have a positive effect on your application's performance?</p>
 <p>Let's see that with a little benchmark.</p>
-<p>Assume we have three basic classes, one base class (which is not abstract because we will instanciate it for the benchmark it probably would in the real world), one open class and one sealed class, the two last one are inheriting from the base class :</p>
+<p>Assume we have three basic classes: one base class (which is not abstract because we will instantiate it for the benchmark, although it probably would be in the real world), one open class and one sealed class, the last two inheriting from the base class:</p>
 <pre><code class="csharp">
 public class BaseClass
 {
@@ -80,7 +80,7 @@ public sealed class SealedClass : BaseClass
     public override int ExampleIntMethod() => 450;
 }
 </code></pre>
-<p>We create now a basic benchmark class that tests the two methods of the open and the sealed class. The code looks like this:</p>
+<p>We now create a basic benchmark class that tests the two methods of the open and the sealed class. The code looks like this:</p>
 <pre><code class="csharp">
 using BenchmarkDotNet.Attributes;
 
@@ -142,11 +142,11 @@ public bool IsCheckSealed() => baseClass is SealedClass;
 |   IsCheckOpen | 1.7381 ns | 0.0606 ns | 0.0789 ns |         - |
 | IsCheckSealed | 0.0776 ns | 0.0102 ns | 0.0095 ns |         - |
 </code></pre>
-<p>As you can see it's ten time faster, just as sealing it. This is an interesting issue about the performance gain of sealing the classes: <a href="https://github.com/dotnet/runtime/issues/49944" title="" target="_blank" rel="nofollow">Analyzer Proposal: Seal internal/private types</a></p>
-<p>Why no warm or even throw a compilation exception when a class that could be sealed remains open? You can do it by modifying the configuration of the editor in Visual Studio. To do this, add a file named .editorconfig in your project, then update the value of the CA1852 rule:</p>
+<p>As you can see, it's ten times faster, just by sealing it. This is an interesting issue about the performance gain of sealing classes: <a href="https://github.com/dotnet/runtime/issues/49944" title="" target="_blank" rel="nofollow">Analyzer Proposal: Seal internal/private types</a></p>
+<p>Why not warn, or even throw a compilation error, when a class that could be sealed remains open? You can do this by modifying the editor configuration in Visual Studio. To do this, add a file named .editorconfig in your project, then update the value of the CA1852 rule:</p>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/sealed-class-benchmark-add-editor-config-file.PNG" title="" /></div>
 <div class="pic_wrapper"><img  src="/wwwroot/images/dotnet/sealed-class-benchmark-add-editor-config-file-compilation-warnings.PNG" title="" /></div>
-<p>Don't forget, don't open what does not need to be!</p>
+<p>Don't forget: don't open what doesn't need to be open!</p>
 				<div id="crdny">December 1, 2022</div>
 				<div id="tags_wrapper">
 					<ul>
