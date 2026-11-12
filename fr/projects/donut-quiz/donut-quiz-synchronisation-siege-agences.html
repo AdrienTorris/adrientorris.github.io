@@ -1,0 +1,191 @@
+<!DOCTYPE html><html lang="fr-FR" xml:lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=UA-85948839-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-85948839-1');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Donut Quiz : synchroniser un siège et des agences sans rien perdre en silence</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="fr" />
+		<meta name="keywords" content="Team Break,Donut Quiz,.NET,Synchronisation,MongoDB,Hangfire,System.Text.Json,Architecture,Retour d'expérience" />
+		<meta name="description" content="Filigrane qui suit la mauvaise horloge, propriétés qui disparaissent derrière un 200 OK, enrôlement qui « réussit » sans rien faire : retour d'expérience sur la synchronisation de contenu entre le siège et les salles Donut Quiz." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/donut-quiz/donut-quiz-synchronisation-siege-agences.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/donut-quiz/donut-quiz-head-office-sync.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/fr/index.html" title="">Accueil</a></li>
+					<li>Projets</li>
+					<li>Donut Quiz</li>
+					<li class="active"><a href="https://adrientorris.github.io/fr/projects/donut-quiz/donut-quiz-synchronisation-siege-agences.html" title="Donut Quiz : synchroniser un siège et des agences sans rien perdre en silence">Donut Quiz : synchroniser un siège et des agences sans rien perdre en silence</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Donut Quiz : synchroniser un siège et des agences sans rien perdre en silence</h1>
+<blockquote>
+<p>Cet article prolonge <a href="https://adrientorris.github.io/fr/projects/donut-quiz/donut-quiz-coulisses-techniques.html">Donut Quiz : les coulisses techniques d'une salle de quiz connectée</a>, qui présente la salle, son architecture et la refonte du logiciel. Ici, je m'intéresse à une seule pièce du puzzle : la synchronisation entre le siège et les agences.</p>
+</blockquote>
+<p>Une salle Donut Quiz doit pouvoir jouer même si la connexion internet de l'agence tombe. Chaque agence a donc sa propre base MongoDB et son propre volume de médias (13 à 19 Go d'images, de vidéos et de sons). Le contenu (questions, thèmes, événements spéciaux, slides, cartes d'honneur, textes, réglages de jeu…) est rédigé au siège et descend vers les agences. Dans l'autre sens, les parties jouées, les clients et l'historique des questions posées à chaque client remontent. Cet historique permet au générateur de parties de ne pas reposer une question à un client qui revient.</p>
+<p>Sur le papier, c'est un problème classique. En pratique, c'est la partie du système où les défauts sont les plus sournois, parce qu'une synchronisation qui perd des données ne plante pas : elle répond 200, se déclare en succès, et le manque ne se voit que des semaines plus tard, quand un game master s'étonne qu'un événement spécial n'apparaisse pas.</p>
+<blockquote>
+<p><strong>En bref</strong></p>
+<ul>
+<li>Le filigrane suivait l'horloge de l'agence alors que les données sont datées par le siège. Il est désormais dérivé de ce qui a réellement été écrit.</li>
+<li>System.Text.Json, avec <code>IgnoreReadOnlyProperties</code>, laissait tomber en silence toute propriété sans setter public. Une garde au démarrage refuse maintenant de lancer l'application si une propriété ne traverse pas.</li>
+<li>L'agence voit ce qui lui manque et peut déclencher la synchro à la demande. Le siège voit l'état de tout le parc.</li>
+<li>Le contenu peut appartenir à un franchisé, avec un cloisonnement strict entre agences.</li>
+<li>Le siège ne se connecte jamais à une agence : tout part de l'agence, en HTTPS sortant.</li>
+</ul>
+</blockquote>
+<hr/>
+<h2 id="comment-ça-marche">Comment ça marche</h2>
+<p>Dans la première version du logiciel, la synchronisation était le dernier composant arrivé. Elle tournait la nuit, entre 1 h et 5 h, sauf pour les parties, synchronisées toutes les cinq minutes. Le principe n'a pas changé, mais presque tout le reste, si.</p>
+<ul>
+<li><strong>Un service dédié.</strong> Côté agence, <code>ContentSynchronization.AgenceApp</code> exécute des jobs Hangfire, stockés dans MongoDB. Quinze entités circulent : toutes descendent, et trois remontent aussi (parties, clients, historique des questions).</li>
+<li><strong>Un calendrier étalé.</strong> Le contenu se synchronise la nuit. Chaque agence tire au hasard son heure de départ dans une fenêtre de cinq heures à partir de 22 h, ce qui étale la charge sur le siège. Les parties et les clients, eux, sont synchronisés toutes les cinq minutes, parce qu'une réservation prise en ligne doit arriver vite en salle.</li>
+<li><strong>Un filigrane par entité.</strong> Chaque entité a son filigrane (<code>Since</code>). L'agence appelle <code>POST /siege/api/sync/{Entité}/pull</code> pour obtenir tout ce qui a changé depuis ce point (<code>LastUpdated &gt;= Since</code>). Le siège renvoie les entités complètes avec les liens de leurs médias, et l'agence les écrit en base puis télécharge les médias dans le volume partagé.</li>
+<li><strong>La purge des contenus supprimés.</strong> Une route <code>check-dead</code> permet à l'agence de demander lesquels de ses contenus n'existent plus au siège, puis de les purger.</li>
+<li><strong>Un enrôlement par jeton.</strong> Pour s'enrôler, une agence échange un jeton générique à usage unique contre son propre jeton d'agence, puis déclare son code auprès du siège.</li>
+<li><strong>Un seul worker par file</strong> : une conversion ffmpeg à la fois, et jamais deux tirages de la même entité en parallèle.</li>
+</ul>
+<p>Rien de révolutionnaire. Le diable, comme toujours, se cache dans ce qui se passe quand ça se passe mal… sans le dire.</p>
+<hr/>
+<h2 id="deux-horloges-pour-un-seul-filigrane">Deux horloges pour un seul filigrane</h2>
+<p>À la fin de chaque passage, le filigrane prenait l'heure locale de l'agence (<code>DateTime.Now</code>). Or le <code>LastUpdated</code> des documents est posé par l'horloge du <strong>siège</strong>.</p>
+<p>Il suffit que l'horloge de l'agence avance de quelques minutes pour créer un trou définitif : un document modifié au siège dans cet intervalle ne repassera jamais le filtre <code>LastUpdated &gt;= Since</code>.</p>
+<p>Pour couronner le tout, un élément arrivé sans données était compté comme « appliqué ». Un passage pouvait donc avancer le filigrane sans avoir écrit une seule ligne. Et le champ censé dater la dernière application ne bougeait jamais après la création du document de suivi : un passage qui n'appliquait rien laissait exactement la même trace qu'un passage qui appliquait tout.</p>
+<p>Le filigrane est désormais dérivé de ce qui a <strong>réellement été écrit</strong> :</p>
+<pre><code class="csharp">// Avant : l'heure locale de l'agence, quoi qu'il se soit passé
+contentSynchronizationInfo.Since = executionDate; // DateTime.Now, côté agence
+
+// Après (principe) : le plus grand LastUpdated effectivement appliqué, daté par le siège,
+// plafonné s'il est invraisemblable, ramené au plus ancien élément en échec,
+// et laissé tel quel si rien n'a été écrit.</code></pre>
+<p>Un élément sans données n'est plus compté comme appliqué, et le document de suivi porte une vraie date de dernière application. L'horloge elle-même est injectée (<code>ISynchronizationClock</code>), ce qui permet de tester les cas de dérive sans attendre qu'une agence les produise.</p>
+<hr/>
+<h2 id="un-200-ok-ne-prouve-rien">Un 200 OK ne prouve rien</h2>
+<p>Les deux extrémités sérialisent en System.Text.Json avec <code>IgnoreReadOnlyProperties = true</code>. Avec ce réglage, une propriété dont le setter n'est pas public n'est <strong>ni écrite par l'émetteur, ni relue par le récepteur</strong>. Pas d'exception, pas de trace, et un 200 en réponse.</p>
+<p>La remontée des parties cumulait les problèmes :</p>
+<ul>
+<li>elle passait par un DTO de projection qui ne déclarait que 20 des 35 propriétés d'une partie ;</li>
+<li>la liste des équipes de ce DTO n'était jamais remplie. Comme le siège remplace intégralement le document à chaque poussée, il recevait des <strong>parties sans équipes, donc sans scores ni classement</strong> ;</li>
+<li>les parties terminées avaient un problème de plus : leurs honneurs étaient stockés dans un dictionnaire que MongoDB refusait de persister dans sa représentation par défaut, et c'était alors <strong>toute la partie</strong> qui était rejetée. Précisément les parties dont le siège a le plus besoin.</li>
+</ul>
+<p>Le correctif « évident », retirer <code>IgnoreReadOnlyProperties</code>, aurait cassé le pull : certaines entités exposent des propriétés calculées typées par une interface, que le désérialiseur ne sait pas instancier. Le drapeau masquait en fait un modèle de domaine qui n'avait jamais été conçu pour être sérialisé.</p>
+<h3 id="une-garde-plutôt-quune-liste">Une garde plutôt qu'une liste</h3>
+<p>J'ai donc procédé propriété par propriété, avec <code>[JsonInclude]</code>. Mais une liste de propriétés à surveiller vieillit mal : la prochaine propriété ajoutée avec un setter privé reproduira le défaut sans que personne le remarque.</p>
+<p>Au démarrage, une garde inspecte donc par réflexion chacune des quinze entités, dans les deux sens. Si une propriété ne traverse pas, l'application refuse de démarrer. Seules lui échappent les propriétés calculées, exemptées automatiquement puisqu'elles n'ont pas de setter, et deux propriétés exemptées nommément, avec leur raison écrite.</p>
+<p>Le message d'erreur nomme le type, la propriété, le sens et la cause, et jamais un simple compte :</p>
+<pre><code class="csharp">/// « 3 propriétés perdues » survivrait à une régression sur une propriété DIFFÉRENTE :
+/// le compte ne bouge pas, le message reste vrai, et la perte change de victime sans bruit.
+public override string ToString()
+    =&gt; $"{Entite.Name}.{Propriete} ne traverse pas dans le sens {Sens} : {Cause}";</code></pre>
+<p>Un inventaire de la traversée, propriété par propriété et pour chaque sens, est aussi versionné dans le dépôt. Un test vérifie qu'il couvre bien les quinze entités dans les deux sens : supprimer une section le fait échouer.</p>
+<h3 id="une-partie-jouée-est-un-fait">Une partie jouée est un fait</h3>
+<p>Une fois les manches transmises, un nouveau piège est apparu. Des questions incomplètes traînaient dans la banque de questions, et la validation de modèle aurait fait refuser en bloc toute partie qui en embarquait une. Or une partie jouée est un fait : on ne la refuse pas.</p>
+<p>À la réception d'une poussée de partie, et pour cette seule action, la validation de modèle est donc levée. La partie est écrite telle quelle, et chaque champ manquant produit un avertissement qui nomme la partie, la manche et la propriété. La banque se nettoie par constat, pas par blocage. Tous les autres points d'entrée du siège conservent leur validation.</p>
+<h3 id="les-silences-ordinaires">Les silences ordinaires</h3>
+<p>En inspectant la synchro, j'ai trouvé un job qui appelait toutes les cinq minutes une route que le siège ne servait pas : aucun contrôleur n'existait pour cette entité. Il recevait un 404, n'appliquait rien… et rien ne le signalait.</p>
+<p>Enfin, l'agence reste maîtresse de ce qu'elle joue. Une partie en cours n'est jamais écrasée par la synchro, et une copie locale au moins aussi récente que celle du siège fait autorité.</p>
+<hr/>
+<h2 id="voir-ce-qui-manque-et-le-tirer-sans-attendre-la-nuit">Voir ce qui manque, et le tirer sans attendre la nuit</h2>
+<p>Quand un game master constate qu'un nouvel événement spécial n'apparaît pas, attendre la synchro de la nuit n'est pas une réponse. Encore fallait-il savoir ce qui manque : jusque-là, le seul moyen de compter les questions manquantes était de télécharger toutes les questions.</p>
+<ul>
+<li><strong>Le siège sait compter.</strong> Un point d'entrée d'inventaire renvoie, par entité, le nombre d'éléments que l'agence n'a pas encore, sans en télécharger le contenu.</li>
+<li><strong>L'agence voit ce qui lui manque.</strong> Son administration affiche ces compteurs, entité par entité, avec un bouton unique qui déclenche le tirage immédiatement.</li>
+<li><strong>Les clics sont sans danger.</strong> Les demandes répétées sont fusionnées par entité : un clic pendant qu'un tirage est en file ou en cours ne déclenche pas de second tirage. Et aucun tirage ne part pendant une partie en cours.</li>
+<li><strong>Le siège voit tout le parc.</strong> Chaque agence remonte son filigrane. Une vue du parc montre quelles agences sont à jour et lesquelles ont du retard, avec la fraîcheur de cette information.</li>
+</ul>
+<p>L'administration et l'ordonnanceur sont deux processus distincts. Le bouton de l'administration appelle donc un point d'entrée HTTP de l'ordonnanceur, restreint à l'origine locale, tandis que le contrôle des rôles reste entièrement dans l'administration.</p>
+<h3 id="un-enrôlement-qui-ne-réussit-plus-en-silence">Un enrôlement qui ne réussit plus en silence</h3>
+<p>L'enrôlement d'une agence pouvait « réussir » en silence par quatre sorties différentes, sans le moindre journal. Et la présence d'un jeton était prise pour sa validité : un jeton périmé, révoqué ou émis par un autre siège faisait tout aussi bien l'affaire.</p>
+<p>Seul le siège sait juger un jeton. Il le vérifie désormais et dit pourquoi il refuse, tandis que l'agence journalise et affiche la raison. Un écran vert ne veut plus dire « une chaîne de caractères est présente dans un fichier ».</p>
+<hr/>
+<h2 id="du-contenu-pour-chaque-franchisé">Du contenu pour chaque franchisé</h2>
+<p>Dernière évolution en date : les franchisés créent du contenu au siège pour leur seule agence.</p>
+<ul>
+<li><strong>Un propriétaire optionnel.</strong> Une question ou un événement spécial porte un propriétaire. L'absence de propriétaire veut dire « global », ce qui a évité toute migration des données existantes.</li>
+<li><strong>Une synchro filtrée par propriétaire.</strong> Le pull, les compteurs, les liens de médias et la détection des contenus supprimés tiennent compte du propriétaire, avec un cloisonnement strict : une agence ne reçoit jamais le contenu d'une autre.</li>
+<li><strong>Pas de validation centrale.</strong> Le contenu d'une agence part en salle dès qu'il est activé, uniquement vers l'agence propriétaire.</li>
+<li><strong>La « mise au pot ».</strong> Un contenu d'agence qui mérite de profiter à tout le réseau peut être copié en contenu global.</li>
+</ul>
+<hr/>
+<h2 id="aucune-connexion-entrante-vers-une-agence">Aucune connexion entrante vers une agence</h2>
+<p>Même pour récupérer l'historique de jeu des anciennes agences, la règle reste la même : <strong>le siège ne se connecte jamais à une agence.</strong> Pas d'accès entrant, pas de clé SSH.</p>
+<pre><code class="nohighlight">AGENCE (lecture seule)                          SIÈGE
+  mongodump --archive --gzip                    PUT /…/ingest/&lt;agence&gt;/&lt;collection&gt;
+        │  (streamé, aucun fichier temporaire)    └─&gt; dépôt de l'archive
+        └── curl -T -  ──── HTTPS sortant ────&gt;   restauration dans une base jetable
+                                                  puis fusion dans la base principale</code></pre>
+<p>La route d'ingestion est authentifiée par jeton et <strong>inerte sans configuration</strong> : sans jeton configuré, elle répond 404. Elle peut donc être déployée partout sans risque, puisque c'est la configuration, et elle seule, qui l'active. Côté agence, tout se fait en lecture seule : aucun service installé, aucun fichier temporaire, aucune écriture dans MongoDB, et l'opération est interruptible à tout moment.</p>
+<hr/>
+<h2 id="ce-que-je-retiens">Ce que je retiens</h2>
+<ul>
+<li><strong>Un 200 OK ne prouve rien.</strong> Une synchronisation se juge sur ce qui a réellement été écrit.</li>
+<li><strong>Une horloge ne vaut que pour la machine qui l'a lue.</strong> Un filigrane se dérive des données reçues, jamais de l'heure locale.</li>
+<li><strong>Une garde vaut mieux qu'une liste.</strong> Ce qui doit rester vrai se vérifie au démarrage, par construction, plutôt que dans une liste que personne ne tiendra à jour.</li>
+<li><strong>Nommer plutôt que compter.</strong> Un message qui nomme la propriété perdue ne peut pas rester vrai après une régression ailleurs.</li>
+<li><strong>La salle reste maîtresse de ce qu'elle joue.</strong> Une partie en cours ne se fait jamais écraser.</li>
+<li><strong>Jamais de connexion entrante vers une agence.</strong> Tout part de l'agence, en HTTPS sortant.</li>
+</ul>
+<p>Pour le reste de l'histoire (les pupitres en web, MQTT, le son, la lumière et le déploiement sur Raspberry Pi), c'est dans l'article principal : <a href="https://adrientorris.github.io/fr/projects/donut-quiz/donut-quiz-coulisses-techniques.html">Donut Quiz : les coulisses techniques d'une salle de quiz connectée</a>.</p>
+				<div id="crdny">posté le 30/10/2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>Donut Quiz</li>
+						<li>.NET</li>
+						<li>Synchronisation</li>
+						<li>MongoDB</li>
+						<li>Hangfire</li>
+						<li>System.Text.Json</li>
+						<li>Architecture</li>
+						<li>Retour d'expérience</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

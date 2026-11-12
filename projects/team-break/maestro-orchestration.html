@@ -1,0 +1,312 @@
+<!DOCTYPE html><html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=UA-85948839-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-85948839-1');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Maestro: orchestrating an escape room, one event at a time</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="en" />
+		<meta name="keywords" content="Team Break,Maestro,Orchestration,MQTT,.NET,Event-driven,Escape room,Architecture" />
+		<meta name="description" content="An escape room looks a lot like a musical score." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/team-break/maestro-orchestration.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/team-break/maestro-orchestration.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>Projects</li>
+					<li>Team Break</li>
+					<li class="active"><a href="https://adrientorris.github.io/projects/team-break/maestro-orchestration.html" title="Maestro: orchestrating an escape room, one event at a time">Maestro: orchestrating an escape room, one event at a time</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Maestro: orchestrating an escape room, one event at a time</h1>
+<p>An escape room looks a lot like a musical score. Over 60 minutes, hundreds of events happen: a player puts a statuette on a pedestal, types a code, turns a crank; a video ends; the game master (GM) clicks a button; time passes. Each one triggers reactions: a door unlocks, a light changes colour, music starts, smoke pours out, a video plays on five screens at once. All of it has to happen at the right moment, in the right order, and only when the right conditions are met.</p>
+<p><strong>Maestro</strong> is the engine I built to orchestrate our rooms at Team Break. The name is no accident. In a <a href="https://adrientorris.github.io/projects/team-break/team-break-architecture.html">previous article</a> I described the overall architecture (MQTT, agents, Raspberry Pis, ESP32s, Linux). Here I zoom in on the core of the system: how Maestro turns a stream of heterogeneous events into a coherent experience.</p>
+<h2 id="the-conductor-plays-no-instrument">The conductor plays no instrument</h2>
+<p>That's the founding principle. The <em>Room Orchestrator</em> never drives a relay, a video player or a light directly. It receives <strong>notifications</strong>, decides, then publishes <strong>commands</strong> to agents that know how to talk to the hardware. The video player doesn't know it's showing a dinosaur; the orchestrator doesn't know how to decode H.264.</p>
+<p>Four sources of events converge on the same MQTT inbox, <code>/games/&lt;game&gt;/rooms/&lt;room&gt;/roomorchestrator</code>:</p>
+<pre><code class="nohighlight">  Players ──► sensors (ESP32, Kincony, I/O panels)
+                 │  /c5m1p7/on, {"module":"in2","pin":0,...}
+                 ▼
+            Electronic Agent ──────────────┐
+                                           │
+  Agents ──► "video finished", "intro audio ended" ──────┤
+                                           │   notifications
+  GM ─────► console (milestones, controls, time) ────────┤   (JSON, MQTT)
+                                           ▼
+  Time ───► delays, scheduled actions ──► Room Orchestrator ──► commands
+                                           │                     ├─► audioplayer
+                                           │                     ├─► videoplayer
+                                           ▼                     ├─► electronics
+                                     Agents API (HTTP)           ├─► dmx
+                                     PostgreSQL: state,          └─► customagents
+                                     milestones, sessions</code></pre>
+<p>The source of truth for whatever must survive a restart (room state, milestones, session, remaining time) is a PostgreSQL database behind an HTTP API. Everything else (events, commands) travels over MQTT, fire-and-forget.</p>
+<h2 id="the-score-the-gameflow">The score: the gameflow</h2>
+<p>What a room does is described in a <strong>gameflow</strong>: declarative JSON, versioned in one Git repository per game and per site. Its vocabulary is small:</p>
+<ul>
+<li>a <strong>notification</strong> is a named event (<code>digicode_unlocked</code>, <code>audio_intro_ended</code>);</li>
+<li>a <strong>handler</strong> reacts to one or more notifications, optionally filtered by <strong>milestones</strong> and deferred by a <strong>delay</strong>;</li>
+<li>a handler runs <strong>behaviors</strong>, in <code>position</code> order;</li>
+<li>a behavior publishes a <strong>command</strong> (or a <em>bundle</em> of commands), validates or resets a milestone, ends the room, changes the remaining time, or sends a command to another room.</li>
+</ul>
+<p>There are exactly nine behaviors: publish a command, publish a bundle, validate a milestone, reset a milestone, raise a room event (<code>room_succeed</code>, <code>room_failed</code>), send a command to another room (<em>dispatch</em>), set the remaining time, freeze the time display, and release it. That's deliberately short: anything that doesn't fit belongs in a custom agent, not in the engine.</p>
+<p>Here's a real excerpt from the Chocolaterie, in Lille. When the audio intro ends (or when the GM forces the matching milestone), three handlers react to the same notification, at t+0, t+1 s and t+6 s:</p>
+<pre><code class="json">[
+  { "notifications": ["audio_intro_ended", "milestone_state_change_intro_played_validate"],
+    "position": 1,
+    "behaviors": [
+      { "behavior": "milestone_validate", "key": "intro_played",         "position": 1 },
+      { "behavior": "command_publish",    "key": "audio_background_play", "position": 2 } ] },
+  { "notifications": ["audio_intro_ended", "milestone_state_change_intro_played_validate"],
+    "position": 2, "delay": 1,
+    "behaviors": [
+      { "behavior": "command_publish",  "key": "r1_pinch_anims_scene1_play",       "position": 1 },
+      { "behavior": "command_publish",  "key": "r1_pinch_scene1_audio_play",       "position": 2 },
+      { "behavior": "command_publish",  "key": "r1_lights_stainedglass_pinch_on",  "position": 3 },
+      { "behavior": "command_dispatch", "key": "chocolate_garden_init_audio_player", "position": 5 } ] },
+  { "notifications": ["audio_intro_ended", "milestone_state_change_intro_played_validate"],
+    "description": "delai: 5 + 1 (delay between intro and sceno 1 starts)",
+    "position": 3, "delay": 6,
+    "behaviors": [ { "behavior": "command_publish", "key": "r1_lights_stainedglass_pinch_off" } ] }
+]</code></pre>
+<p>This is how you write a sequence over time: one handler per moment, all on the same notification. The last behavior of the second handler is already getting the next room's audio player ready.</p>
+<p>Across the Chocolaterie (five software rooms), that adds up to about 300 command publications, 110 milestone validations, some forty delayed handlers and 136 handlers gated by milestones.</p>
+<h2 id="inside-the-room-orchestrator">Inside the room orchestrator</h2>
+<h3 id="start-but-only-once-ready">Start, but only once ready</h3>
+<p>At startup the orchestrator loads the room settings, its state from the database and the gameflow, retrying every 5 s until everything succeeds. Only then does it subscribe to its topics and report healthy to Docker. The comment in the code explains why:</p>
+<blockquote>
+<p>Only here does the container turn healthy […]. Signalling before InitializeAsync() would mark the agent healthy while it is subscribed to no topic — the very "Running but inert" false positive.</p>
+</blockquote>
+<p>If the room was mid-game when it restarted (power cut, upgrade), the orchestrator reads the state back from the database and re-arms the countdown where it left off.</p>
+<p>A subtle MQTT detail: message handlers are attached <em>before</em> <code>ConnectAsync</code> is called. MQTTnet starts delivering messages as soon as the SUBACK arrives, and attaching them afterwards lost everything received in between.</p>
+<h3 id="routing">Routing</h3>
+<p>Every notification carries a <code>type_id</code> that decides how it is handled:</p>
+<pre><code class="csharp">switch (notification.Type ?? NotificationTypeEnum.RoomEvent)
+{
+    case NotificationTypeEnum.RoomEvent:
+        await HandleRoomEventAsync(notification, scenarioScope); break;
+    case NotificationTypeEnum.GameEvent:
+        await HandleGameEventAsync(notification, scenarioScope); break;
+    case NotificationTypeEnum.GameOrchestratorInstruction:
+        await HandleGameOrchestratorInstructionAsync(notification.Source, notification.Key ?? string.Empty, notification.Datas, scenarioScope); break;
+    case NotificationTypeEnum.GameMasteringInstruction:
+        await HandleGameMasteringInstructionAsync(notification.Source, notification.Key ?? string.Empty, notification.Datas, scenarioScope); break;
+    case NotificationTypeEnum.PublishCommandInstruction:
+        await PublishCommandAsync(notification.Key ?? string.Empty, scenarioScope); break;
+}</code></pre>
+<p>Game events (the ones that come from players and agents) are only processed while the room is in play (or at the very start of its preparation). A sensor that fires while the GM is tidying the room up triggers nothing. Instructions from the GM and from the game orchestrator always get through.</p>
+<h3 id="selecting-handlers">Selecting handlers</h3>
+<p>For a game notification, the pipeline is:</p>
+<ol type="1">
+<li><strong>Scenario filter</strong> on the notification itself. A room can run a variant (Halloween, a kids' version), and some elements only exist in one of them.</li>
+<li><strong><code>only_once</code></strong>: some notifications must only count once per session. The list is cleared at every preparation.</li>
+<li><strong>Selecting the handlers</strong> that listen to this key, then applying scenario filters and <code>override</code>s (a "Halloween" handler masks its standard counterpart).</li>
+<li><strong>For each handler</strong>, in order: if it has a delay, it is queued and the loop moves on. Otherwise its <strong>milestone filters</strong> are evaluated (<code>milestone_validated</code>, <code>milestone_not_validated</code>, combined with <code>and</code> or <code>or</code>), and then its behaviors run one after another.</li>
+</ol>
+<pre><code class="csharp">foreach (var behavior in handler.Behaviors.OrderBy(x =&gt; x.Position))
+{
+    if (!await handlerOptionSelectorScope.ShouldExecuteAsync(notificationKey, behavior.ElementKey,
+            behavior.OptionKey, behavior.SelectedItem, CancellationToken.None))
+    {
+        continue;
+    }
+    await HandleNotificationHandlerBehaviorAsync(behavior.Behavior, behavior.ElementKey, scenarioScope,
+        behavior.Seconds, behavior.NeverAddTime, source);
+}</code></pre>
+<p>The option selector lets a behavior play only for a given value of a session option (typically the language). Command keys can also be built dynamically: <code>option~lang~fr@_start_video</code> becomes <code>fr_start_video</code> or <code>en_start_video</code> depending on the team's language.</p>
+<p>One story is a reminder that a declarative format is still code. For a long time, <code>"filters_behavior": "or"</code> was evaluated as AND, because a constructor assigned the parameter instead of the property. No gameflow crashed: the affected handlers just only fired when <em>all</em> of their conditions were met, which looks a lot like a badly tuned puzzle.</p>
+<h3 id="concurrency-is-the-real-issue">Concurrency is the real issue</h3>
+<p>The orchestrator has no inbound queue: each MQTT message opens its own async flow, and several notifications can be processed in parallel. Within a single notification, everything is sequential. This keeps the room responsive (a slow handler doesn't hold up a sensor), but it requires discipline.</p>
+<p>First safeguard: state-change instructions (prepare, briefing, start, stop) are serialized by a semaphore. A forced cascade ("prepare the room while it's in play" becomes "stop, then prepare") chains several transitions and must not interleave with another instruction.</p>
+<p>Second safeguard, more subtle: <strong>the scenario scope</strong>. Each treatment reads the active scenario once and keeps it to the end. The comment tells the story of the bug behind it (translated from French):</p>
+<blockquote>
+<p>The risk addressed is not latency but concurrency: […] the notification passed the guard in halloween, the game master switched, and the published command was rejected in standard. The trigger was then only half played.</p>
+</blockquote>
+<p>A half-played effect in a room is a door that opens without the music that announces it, or the other way round. With a single read per treatment, an event is played entirely in one scenario or entirely in the other.</p>
+<h2 id="time-or-rather-times">Time, or rather times</h2>
+<h3 id="delays">Delays</h3>
+<p>Delayed handlers live in memory, in sets sorted by trigger time, polled by a <code>PeriodicTimer</code> every 350 ms. Delays are whole seconds: plenty of precision for a stage effect, and a mechanism that stays trivial to reason about.</p>
+<p>A handler can also reschedule itself (<code>"behavior": {"behavior": "while", "delay": 1, "limit": 10}</code>) to repeat an action, with a bound.</p>
+<p>The interesting question is: <strong>when should pending delays be forgotten?</strong></p>
+<ul>
+<li><strong>When the room stops</strong>, obviously. But <em>before</em> running the <code>room_stopped</code> handlers, so that a stop handler can itself schedule a delayed effect.</li>
+<li><strong>On preparation</strong>, as a precaution.</li>
+<li><strong>On the emergency signal (fire alarm)</strong>, whatever the room's state. The comment is explicit: "armed before the alarm, they would restart the game when they fall due (sounds, lights, doors) during the evacuation."</li>
+<li><strong>Not at the end of the game.</strong> That's deliberate: at the Chocolaterie, a win triggers one bundle immediately, then a second one 45 s later, once the team has had time to savour it.</li>
+</ul>
+<h3 id="the-countdown-in-three-clocks">The countdown, in three clocks</h3>
+<p>Remaining time lives in three places, and each has its own job:</p>
+<ol type="1">
+<li><p><strong>In the database</strong>, the truth: <code>start + duration − now + adjustments</code>. When the gameflow sets the remaining time ("only 5 minutes left!"), what gets stored is a delta. The comment gives the example: <em>a 60-minute room set to 300 s after 5 minutes of play stores −3000</em>. GM adjustments are capped at ±320 s per click.</p></li>
+<li><p><strong>In the orchestrator</strong>, a counter that advances in 5 s steps and fires <code>room_time_over</code> at zero. GM clicks <strong>accumulate</strong> until the next step, because several quick clicks land in the same window and a plain assignment would have kept only the last one:</p>
+<pre><code class="csharp">public int Tick(int intervalInSeconds, out int appliedGameMasterAdjustmentInSeconds)
+{
+    lock (_lock)
+    {
+        appliedGameMasterAdjustmentInSeconds = _pendingGameMasterAdjustmentInSeconds;
+        if (appliedGameMasterAdjustmentInSeconds != 0)
+        {
+            _remainingTimeInSeconds += appliedGameMasterAdjustmentInSeconds;
+            _pendingGameMasterAdjustmentInSeconds = 0;
+        }
+        _remainingTimeInSeconds -= intervalInSeconds;
+        if (_remainingTimeInSeconds &lt; 0) _remainingTimeInSeconds = 0;
+        return _remainingTimeInSeconds;
+    }
+}</code></pre></li>
+<li><p><strong>For the in-room display</strong>, a publisher that computes the seconds left from a UTC <strong>deadline</strong>, re-synced at every step, rather than decrementing a counter. It can be frozen (<code>remaining_time_display_hold</code>) for the length of a scene, then released.</p>
+<pre><code class="csharp">if (heldSeconds.HasValue) return heldSeconds.Value;
+if (deadlineUtc is null) return null;
+double secondsLeft = (deadlineUtc.Value - nowUtc).TotalSeconds;
+return secondsLeft &lt;= 0 ? 0 : (int)Math.Ceiling(secondsLeft);</code></pre></li>
+</ol>
+<p>About every 30 s, the orchestrator also publishes a progression update to the outside world (for Archipel's tablets, which interpolate between messages). A coarse cadence is enough: the display does the fine work.</p>
+<h2 id="milestones-the-games-memory">Milestones, the game's memory</h2>
+<p>A <strong>milestone</strong> is a named step of progress: "intro played", "keypad found", "chest opened". It is persisted in the database along with its origin (the room, the GM or a scheduled action), and it serves three purposes:</p>
+<ul>
+<li><strong>gating handlers</strong> ("only play this video if the chest is open");</li>
+<li><strong>gating hints and scheduled actions</strong>;</li>
+<li><strong>telling the story of the game</strong> afterwards, in the session timeline.</li>
+</ul>
+<p>The GM can force a milestone from the console in two ways. In <strong>quiet</strong> mode only the database changes: useful to fix a state without replaying anything. In <strong>noisy</strong> mode the orchestrator also receives the notification <code>milestone_state_change_&lt;milestone&gt;_validate</code> (or <code>_reset</code>). Gameflows listen to it next to the "player" notification, as in the excerpt above: the GM can unblock a stubborn puzzle <em>with</em> all its effects (light, sound, door), exactly as if the players had solved it.</p>
+<h2 id="scheduled-actions-and-hints">Scheduled actions and hints</h2>
+<p>A dedicated agent, <em>Scheduled Actions</em>, listens on the same topic as the orchestrator and keeps its own clock (monotonic, started when the game begins). On each tick (30 s on our sites), it:</p>
+<ol type="1">
+<li>re-reads the session options ("automatic hints", "automatic wins");</li>
+<li>takes <strong>a single</strong> snapshot of the room's state (milestones, state);</li>
+<li>walks the actions in order and runs <strong>at most one action per tick</strong>, never twice in the same session.</li>
+</ol>
+<p>An action fires on time elapsed since the start, a delay after a milestone, a delay after a notification, or a remaining time. It can be gated by milestones, and it belongs to a category (<code>game</code>, <code>hint</code>, <code>auto_win</code>) that the GM switches on or off per session. Nothing happens during the first minute of play.</p>
+<p>The players' <strong>hint button</strong> follows a different logic. The <code>hint_system</code> notification picks the first entry of the hint schedule whose conditions match the progress, then steps through that hint group: first hint, then the next one, then the last one on repeat once the group is exhausted. Every hint is journaled, with this rule written in a comment: "a logging exception must not stop a hint from going out."</p>
+<h2 id="a-rooms-lifecycle">A room's lifecycle</h2>
+<p>A room goes through eleven states. The basic model is an <strong>asked → confirmed</strong> handshake: the GM console <em>asks</em> for a state (in the database), and the orchestrator runs the matching handlers and then <em>confirms</em> through the Agents API.</p>
+<pre><code class="nohighlight"> GM UI           GM API / DB            Game Orch.         Room Orch.              Agents
+   │ prepare ──►  PrepareAsked
+   │              (reset milestones) ──► Prepare ────────► prepare_room
+   │                                                       purge delays
+   │                                                       room_prepared handlers ──► doors, lights, sound
+   │              InPreparation ◄──────────────────────── /prepare/confirm
+   │ prepared ──► PreparedAsked ───────────────────────► room_preparation_done handlers
+   │ briefing ──► BriefingAsked ───────────────────────► room_briefing_started handlers
+   │ start ─────► session created ───► Start + session ─► start_room
+   │                                                       room_started handlers ───► intro, countdown
+   │                                                       Running, 5 s timer
+   │                                                       SessionProgressionInit ──► (Archipel)
+   │                  … game: notifications ↔ commands, milestones, hints …
+   │                                                       room_succeed | room_failed | room_time_over
+   │                                                       then room_ended
+   │              Ended ◄──────────────────────────────── /ended/confirm
+   │                                ◄── RoomEnded ──────── (chaining, if any)
+   │ stop ──────► StopAsked ──────────► Stop ───────────► Stopped first, then
+   │              AtRest                                   purge, room_stopped handlers</code></pre>
+<p>Two nuances, because they're instructive:</p>
+<ul>
+<li><strong>Pragmatism sometimes beats purity.</strong> For start, stop, briefing and end of preparation triggered from the console, the API confirms the state in the database optimistically ("Resilience fallback: avoid being stuck in StartAsked when orchestrator confirmation is delayed/lost"). A room stuck in "start asked" with six players inside is worse than a momentarily optimistic state. Preparation and the end of the game are still confirmed by the orchestrator.</li>
+<li><strong>Stopping is unconditional.</strong> The orchestrator switches the room to stopped <em>before</em> doing anything else ("Critical safety invariant: room must become Stopped even if a stop handler fails"), then stops the countdown, purges delays, confirms, and finally runs the stop handlers on a best-effort basis. The session ID is only cleared after those handlers, so the end-of-game video montage still knows which session it belongs to.</li>
+</ul>
+<p>Some business rules are baked into the guards. For example, a room whose briefing has started can no longer be "prepared": the players are inside, and replaying <code>room_prepared</code> would undo the briefing (lights, locks…).</p>
+<h2 id="orchestrating-several-rooms-the-game-orchestrator">Orchestrating several rooms: the Game Orchestrator</h2>
+<p>Some experiences span several rooms. The Chocolaterie chains five: the candy store, the chocolate garden, the elevator, the ice room and the inventing room. Each room has its own orchestrator; above them, the <strong>game orchestrator</strong> acts as section leader.</p>
+<p>It is deliberately <strong>stateless</strong>. It knows the order of the rooms, listens on <code>/games/&lt;game&gt;/gameorchestrator</code> and relays instructions to the relevant room's orchestrator. When a room ends:</p>
+<ol type="1">
+<li>the room orchestrator publishes <code>RoomEnded</code>;</li>
+<li>the game orchestrator asks the API to chain. In a single operation, the API stops the ended room's session, resets the next room's milestones and starts it <strong>with the same session ID</strong>: as far as reporting is concerned, the team played <em>one</em> game;</li>
+<li>it publishes the start instruction to the next room.</li>
+</ol>
+<p>Rooms also talk to each other during the game through <strong>dispatches</strong>: one room asks another to publish a command, via the game orchestrator.</p>
+<pre><code class="json">{ "key": "smoke_on",     "command":  "r2_smokemachine_smoke_on", "recipient_room": "chocolate_garden" }
+{ "key": "roller_start", "commands": ["r3_sas_chocolategarden_door_roller_open",
+                                      "r3_sas_iceroom_door_roller_close"], "recipient_room": "elevator" }</code></pre>
+<p>The command is executed by the receiving room, with <em>its</em> scenario filters and <em>its</em> options.</p>
+<p>Finally, the game orchestrator is the entry point for external systems such as Archipel, our site operations platform, which launches rooms from the players' tablets. That's the subject of the <a href="https://adrientorris.github.io/projects/team-break/archipel-orchestration.html">next article</a>.</p>
+<h2 id="electronics-in-from-c5m1p7on-to-digicode_unlocked">Electronics in: from <code>/c5m1p7/on</code> to <code>digicode_unlocked</code></h2>
+<p>Sensors don't speak the gameflow's language. An I/O panel publishes <code>/c5m1p7/on</code> (controller 5, module 1, port 7); a Kincony board publishes <code>{"module":"in2","pin":0,"value":"off"}</code>. The <strong>electronic agent</strong> does the translation:</p>
+<ol type="1">
+<li>it keeps one MQTT client per electronics broker (one per provider), each with its own reconnection;</li>
+<li>for each message, it identifies the provider from the topic, ignores heartbeats, builds a resolution key and matches it against the <strong>input proxies</strong> declared in the gameflow;</li>
+<li>if a proxy matches, it publishes a business notification (<code>digicode_unlocked</code>) on the orchestrator's topic, or on several rooms' topics if needed.</li>
+</ol>
+<p>In the other direction, a <code>trappe_unlock</code> command published by the orchestrator is resolved into <strong>output proxies</strong>, then into a message suited to the board.</p>
+<p>An incident showed that translation also has to <strong>filter</strong>. In October, a spurious pulse (<code>/c5m1p7/on</code> then <code>/c5m1p7/off</code> within the same second) triggered the emergency input. Every input proxy can now carry a <code>debounce</code>: a rising edge opens a window (100 ms by default); a release within the window cancels it and is itself swallowed; with no release, the input is confirmed once at the end of the window. The mechanism relies on an injected <code>TimeProvider</code>, with no <code>Task.Delay</code>, which makes it testable to the millisecond.</p>
+<h2 id="the-game-master-in-the-loop">The game master in the loop</h2>
+<p>The GM console is a web app built with native Web Components, no framework: room control, countdown, milestones, controls, cameras, push-to-talk to the room's speakers, a technical page to test every I/O point, a tests page, and session timelines.</p>
+<p>For live updates I went for simplicity. A single server-side poll per room (every 1.5 s, started by the first subscriber and stopped by the last) reads the database and pushes deltas over <strong>SSE</strong> (<code>milestones</code>, <code>state</code>, <code>timer</code>, plus a <code>heartbeat</code>). The comment sums up the argument: this mechanism "captures every source of change (GM, players, scheduled actions, Room Orchestrator confirmations) since everything goes through the database." No need to subscribe the browser to MQTT or to rebuild state from events.</p>
+<p>GM controls ("open door 2", "restart the video") are lists of actions run in order. All of them are attempted even if one fails, and the result has three states: success, partial action, impossible action. During a game, the GM needs to know <em>what</em> worked, not just <em>whether</em> it worked.</p>
+<h2 id="safety-outside-the-score">Safety, outside the score</h2>
+<p>Emergencies don't go through the gameflow. A dedicated agent with a minimal critical path (no HTTP, no database, infinite MQTT reconnection, <code>restart: always</code>) relays the fire-alarm system: doors open, lights on, sound cut, and a latch published as <em>retained</em> that every restarting agent reads back immediately. On the orchestrator side, the emergency signal purges pending delays whatever the room's state. Above all, life safety (the door maglocks) stays hard-wired on the fire-alarm side, outside software. Maestro follows the alarm; it doesn't replace it.</p>
+<h2 id="tracing-and-testing">Tracing and testing</h2>
+<p>Every game leaves a timeline: state changes, milestones validated or reset (with their origin), published commands, GM controls used, clicks on the technical page. The GM action log (mic, volumes, cameras) deliberately has no foreign key, "so that neither a TRUNCATE … CASCADE… nor the purge… erase the log." <em>Reporters</em> push finished sessions to our head office (outside opening hours) and to the booking tool.</p>
+<p>On the testing side, the room orchestrator has its own suite (184 tests), among the roughly 1,800 in the repository. Every gameflow also ships a <strong>test protocol</strong> (<code>_tests/*.json</code>), never read by the game, validated in CI and replayed from the console: that's where the Chocolaterie's 312 I/O points get checked one by one.</p>
+<h2 id="what-i-take-away-from-it">What I take away from it</h2>
+<ol type="1">
+<li><strong>The conductor plays no instrument.</strong> The orchestrator decides and publishes; agents execute. That's what lets us replace a video player, an electronics board or a light without touching the engine.</li>
+<li><strong>Declarative doesn't mean bug-free.</strong> A gameflow is code: it deserves a documented format, tests and CI.</li>
+<li><strong>Concurrency is the real issue.</strong> Processing events in parallel keeps the room responsive, as long as the context (scenario, options) is frozen for the duration of a treatment.</li>
+<li><strong>Time is plural.</strong> Truth in the database, a counter in memory, a deadline for the display, interpolation on the client: each clock has its job, and none should pretend to do the others'.</li>
+<li><strong>Know when to forget.</strong> Purging delays (on stop, on preparation, on alarm, but not on a win) is a staging decision as much as a technical one.</li>
+<li><strong>Confirm, but never get stuck.</strong> The asked → confirmed handshake is the rule, and optimism a deliberate exception when players are waiting.</li>
+<li><strong>Safety short-circuits everything.</strong> It has its own agent, its own path, and the last word.</li>
+</ol>
+<p>A room is a few hundred notifications per game, a few hundred commands, a handful of milestones and a countdown. When they're well orchestrated, players see none of it. They see a door opening at the exact moment the music swells.</p>
+				<div id="crdny">November 6, 2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>Maestro</li>
+						<li>Orchestration</li>
+						<li>MQTT</li>
+						<li>.NET</li>
+						<li>Event-driven</li>
+						<li>Escape room</li>
+						<li>Architecture</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

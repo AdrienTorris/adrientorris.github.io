@@ -1,0 +1,279 @@
+<!DOCTYPE html><html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=UA-85948839-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-85948839-1');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Heroes Academy (3/3): eight months of AI-assisted development</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="en" />
+		<meta name="keywords" content="Team Break,Heroes Academy,AI,Claude Code,GitHub Copilot,.NET,Testing,Methodology,Lessons learned" />
+		<meta name="description" content="What the Heroes Academy Git history says about AI in development: when it arrived, what it produced, how I frame it, and what it cannot see." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/heroes-academy/heroes-academy-3-developper-avec-l-ia.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-3-ai-assisted-development.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>Projects</li>
+					<li>Heroes Academy</li>
+					<li class="active"><a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-3-ai-assisted-development.html" title="Heroes Academy (3/3): eight months of AI-assisted development">Heroes Academy (3/3): eight months of AI-assisted development</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Heroes Academy (3/3): eight months of AI-assisted development</h1>
+<blockquote>
+<p><strong>The Heroes Academy series</strong></p>
+<ol type="1">
+<li><a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-1-v1.html">Designing software for a physical game venue</a></li>
+<li><a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-2-v2-rewrite.html">The V2 rewrite for Canada</a></li>
+<li><strong>Eight months of AI-assisted development</strong> (you are here)</li>
+</ol>
+</blockquote>
+<p>The first two articles in this series cover the design of Heroes Academy: a V1 that learned the hard way what a distributed system inside a gym looks like, then a rewrite built for a site six hours away.</p>
+<p>This third part is about something that changed the way I work during that rewrite: AI-assisted development. I won't make predictions. I'd rather stick to what the project's Git history says: when AI arrived, what it produced, how I frame it, and what it can't do.</p>
+<hr/>
+<h2 id="what-the-numbers-say">What the numbers say</h2>
+<p>I counted as "AI-assisted" any commit written by an agent, or carrying an assistant's <code>Co-Authored-By</code> trailer. Here is what that gives on V2's main repository, excluding merge commits:</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Period</th>
+<th>What was happening</th>
+<th style="text-align: right;">Commits</th>
+<th style="text-align: right;">AI-assisted</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sept 2025 → Feb 2026</td>
+<td>V2 architecture, Canada opening</td>
+<td style="text-align: right;">643</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>Mar → May 2026</td>
+<td>First experiments, with GitHub Copilot</td>
+<td style="text-align: right;">196</td>
+<td style="text-align: right;">27</td>
+</tr>
+<tr class="odd">
+<td>Jun → Sept 2026</td>
+<td>Claude Code, Arena mode, Lille migration</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">74</td>
+</tr>
+<tr class="even">
+<td>Oct → Nov 2026</td>
+<td>Game scenarios, the Switchboard</td>
+<td style="text-align: right;">121</td>
+<td style="text-align: right;">118</td>
+</tr>
+</tbody>
+</table></div>
+<p>Three things stand out in this table.</p>
+<p><strong>AI arrived after the foundations.</strong> V2's first 643 commits, the ones that lay down the whole architecture described in <a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-2-v2-rewrite.html">part two</a>, were written without an assistant. They cover MQTT everywhere, no database in the rooms, games as step machines and hardware described as data. Canada opened on that code.</p>
+<p><strong>The switch was fast.</strong> From 2 assisted commits in March 2026, we went to 118 out of 121 in October-November. Overall, 100 of the 169 pull requests merged into the main repository come from agent branches (<code>claude/*</code> or <code>copilot/*</code>). The share is similar, or even higher, on the game UI, the admin UI and the documentation.</p>
+<p><strong>Tests exploded.</strong> To me, this is the most important number:</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Date</th>
+<th style="text-align: right;">Automated tests</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>January 2026 (Canada opening)</td>
+<td style="text-align: right;">~10</td>
+</tr>
+<tr class="even">
+<td>March 2026</td>
+<td style="text-align: right;">17</td>
+</tr>
+<tr class="odd">
+<td>June 2026</td>
+<td style="text-align: right;">161</td>
+</tr>
+<tr class="even">
+<td>September 2026</td>
+<td style="text-align: right;">217</td>
+</tr>
+<tr class="odd">
+<td>November 2026</td>
+<td style="text-align: right;">842</td>
+</tr>
+</tbody>
+</table></div>
+<p>The test suite grew fiftyfold in eight months. I'll come back to this below.</p>
+<hr/>
+<h2 id="the-tools-and-what-i-used-them-for">The tools, and what I used them for</h2>
+<h3 id="github-copilot-from-issues-to-pull-requests">GitHub Copilot: from issues to pull requests</h3>
+<p>The first experiments, in spring 2026, used Copilot's coding agent. I opened an issue, it opened a pull request. That format suits well-scoped bugs:</p>
+<ul>
+<li>the <strong>8 pm in Montréal bug</strong> (the dashboard filtered on the UTC day) was fixed with a rolling 24-hour window, with tests on the boundaries;</li>
+<li>the <strong>bonus answer ignored</strong> during the reveal window, a race between two threads;</li>
+<li>a <strong>session slot</strong> computed without taking an ongoing Warm Up session into account;</li>
+<li>an <strong>XSS vulnerability</strong> in the admin scoreboard;</li>
+<li>and a first wave of <strong>unit tests for all nine games</strong>, which explains the jump from 17 to 161 tests in spring.</li>
+</ul>
+<p>A few fixes also came from Copilot Autofix, applied to review comments.</p>
+<h3 id="claude-code-in-sessions-and-inside-github">Claude Code: in sessions, and inside GitHub</h3>
+<p>From June 2026, I mostly worked with Claude Code, in two ways:</p>
+<ul>
+<li><strong>in interactive sessions</strong>, for the big projects: Arena mode, game scenarios, the Switchboard, the one-command deployment tool, the browser-based test UI;</li>
+<li><strong>inside GitHub</strong>, through a GitHub Action. An <code>@claude</code> mention in an issue or PR triggers the agent, and <strong>every pull request gets an automatic review</strong> before I look at it.</li>
+</ul>
+<hr/>
+<h2 id="the-method-write-before-you-code">The method: write before you code</h2>
+<p>What changed most is not how fast code gets written. It's what I write <em>before</em> the code.</p>
+<h3 id="a-plan-alternatives-decisions">A plan, alternatives, decisions</h3>
+<p>Arena mode is a good example. Before a single line of code, two design documents were written with the agent. The first drove the mode from the database. The second made it a compile-time constant. Both carried the same header: <em>"design plan, no implementation at this stage"</em>.</p>
+<p>The reference plan included a table of <strong>locked decisions</strong>, for example:</p>
+<ul>
+<li>an Arena after every game room except the last;</li>
+<li>the question's video stays in the game room, and only the answer moves to the Arena;</li>
+<li>the question's result is carried by the Arena row.</li>
+</ul>
+<p>These are business decisions, and I made them. I picked the compile-time variant because a site never changes mode.</p>
+<p>Implementation then followed the plan in phases, each in its own PR:</p>
+<ol type="1">
+<li>session creation without overlaps;</li>
+<li>a visit identity carried end to end;</li>
+<li>sequencing by position;</li>
+<li>the Arena game itself;</li>
+<li>reporting.</li>
+</ol>
+<h3 id="increments-not-big-bangs">Increments, not big bangs</h3>
+<p>The Switchboard, the Communication room's new gameplay, was split into seven increments, each in its own PR:</p>
+<ol type="1">
+<li>foundation and gameplay selection through configuration;</li>
+<li>a playable prototype;</li>
+<li>coded calls, then blurred images and general knowledge;</li>
+<li>priority and deferred messages;</li>
+<li>audio feedback and ambience;</li>
+<li>settings and profiles;</li>
+<li>general shutdown and instructions.</li>
+</ol>
+<p>The game scenarios (Halloween, Christmas, "hardcore" mode) followed the same split. An increment must be small enough for me to genuinely review it, and complete enough to be tested in the room.</p>
+<h3 id="specify-first-fix-second">Specify first, fix second</h3>
+<p>The story of the "reconnected but deaf" <code>SessionsOrchestrator</code>, told in part two, has an epilogue that sums up the way I work.</p>
+<p>A first fix had been produced quickly by the agent at the end of July: resubscribe to topics after reconnecting. It was <strong>set aside</strong>. Instead, I had a specification written with about twenty acceptance criteria. Several of them relied on constraints only a human knew:</p>
+<ul>
+<li><strong>the code base</strong>: the deliverable had to start from the commit matching the production version, not from <code>main</code>, so that it shipped this fix and nothing else;</li>
+<li><strong>the actual deployment</strong>: the binary is deployed <strong>without</strong> its <code>appsettings.json</code>, because the server's older file is kept. The new settings therefore needed defaults in code, which one criterion checks explicitly;</li>
+<li><strong>operations</strong>: a fallback to the standard MQTT port after three failures on the configured port.</li>
+</ul>
+<p>The code was rewritten from that spec, with 32 tests driving a mocked MQTT client and a fake delay provider. No test actually waits for a second.</p>
+<p>That's the lesson I keep: <strong>the agent writes code fast; the value is in the acceptance criteria.</strong></p>
+<hr/>
+<h2 id="tests-became-almost-free">Tests became (almost) free</h2>
+<p>On V1, as at the start of V2, tests were rare: a few on scheduling, about ten when Canada opened. A physical game is validated in the room first, and there was no time left for the rest. With an agent, writing a test costs almost nothing. What costs is reviewing it.</p>
+<p>Two architectural choices made this possible:</p>
+<ul>
+<li><strong>time is injected everywhere</strong> (<code>TimeProvider</code>, an abstract delay provider). A seven-minute game, a reconnection loop with backoff or an Arena with teams following each other are tested in a few milliseconds, deterministically;</li>
+<li><strong>hardware is just MQTT.</strong> Simulating a button press means publishing a string.</li>
+</ul>
+<p>The result: over 800 tests, including regression tests written at the very moment each bug was fixed (Arena crossings, ghost sessions, ignored answers). These tests are also what lets me have an agent modify the code: they are the net under the trapeze.</p>
+<hr/>
+<h2 id="documenting-for-humans-and-for-agents">Documenting for humans… and for agents</h2>
+<p>An effect I hadn't anticipated: documentation became an asset again. An agent reads the same documentation as a technician, and follows it more scrupulously.</p>
+<ul>
+<li>The repository contains a <strong>deployment skill</strong> (a Claude Code <em>skill</em>). It describes how to install or update a site, which questions to ask before acting (game mode, addresses, access), and what never to do, such as inventing a room key.</li>
+<li>The documentation repository was reorganised into <strong>one folder per site</strong>, with the history of interventions. What each folder contains serves the person on site as much as the agent assisting them.</li>
+</ul>
+<p>AI is also used outside the application code. The watchdog that fixes V1's zombie process, described in <a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-1-v1.html">part one</a>, was written with it, along with the document that explains the cause from the TCP connections observed on a Pi. So was bringing back a Windows admin server that went down after a network outage.</p>
+<hr/>
+<h2 id="what-ai-cannot-see-the-room">What AI cannot see: the room</h2>
+<p>The agent writes code for the system you describe to it. The field tells you whether the description is right.</p>
+<p>The Switchboard plan says it in black and white: before writing the engine, <strong>measure a magnet's bounce</strong> with <code>mosquitto_sub</code> by removing and putting back a single magnet on a panel. Same for the actual latency between the electronics bridge, the central broker and the orchestrator: it has to be measured before fixing any timing windows. No model knows how the magnets in <em>our</em> room bounce.</p>
+<p>The "no beacon during play" rule came from watching players, who leave the room as soon as a beacon lights up. So did the basket sensor mounted at the top in Tarbes, which made a bouncing ball score twice. That information exists in no repository until a human writes it down.</p>
+<p>And the agent makes mistakes, of course. During the Arena mode PR series, it introduced a build error in the tests (optional arguments inside Moq expressions), fixed right after. Arena mode also lived on a separate branch for a while, and every change had to be ported back to <code>main</code>. The agent does that mechanical work well, but each port is another PR to review.</p>
+<hr/>
+<h2 id="what-changed-and-whats-still-missing">What changed, and what's still missing</h2>
+<p>In eight months, a very small team delivered, among other things:</p>
+<ul>
+<li>Arena mode and the Lille migration;</li>
+<li>game scenarios;</li>
+<li>the Switchboard;</li>
+<li>a one-command deployment tool;</li>
+<li>a browser-based test UI;</li>
+<li>a test suite fifty times larger.</li>
+</ul>
+<p>Without an assistant, that pace would have required a much bigger team.</p>
+<p>But the bottleneck didn't disappear; it moved. It is no longer in writing code. It is in three activities that remain human:</p>
+<ol type="1">
+<li><strong>specifying</strong>: deciding what we want, with verifiable criteria;</li>
+<li><strong>reviewing</strong>: every PR is reviewed automatically, but every single one was merged by hand, by a human;</li>
+<li><strong>validating on site</strong>: a game is only finished once a team has played it.</li>
+</ol>
+<p>One piece is still missing: a CI that builds and runs those 800 tests on every pull request. Today, review is automated; running the tests isn't yet.</p>
+<p>My conclusion is simple. AI did not design Heroes Academy. It arrived on an architecture designed without it, and that architecture is precisely what made it effective: small classes, a documented MQTT contract, hardware described as data, injected time. An agent is an excellent developer for a well-partitioned system. On a monolith where everything depends on everything, as V1 was, I doubt it would have done better than I did.</p>
+<hr/>
+<blockquote>
+<p><strong>The Heroes Academy series</strong></p>
+<ol type="1">
+<li><a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-1-v1.html">Designing software for a physical game venue</a>: V1, MongoDB as a bus, the zombie process.</li>
+<li><a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-2-v2-rewrite.html">The V2 rewrite for Canada</a>: V2's architecture, principles and bugs.</li>
+</ol>
+</blockquote>
+				<div id="crdny">November 12, 2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>Heroes Academy</li>
+						<li>AI</li>
+						<li>Claude Code</li>
+						<li>GitHub Copilot</li>
+						<li>.NET</li>
+						<li>Testing</li>
+						<li>Methodology</li>
+						<li>Lessons learned</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

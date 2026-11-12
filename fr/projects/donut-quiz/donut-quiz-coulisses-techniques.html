@@ -1,0 +1,471 @@
+<!DOCTYPE html><html lang="fr-FR" xml:lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=UA-85948839-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-85948839-1');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Donut Quiz : les coulisses techniques d'une salle de quiz connectée</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="fr" />
+		<meta name="keywords" content="Team Break,Donut Quiz,.NET,MQTT,Raspberry Pi,SSE,DMX,IoT,Architecture,Retour d'expérience" />
+		<meta name="description" content="Neuf Raspberry Pi, treize écrans, du son, du DMX et des buzzers. Retour d'expérience sur la conception de la salle Donut Quiz, et sur la refonte qui l'a rendue stable : fin d'Avalonia, Akka.NET remplacé par MQTT, .NET 10, paquets Debian et images Raspberry Pi reproductibles." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/donut-quiz/donut-quiz-coulisses-techniques.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/donut-quiz/donut-quiz-behind-the-scenes.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/fr/index.html" title="">Accueil</a></li>
+					<li>Projets</li>
+					<li>Donut Quiz</li>
+					<li class="active"><a href="https://adrientorris.github.io/fr/projects/donut-quiz/donut-quiz-coulisses-techniques.html" title="Donut Quiz : les coulisses techniques d'une salle de quiz connectée">Donut Quiz : les coulisses techniques d'une salle de quiz connectée</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Donut Quiz : les coulisses techniques d'une salle de quiz connectée</h1>
+<p>Donut Quiz est une salle de jeu Team Break. Plusieurs équipes s'affrontent dans un quiz rythmé, chacune derrière son pupitre, avec un grand écran commun, du son et des lumières. Les manches portent des noms de pâtisserie (<em>Mise en bouche</em>, <em>Pour du beurre</em>, <em>Apéro</em>, <em>Surprise du chef</em>, <em>Milkshake de frites</em>, <em>Cerise sur le gâteau</em>), on s'envoie des coups spéciaux (<em>Bouchée double</em>, <em>Pique-assiette</em>, <em>Retard en cuisine</em>…) et la partie finit par une remise des honneurs.</p>
+<p>Pour les joueurs, c'est une heure de jeu. Pour moi, c'est un système distribué d'une dizaine de machines qui doit tenir sa cadence à la seconde près, sans informaticien sur place, dans des agences réparties dans toute la France.</p>
+<p>Cet article raconte les difficultés rencontrées pour concevoir cette salle, puis la refonte qui l'a rendue <strong>plus évolutive, plus stable et beaucoup moins lourde à maintenir</strong> : fin d'Avalonia, remplacement d'Akka.NET par MQTT, passage de .NET 5 à .NET 10, déploiement par paquets Debian et images Raspberry Pi reproductibles.</p>
+<blockquote>
+<p><strong>En bref</strong></p>
+<ul>
+<li>Les pupitres ne sont plus des applications Avalonia : ce sont des pages web en HTML/CSS/JS sans framework, affichées par un navigateur en mode kiosque et alimentées par Server-Sent Events.</li>
+<li>Akka.NET a laissé la place à un broker MQTT. Le serveur de jeu, les écrans, le lecteur audio (en Python), les agents DMX et les buzzers parlent tous le même protocole.</li>
+<li>Toute la solution est passée de .NET 5 à .NET 10 (LTS), avec une gestion centralisée des paquets NuGet. On est passé de 44 à 30 projets et de 31 à près de 2 000 tests.</li>
+<li>La synchronisation entre le siège et les agences a été un chantier à part entière, que je raconte dans <a href="https://adrientorris.github.io/fr/projects/donut-quiz/donut-quiz-synchronisation-siege-agences.html">un article dédié</a>.</li>
+<li>Les déploiements Azure DevOps à base de zip ont été remplacés par des paquets <code>.deb</code> versionnés et réversibles, des images Raspberry Pi générées par rôle, et une migration à distance des Pi de 32 à 64 bits sans déplacement sur site.</li>
+</ul>
+</blockquote>
+<hr/>
+<h2 id="la-salle-en-quelques-chiffres">La salle en quelques chiffres</h2>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Élément</th>
+<th>Détail</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Pupitres</strong></td>
+<td>6, aux couleurs <em>chocolat</em>, <em>citron</em>, <em>caramel</em>, <em>fraise</em>, <em>pistache</em> et <em>myrtille</em>. Chacun a un écran tactile de jeu, un écran de score, un buzzer physique et une barre LED RGB.</td>
+</tr>
+<tr class="even">
+<td><strong>Saloon</strong></td>
+<td>Un grand écran public qui diffuse l'ambiance et les classements.</td>
+</tr>
+<tr class="odd">
+<td><strong>Lumière</strong></td>
+<td>Des spots pilotés en DMX512, plus les LED des pupitres.</td>
+</tr>
+<tr class="even">
+<td><strong>Son</strong></td>
+<td>Une sonorisation de salle avec trois groupes de pistes (ambiance, voix, effets). Environ 3 400 pistes par salle.</td>
+</tr>
+<tr class="odd">
+<td><strong>Machines</strong></td>
+<td>9 Raspberry Pi 4 par salle (6 pupitres, saloon, « donut », serveur), soit <strong>13 écrans</strong>.</td>
+</tr>
+<tr class="even">
+<td><strong>Médias</strong></td>
+<td>13 à 19 Go d'images, GIF, vidéos et sons, synchronisés depuis le siège.</td>
+</tr>
+<tr class="odd">
+<td><strong>Parc</strong></td>
+<td>9 agences, en propre et en franchise.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="pourquoi-cest-plus-difficile-quil-ny-paraît">Pourquoi c'est plus difficile qu'il n'y paraît</h2>
+<p>Sur le papier, c'est un quiz. Dans les faits, plusieurs contraintes se cumulent.</p>
+<ul>
+<li><strong>Le temps réel se voit, et s'entend.</strong> Une voix qui arrive une seconde trop tard, deux sons qui se superposent, une LED qui reste rouge, un pupitre qui fige : toute la salle le remarque. Dans un jeu en équipe, l'injustice perçue est pire que le bug lui-même.</li>
+<li><strong>Personne de technique sur place.</strong> La salle est animée par des game masters, installée par des techniciens et maintenue à distance. Un diagnostic qui exige un SSH et la lecture d'un JSON n'en est pas un.</li>
+<li><strong>Du matériel ordinaire.</strong> Raspberry Pi, cartes SD, GPIO, dongles USB-DMX, écrans tactiles dont l'EDID annonce n'importe quoi, spots de modèles différents selon l'agence, câblage fait à la main.</li>
+<li><strong>Une longue durée de vie.</strong> Le logiciel doit survivre aux nouvelles versions de Raspberry Pi OS, à la fin de support des frameworks et aux remplacements de matériel.</li>
+<li><strong>Hors ligne par nature.</strong> La salle doit jouer sur son réseau local. Le siège ne sert qu'à fournir le contenu (questions, thèmes, médias), qui est synchronisé vers chaque agence.</li>
+</ul>
+<hr/>
+<h2 id="la-version-1--ce-qui-a-marché-et-ce-qui-a-coûté-cher">La version 1 : ce qui a marché, et ce qui a coûté cher</h2>
+<p>La première version du jeu a été développée par un prestataire : mon ancienne société, dont j'étais gérant associé. Elle tournait sur la pile suivante :</p>
+<ul>
+<li><strong>.NET 5</strong>, avec des interfaces <strong>Avalonia 0.10</strong> sur les pupitres et le saloon (LibVLCSharp pour la vidéo, un contrôle dédié pour les GIF animés) ;</li>
+<li>des <strong>Raspberry Pi sous Raspbian Buster en 32 bits (armhf)</strong> avec X11 ;</li>
+<li><strong>Akka.NET</strong> pour faire communiquer les composants, plus un <strong>Hello Service</strong> chargé de la découverte : chaque composant s'y annonçait pour que le serveur de jeu sache à quelle adresse IP trouver qui ;</li>
+<li><strong>MongoDB</strong> pour les données ;</li>
+<li><strong>Azure DevOps</strong> pour le code source, la CI et le déploiement, choisi parce que l'équipe le maîtrisait et qu'il était gratuit jusqu'à cinq utilisateurs. Un pipeline de build produisait un bundle self-contained, puis des <em>release pipelines</em> par agence et par salle étaient exécutés par un <strong>agent auto-hébergé installé dans chaque agence</strong>. L'inventaire de l'infrastructure (adresse IP de chaque composant, coefficient de volume, offset DMX…) vivait dans des fichiers Excel versionnés que les pipelines lisaient.</li>
+</ul>
+<p>Les composants avaient des noms explicites : <em>Game Server</em> (le moteur), <em>Game Master</em> (sons et spots), <em>Pupitre</em>, <em>Écran partagé</em> (le saloon), <em>Administration</em>, <em>Synchronization</em>, <em>Checkin</em> et <em>Hello Service</em>.</p>
+<p>Ça marchait. Mais chaque site finissait par devenir un cas particulier, et j'en garde quelques souvenirs de terrain.</p>
+<ul>
+<li><strong>.NET 5 n'était pas une LTS.</strong> Un jour, impossible de produire le bundle de déploiement : les certificats NuGet des SDK antérieurs à 5.0.202 avaient expiré, et comme la version n'était pas LTS, ils n'avaient pas été renouvelés. Correctif : passer l'agent de build d'Ubuntu 18.04 à 22.04 et monter le SDK. Leçon : on ne met pas une version non-LTS dans un produit qui doit vivre des années.</li>
+<li><strong>Un buzzer qui n'était plus détecté</strong> après une mise à jour de Raspbian, à cause d'un bug de la bibliothèque .NET IoT. J'ai dû passer d'une écoute en numérotation logique (GPIO 21) à une numérotation physique (broche 40), puis déployer le correctif pupitre par pupitre. Le numéro de broche était codé en dur, si bien qu'une broche défectueuse aurait imposé un build spécifique. Il est désormais configurable.</li>
+<li><strong>Aucun son en salle.</strong> Le processus de déploiement installait le pilote d'une carte son HifiBerry sur un Pi qui utilisait la sortie jack.</li>
+<li><strong>Le navigateur bloquait le port de l'administration.</strong> Elle écoutait sur le port 10080, que Chrome et Firefox classent parmi les ports « dangereux ». La documentation a dû s'enrichir d'une annexe pour l'autoriser, navigateur par navigateur.</li>
+<li><strong>La sortie de Raspbian Bullseye</strong> a obligé à épingler Buster, que les outils ne proposaient plus par défaut.</li>
+</ul>
+<p>Aucun de ces problèmes n'était difficile à corriger. Ce qui coûtait cher, c'était <strong>le coût de chaque correctif</strong> : un build, une release, un passage sur chaque machine, et une configuration qui divergeait un peu plus d'un site à l'autre.</p>
+<hr/>
+<h2 id="akkanet--mqtt--choisir-un-protocole-plutôt-quun-framework">Akka.NET → MQTT : choisir un protocole plutôt qu'un framework</h2>
+<p>Sur le papier, Akka.NET avait tout pour plaire : un modèle acteur, la transparence de localisation, et un serveur de jeu qui distribue des ordres à des pupitres ressemble beaucoup à un acteur qui envoie des messages à d'autres acteurs.</p>
+<p>À l'usage, trois limites sont apparues.</p>
+<ol type="1">
+<li><strong>Le remoting est point à point.</strong> Chaque nœud doit connaître l'hôte et le port des autres. D'où le Hello Service, l'inventaire des IP dans Excel, et une reconfiguration de la salle à chaque remplacement de machine.</li>
+<li><strong>Tout le monde doit parler .NET et Akka</strong>, dans des versions et des formats de sérialisation compatibles. Or l'écosystème matériel réclamait autre chose : un lecteur audio en Python, de petits agents DMX, et à terme des microcontrôleurs (ESP32) pour les buzzers.</li>
+<li><strong>C'est difficile à observer.</strong> Impossible de « tendre l'oreille » pour savoir ce que la salle est en train de se dire.</li>
+</ol>
+<p>MQTT règle ces trois points.</p>
+<ul>
+<li><strong>Une seule adresse à connaître</strong>, celle du broker Mosquitto qui tourne sur le serveur de la salle. Le Hello Service a disparu.</li>
+<li><strong>Le publish/subscribe</strong> correspond exactement au besoin. Le serveur publie un message par pupitre, un message pour tous les pupitres, et un pour le saloon.</li>
+<li><strong>C'est polyglotte</strong> : C#, Python, firmware ESP32, tout le monde sait parler MQTT.</li>
+<li><strong>C'est observable.</strong> <code>mosquitto_sub -v -t '/games/dq/#'</code> affiche toute la partie en direct.</li>
+</ul>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Topic</th>
+<th>Sens</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>/games/dq/orchestrator</code></td>
+<td>écrans → serveur de jeu</td>
+<td>commandes et entrées des joueurs (réponse, inscription, coup spécial…)</td>
+</tr>
+<tr class="even">
+<td><code>/games/dq/desks/{couleur}</code></td>
+<td>serveur → un pupitre</td>
+<td>ce que le pupitre doit afficher</td>
+</tr>
+<tr class="odd">
+<td><code>/games/dq/desks/all</code></td>
+<td>serveur → tous les pupitres</td>
+<td>diffusion</td>
+</tr>
+<tr class="even">
+<td><code>/games/dq/saloon</code></td>
+<td>serveur → saloon</td>
+<td>écran public</td>
+</tr>
+<tr class="odd">
+<td><code>/games/dq/desks/{couleur}/led</code></td>
+<td>serveur → agent DMX</td>
+<td>couleur de la barre LED du pupitre</td>
+</tr>
+<tr class="even">
+<td><code>/games/dq/lights</code></td>
+<td>serveur → agent DMX</td>
+<td>spots de la salle</td>
+</tr>
+<tr class="odd">
+<td><code>/games/dq/audio</code></td>
+<td>serveur → lecteur audio</td>
+<td>lecture, arrêt, fondus</td>
+</tr>
+<tr class="even">
+<td><code>/games/dq/desks/{couleur}/buzz</code></td>
+<td>buzzer → serveur</td>
+<td>appui sur le buzzer</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le principe d'architecture qui en découle est simple : <strong>le serveur de jeu est la seule source de vérité.</strong> Il publie des DTO qui décrivent ce qu'il faut afficher, jouer ou allumer, et les consommateurs se contentent d'exécuter. Les pilotes matériels sont sortis du code métier et confiés à de petits agents spécialisés :</p>
+<ul>
+<li><strong>MQTTaudioplayer</strong> (Python) joue les pistes sur ALSA ;</li>
+<li><strong>MQTTdmx</strong> traduit les messages en trames DMX sur un dongle USB-FTDI, avec un agent par bus ;</li>
+<li><strong>le buzzer</strong> lit un GPIO et publie sur <code>/desks/{couleur}/buzz</code>. Demain, ce sera un ESP32 sur <strong>le même topic</strong>, et ni le serveur ni les écrans ne verront la différence.</li>
+</ul>
+<h3 id="ce-que-mqtt-ne-fait-pas-à-votre-place">Ce que MQTT ne fait pas à votre place</h3>
+<ul>
+<li><strong>La QoS.</strong> Par défaut, MQTTnet publie en QoS 0 (« au plus une fois »). Sur un réseau de salle un peu chargé, un <code>play</code> perdu donne un silence, et un <code>stop</code> perdu donne une superposition. Toutes les commandes audio sont désormais publiées en <code>AtLeastOnce</code>, et rendues idempotentes pour que les doublons soient sans conséquence.</li>
+<li><strong>La reconnexion.</strong> Chaque client doit se reconnecter indéfiniment et se réabonner, même si la toute première connexion a échoué. Autre piège : en version 4.0, <code>ConnectAsync</code> de MQTTnet attend le CONNACK sans aucune borne. Un broker gelé laisse alors un client « connecté » sans session réelle. J'ai donc écrit un <code>MqttConnectionKeeper</code> doté d'une sonde de vivacité.</li>
+<li><strong>Les jokers.</strong> Les topics techniques (la supervision des écrans, voir plus bas) vivent sous une autre racine, <code>/screens/dq/</code>. Si un agent tiers s'abonne un jour à <code>/games/dq/#</code>, il ne recevra jamais de message inattendu. Le risque est écarté par construction, pas par hypothèse.</li>
+</ul>
+<hr/>
+<h2 id="la-fin-davalonia--des-pupitres-qui-ne-sont-plus-que-des-navigateurs">La fin d'Avalonia : des pupitres qui ne sont plus que des navigateurs</h2>
+<p>Passer à .NET 10 imposait de migrer d'Avalonia 0.10 à Avalonia 11, une rupture majeure, en plus de LibVLC sur ARM et de X11. En relisant le code des pupitres, j'ai fait la découverte qui a tout débloqué : <strong>les pupitres étaient déjà des clients légers.</strong> Le serveur publiait un <code>DeskMessage</code> en JSON, et les ViewModels Avalonia n'étaient qu'une machine à états qui transformait un message en écran.</p>
+<p>L'interface n'avait donc qu'un seul travail : afficher un DTO JSON. Le web fait ça très bien.</p>
+<h3 id="les-choix">Les choix</h3>
+<ul>
+<li><strong>HTML, CSS et JavaScript, sans framework.</strong> J'ai écarté Blazor : il faut soit le runtime WebAssembly, soit un circuit SignalR permanent, ce qui est trop lourd pour un Raspberry Pi et pour un besoin aussi simple.</li>
+<li><strong>Un hôte web central.</strong> Une seule application ASP.NET Core, <code>GameScreens.Web</code>, sert tous les écrans de la salle. Chaque Pi fait tourner Firefox en mode kiosque sous Wayland (labwc).</li>
+<li><strong>Deux surfaces par pupitre</strong> : <code>/desk/{couleur}</code> pour le jeu tactile et <code>/desk/{couleur}/score</code> pour le score. Elles s'abonnent au même flux.</li>
+<li><strong>Un pont MQTT → SSE.</strong> Un <code>IHostedService</code> s'abonne aux topics des pupitres et du saloon, conserve le dernier état de chaque écran et le pousse aux navigateurs en Server-Sent Events. Les entrées des joueurs repartent par un simple <code>fetch</code> POST, republié sur <code>/orchestrator</code>. <strong>Le serveur de jeu n'a pas changé d'une ligne.</strong></li>
+</ul>
+<p>Pourquoi SSE plutôt que WebSocket ? Presque tout le trafic va du serveur vers l'écran. SSE, c'est du HTTP ordinaire, avec une reconnexion native, et un <code>curl</code> suffit pour le déboguer. Les rares entrées des joueurs se prêtent très bien à un POST.</p>
+<pre><code class="csharp">// GameScreens.Web — flux SSE d'un écran (version simplifiée)
+public static async Task StreamAsync(HttpContext ctx, ScreenStateStore store, string screenKey, CancellationToken ct)
+{
+    ctx.Response.Headers.ContentType = "text/event-stream";
+    ctx.Response.Headers.CacheControl = "no-cache";
+    ctx.Response.Headers["X-Accel-Buffering"] = "no";
+
+    var channel = Channel.CreateUnbounded&lt;string&gt;(new() { SingleReader = true });
+    void Handler(string key, string json) { if (key == screenKey) channel.Writer.TryWrite(json); }
+
+    store.Subscribe(Handler);
+    try
+    {
+        await ctx.Response.WriteAsync(": connected\n\n", ct);
+        await ctx.Response.Body.FlushAsync(ct);
+
+        // Rejoue le dernier état, avec son ancienneté, pour qu'une vidéo reprenne au bon instant.
+        // Un état trop vieux (plus de 5 min) n'est jamais rejoué : l'écran reste sur son accueil.
+        if (store.TryGetLatest(screenKey, out var latest, out var elapsedMs) &amp;&amp; elapsedMs &lt;= StaleReplayCapMs)
+            await WriteEventAsync(ctx, InjectResyncElapsed(latest, elapsedMs), ct);
+
+        while (!ct.IsCancellationRequested)
+        {
+            var wait = channel.Reader.WaitToReadAsync(ct).AsTask();
+            if (await Task.WhenAny(wait, Task.Delay(KeepAliveInterval, ct)) == wait)
+            {
+                if (!await wait) break;
+                while (channel.Reader.TryRead(out var json)) await WriteEventAsync(ctx, json, ct);
+            }
+            else
+            {
+                // Toutes les 15 s : un commentaire (pour les sondes curl) PUIS un événement nommé.
+                await ctx.Response.WriteAsync(": ping\n\nevent: ping\ndata: 1\n\n", ct);
+                await ctx.Response.Body.FlushAsync(ct);
+            }
+        }
+    }
+    catch (OperationCanceledException) { /* client parti */ }
+    finally { store.Unsubscribe(Handler); }
+}</code></pre>
+<h3 id="reproduire-avant-daméliorer">Reproduire avant d'améliorer</h3>
+<p>La règle la plus importante du portage a été la suivante : <strong>l'écran web doit se comporter exactement comme l'écran Avalonia.</strong> Pour chaque interaction, je lisais d'abord le code legacy, puis j'écrivais le code web. Les comportements « améliorés » que j'aurais pu inventer, comme envoyer la réponse au toucher ou mapper le buzzer sur la barre d'espace, sont des bugs pour des joueurs et des game masters habitués au jeu. Dans le jeu d'origine, <strong>un toucher sélectionne une réponse, qui reste modifiable, et c'est le buzzer qui la valide</strong> en envoyant le temps de réponse. Le logo Donut Quiz est lui-même un buzzer cliquable.</p>
+<h3 id="porter-la-charte-graphique">Porter la charte graphique</h3>
+<ul>
+<li>Les formes (bulles en trapèze, cartes, bandeau) étaient des <code>Polygon</code> Avalonia dérivés de SVG. Elles redeviennent des fichiers SVG, injectés inline pour que <code>fill: var(--…)</code> suive le thème.</li>
+<li>Les huit thèmes sont des jeux de variables CSS. La police Montserrat est conservée.</li>
+<li><strong>Les textes trop longs</strong> ont été la première remarque d'un client après la migration : des réponses et des explications qui débordaient des bulles. Le mécanisme d'ajustement de police existait, mais il n'était pas branché sur les tuiles de réponse. Il a aussi fallu le fiabiliser deux fois : réessayer au <code>requestAnimationFrame</code> suivant quand la boîte n'a pas encore de largeur, et relancer la mesure après <code>document.fonts.ready</code>, parce qu'une mesure prise avec la police de repli concluait trop tôt que « ça tient ».</li>
+<li><strong>La synchronisation vidéo.</strong> Quand un écran se (re)connecte, l'état rejoué porte <code>resync_elapsed_ms</code>. Une slide vidéo reprend ainsi au bon instant, en phase avec le saloon et les autres pupitres, au lieu de repartir de zéro.</li>
+</ul>
+<h3 id="les-médias">Les médias</h3>
+<p>Avant, chaque pupitre avait sa propre copie des médias, soit plus de 13 Go par machine. Aujourd'hui, ils vivent dans un volume Docker unique sur le serveur de la salle et sont servis sur le réseau local avec <code>Cache-Control: public, max-age=31536000, immutable</code>. Le contenu étant adressé par identifiant, il ne change jamais. Le cache disque du navigateur, sur la carte SD, fait le reste.</p>
+<h3 id="durcir-un-kiosque">Durcir un kiosque</h3>
+<p>Désactiver le pinch-zoom et le balayage à deux doigts, revenir automatiquement à l'écran d'accueil au lieu d'afficher un écran noir, recaler le tactile sur la bonne sortie vidéo quand le Pi pilote deux écrans, choisir 1280×720 par défaut quand l'écran annonce des modes fantaisistes… Aucune de ces tâches n'est glorieuse, et chacune vient d'une remontée de terrain.</p>
+<hr/>
+<h2 id="-connecté--ne-veut-pas-dire--vivant-">« Connecté » ne veut pas dire « vivant »</h2>
+<p>C'est probablement la leçon la plus importante de la refonte.</p>
+<p>Le piège s'appelle la connexion TCP semi-ouverte : un switch, un point d'accès ou une table NAT perd la connexion sans prévenir personne. Le navigateur attend alors des octets qui ne viendront jamais, <code>readyState</code> reste à <code>OPEN</code>, aucun <code>onerror</code> ne se déclenche, et la reconnexion native d'<code>EventSource</code> ne se produit donc pas. Un écran peut ainsi devenir sourd sans qu'aucune erreur ne remonte nulle part. Pire encore : le keepalive du serveur était un <strong>commentaire</strong> SSE (<code>: ping</code>), et un commentaire ne déclenche aucun gestionnaire JavaScript. La page n'avait donc aucun moyen de distinguer « rien à dire » de « liaison morte ».</p>
+<p>La correction se fait en trois couches.</p>
+<ol type="1">
+<li><strong>Côté serveur</strong>, un événement <em>nommé</em> <code>ping</code> est émis toutes les 15 secondes, en plus du commentaire.</li>
+<li><strong>Côté navigateur</strong>, une garde de vivacité rouvre le flux après 45 secondes sans le moindre octet, soit trois keepalives manqués. La reconnexion suit un backoff exponentiel plafonné à 30 secondes, pour que treize écrans ne transforment pas un serveur momentanément lent en tempête de reconnexions. Et deux <code>EventSource</code> ne coexistent jamais.</li>
+</ol>
+<pre><code class="javascript">// stream.js (extrait)
+export const LIVENESS_TIMEOUT_MS = 45000;   // 3 keepalives serveur manqués
+export const RECONNECT_MAX_DELAY_MS = 30000; // on ralentit, on n'abandonne jamais
+
+function armerGarde() {
+  livenessTimer = annuler(livenessTimer);
+  livenessTimer = setTimeout(programmerReprise, LIVENESS_TIMEOUT_MS);
+}
+
+function programmerReprise() {
+  if (closed || reconnectTimer !== null) return;
+  livenessTimer = annuler(livenessTimer);
+  if (es) { es.close(); es = null; }          // jamais deux flux ouverts en même temps
+  const delai = Math.min(RECONNECT_MAX_DELAY_MS, 1000 * 2 ** echecs++);
+  reconnectTimer = setTimeout(() =&gt; { reconnectTimer = null; connect(); }, delai);
+}
+
+function connect() {
+  es = new EventSource(url);
+  es.onmessage = (ev) =&gt; { surActivite(); /* … */ };
+  es.addEventListener('ping', surActivite);   // le keepalive devient observable
+  es.onerror = () =&gt; { if (es.readyState === EventSource.CLOSED) programmerReprise(); };
+  armerGarde();
+}</code></pre>
+<ol start="3" type="1">
+<li><strong>Dans l'autre sens</strong>, chaque écran répond à chaque ping par un <em>pong</em> publié en MQTT. Le pong précise la surface (jeu ou score), parce qu'un pupitre dont seul l'écran de score est mort ne doit pas apparaître en vert. L'administration connaît ainsi l'état réel des 13 écrans, et le serveur relance de lui-même un pupitre décroché.</li>
+</ol>
+<p>La première version de la supervision comptait les sockets ouvertes côté serveur. Elle reposait sur quatre indirections (compteur en mémoire, JSON en HTTP, sonde HTTP, parsing en bash), et <strong>deux d'entre elles ont menti alors que leurs tests étaient verts</strong>. Un aller-retour ping/pong prouve en une seule mesure ce que le compteur ne prouvait pas : le JavaScript tourne, il reçoit, il répond, et sa réponse arrive.</p>
+<hr/>
+<h2 id="le-son--là-où-tout-sentend">Le son : là où tout s'entend</h2>
+<p>Le modèle audio est simple à énoncer. Trois groupes de pistes (<code>ambient</code>, <code>voices</code>, <code>effects</code>). Un <code>play solo</code> remplace les pistes du même groupe. Un <code>notify</code> joue un son en baissant l'ambiance (<em>ducking</em>), puis la remonte. Des fondus enchaînent le tout. Le lecteur est un programme Python (pygame) piloté en MQTT sur le Pi « donut ».</p>
+<p>Les symptômes étaient tout aussi simples : <strong>des superpositions et des silences, « de temps en temps ».</strong> L'analyse a mis au jour huit causes distinctes, réparties entre le serveur de jeu et le lecteur. Voici ma préférée :</p>
+<pre><code class="csharp">// Avant
+foreach (var audioInstruction in audioInstructions)
+{
+    if (audioInstruction.Offset &gt; 0)
+    {
+        _ = Task.Run(async () =&gt;
+        {
+            await Task.Delay(audioInstruction.Offset, cancellationToken); // jeton jamais annulé en amont
+            await RunAudioInstructionsAsync(audioInstruction, cancellationToken);
+        }, cancellationToken);
+        return; // ← abandonne en silence TOUTES les instructions suivantes de l'étape
+    }
+    await RunAudioInstructionsAsync(audioInstruction, cancellationToken);
+}</code></pre>
+<p>On a là un <code>return</code> qui aurait dû être un <code>continue</code>, et une tâche <em>fire-and-forget</em> qu'aucun arrêt de partie n'annulait. Une instruction différée pouvait donc se déclencher par-dessus l'étape suivante, voire après un <code>stopall</code>. Dans la version corrigée, chaque instruction différée reçoit un jeton annulé à l'arrêt ou au chargement d'une partie, ses exceptions sont journalisées, et la boucle continue.</p>
+<p>Les autres causes :</p>
+<ul>
+<li>les publications MQTT en QoS 0, déjà évoquées ;</li>
+<li>un <code>FadeOutBackground</code> envoyé systématiquement, même pour une question sans voix off : l'ambiance tombait à 20 % pendant 30 à 90 secondes, ce que la salle percevait comme un blanc ;</li>
+<li>côté lecteur, un <em>ducking</em> appliqué avant le <code>play</code> et jamais restauré si la lecture échouait.</li>
+</ul>
+<p>Ensuite, la chaîne de contenu. Chaque son est converti en WAV propre par ffmpeg dès l'upload (dans un job Hangfire), et l'administration publie un manifeste <code>/config/audio</code> pour que le lecteur télécharge lui-même ses pistes.</p>
+<hr/>
+<h2 id="la-lumière--dmx512-sans-douleur">La lumière : DMX512 sans douleur</h2>
+<p>Le DMX est un protocole d'une simplicité désarmante : 512 canaux, chacun avec une valeur de 0 à 255, émis en boucle, sans aucune notion d'adresse de destination. Chaque appareil écoute N canaux à partir de son adresse de départ.</p>
+<p>Le serveur de jeu modélise des <strong>storyboards lumineux</strong> (début de partie, bonne ou mauvaise réponse, honneurs…) et publie des messages <code>one_shot</code>, <code>fade</code>, <code>loop</code> ou <code>blackout</code>. L'agent MQTTdmx, un par bus, entretient la trame de 512 canaux et l'émet sur le dongle USB-FTDI.</p>
+<ul>
+<li><strong>Les LED des pupitres.</strong> Chaque pupitre a son propre contrôleur, donc son propre bus. Les six pupitres utilisent tous la même adresse de départ, et ce n'est pas une faute de frappe : il n'existe aucune chaîne commune à décaler.</li>
+<li><strong>Les spots</strong> sont contigus sur un même bus : <code>canal = GlobalOffset + (n − 1) × BufferSize + Index</code>. L'<em>Index</em> (la position d'une couleur dans un spot) vient de la notice du fabricant. L'<em>Offset</em> dépend du câblage sur site.</li>
+<li><strong>Un bug de terrain classique</strong> : <code>GlobalOffset = 0</code>. Le DMX commence au canal 1, l'agent ignorait donc le canal 0 et le premier spot restait éteint.</li>
+<li><strong>La robustesse</strong> : un <code>Index</code> qui dépasse <code>BufferSize</code> (une saisie manuelle) est désormais ignoré pour la seule fonction concernée, au lieu de faire perdre toute la trame.</li>
+<li><strong>Le stroboscope est désactivé, définitivement.</strong> C'est un parti pris de jeu, pas un réglage à découvrir sur site.</li>
+</ul>
+<p>Un seul fichier de configuration, <code>/etc/donutquiz/gameserver-dmx.json</code>, remplace les deux anciens réglages : l'offset dans l'appsettings de chaque pupitre Avalonia et la configuration de l'ancien « spotlights master ». Et quand deux couleurs s'allument ensemble sur un pupitre, le fait de pouvoir vérifier les trames à distance permet de mettre le logiciel hors de cause et d'envoyer le technicien directement au bornier.</p>
+<hr/>
+<h2 id="la-synchro-siège--agences">La synchro siège ↔︎ agences</h2>
+<p>Une salle doit pouvoir jouer même si la connexion internet de l'agence tombe. Chaque agence a donc sa propre base et ses propres médias : le contenu descend du siège, et les parties jouées remontent. Entre un filigrane qui suivait la mauvaise horloge et des propriétés qui disparaissaient en silence derrière un 200 OK, ce chantier mérite son propre article : <strong><a href="https://adrientorris.github.io/fr/projects/donut-quiz/donut-quiz-synchronisation-siege-agences.html">Donut Quiz : synchroniser un siège et des agences sans rien perdre en silence</a></strong>.</p>
+<hr/>
+<h2 id="de-net-5-à-net-10-et-un-grand-ménage">De .NET 5 à .NET 10, et un grand ménage</h2>
+<ul>
+<li><strong>Une gestion centralisée des paquets.</strong> La solution comptait 44 projets dont les versions de paquets divergeaient (<code>System.Device.Gpio</code> en 1.3.0 ici, en 2.2.0 là). Un <code>Directory.Packages.props</code> unique centralise désormais les versions. La politique est simple : on gèle le conteneur d'injection (Autofac) par <code>VersionOverride</code>, pour ne rien changer au comportement, et on aligne les paquets triviaux vers le haut.</li>
+<li><strong>Un saut direct de <code>net5.0</code> à <code>net10.0</code></strong>, sans étape intermédiaire en .NET 8. Les vraies ruptures étaient peu nombreuses mais sournoises : le RID <code>win10-x64</code> devenu <code>win-x64</code>, MSTest 2 incompatible, <code>UseHsts()</code>, et surtout un <code>AddEnvironmentVariables()</code> absent, qui faisait <strong>ignorer en silence</strong> toute la configuration Docker.</li>
+<li><strong>Tester contre le vrai contenu.</strong> Plutôt que de simuler des questions, la pile complète tourne en docker-compose et tire le contenu réel du siège. Un mock donne l'illusion d'un jalon atteint. Le vrai contenu, lui, révèle les vrais bugs de migration.</li>
+<li><strong>Le ménage.</strong> Les applications Avalonia, l'ancien pilote de spots, les applications console de test et le code commenté mort ont été supprimés. On est passé de <strong>44 à 30 projets</strong>.</li>
+<li><strong>Les tests sont passés de 31 à près de 2 000.</strong> La CI GitHub Actions compile la solution, exécute les tests unitaires et les tests JavaScript des écrans (<code>node --test</code>), puis monte un <strong>banc de validation de bout en bout</strong> en Docker (MongoDB, Mosquitto, écrans, une instance siège et une instance agence), sur lequel tournent les tests de validation.</li>
+</ul>
+<hr/>
+<h2 id="déployer-sur-des-raspberry-pi-sans-sy-rendre">Déployer sur des Raspberry Pi… sans s'y rendre</h2>
+<h3 id="dazure-devops-à-github-du-zip-au-paquet-debian">D'Azure DevOps à GitHub, du zip au paquet Debian</h3>
+<p>Avec Azure DevOps, une release revenait à déposer un zip sur chaque machine, le décompresser, rétablir le bit d'exécution et écrire une unité systemd à la main. Le tout était orchestré par des pipelines qui lisaient des IP dans un fichier Excel, avec un agent auto-hébergé par agence et des jetons d'accès qui expiraient au mauvais moment. Ça tenait pour quelques salles, mais rien de tout cela n'était reproductible à l'échelle d'un réseau qui grandit.</p>
+<p>Le code vit désormais sur GitHub, et chaque composant est un <strong>paquet Debian versionné</strong>. Un paquet n'active rien à l'installation : il prépare la configuration et fournit trois outils, <code>dq-cutover</code> pour basculer, <code>dq-rollback</code> pour revenir en arrière et <code>dq-doctor</code> pour un diagnostic qui se vérifie lui-même. La bascule est explicite et réversible.</p>
+<ul>
+<li><strong>Les services serveur tournent dans Docker.</strong> Les binaires .NET sont publiés en <em>self-contained</em> <code>linux-arm64</code> par compilation croisée, puis embarqués avec un Dockerfile qui ne fait que copier. Le <code>docker build</code> se fait <strong>nativement sur le Pi</strong>, au premier démarrage : pas de QEMU, pas de buildx, rien à compiler sur la cible.</li>
+<li><strong>Les services matériels sont natifs.</strong> Le kiosque, le buzzer (GPIO), l'audio (ALSA) et le DMX (FTDI) tournent en services systemd. Ils ont besoin d'un accès direct au matériel, et rien ne justifie de les conteneuriser.</li>
+</ul>
+<h3 id="des-images--golden--par-rôle">Des images « golden » par rôle</h3>
+<p>Les Pi sont produits à partir d'une <strong>image par rôle</strong> (pupitre, saloon, donut, serveur) générée avec <code>rpi-image-gen</code> : Debian 13 « Trixie » en arm64, une base minimale sans bureau, Wayland avec labwc, et des versions épinglées pour garantir la reproductibilité.</p>
+<p>La configuration propre à chaque machine tient dans un fichier posé sur la <strong>partition de boot, en FAT</strong>, donc modifiable depuis n'importe quel PC Windows sans démarrer le Pi :</p>
+<pre><code class="nohighlight"># /boot/firmware/donutquiz.conf
+ROLE=desk                          # desk | saloon | donut | host
+SERVER_URL=http://&lt;ip-du-serveur&gt;:5003
+COLOR=caramel</code></pre>
+<p>Au premier démarrage, un service <em>oneshot</em> lit ce fichier et déduit tout ce qui peut l'être : le topic du buzzer à partir de la couleur, l'adresse du broker à partir de l'URL du serveur. Il génère les fichiers de configuration, recale le tactile sur l'écran de jeu, fixe le nom d'hôte et active les services. Sur le terrain, la procédure se résume à : <strong>flasher, remplir trois clés, brancher.</strong></p>
+<p>Le paquet kiosque, enfin, est <strong>le même pour l'ancien X11 et le nouveau Wayland.</strong> Il détecte le backend vidéo à l'exécution :</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Action</th>
+<th>X11 (Buster)</th>
+<th>Wayland (Trixie)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Lister les sorties</td>
+<td><code>xrandr</code></td>
+<td><code>wlr-randr</code></td>
+</tr>
+<tr class="even">
+<td>Placer une fenêtre par écran</td>
+<td><code>wmctrl</code></td>
+<td><code>&lt;windowRules&gt;</code> de labwc</td>
+</tr>
+<tr class="odd">
+<td>Recaler le tactile</td>
+<td><code>xinput map-to-output</code></td>
+<td><code>&lt;touch mapToOutput&gt;</code> de labwc</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="passer-de-32-à-64-bits-à-distance-sans-brique">Passer de 32 à 64 bits, à distance, sans brique</h3>
+<p>Restait un problème de taille : tout le parc tournait en <strong>Buster armhf (32 bits)</strong>. Or un <code>dist-upgrade</code> ne change pas l'architecture, et une mise à niveau majeure en place de Raspberry Pi OS n'est pas supportée. Il fallait donc reflasher… des dizaines de cartes SD réparties dans toute la France.</p>
+<p>J'ai écrit pour cela <code>dq-migrer-ab</code>, un script qui migre un Pi <strong>à distance, en schéma A/B</strong> :</p>
+<ol type="1">
+<li><strong>Sonde</strong> (en lecture seule) : rôle, adresses, état de la carte SD, qui ouvre réellement le dongle DMX, et génération du <code>donutquiz.conf</code> ;</li>
+<li><strong>Réduction</strong> : un démarrage unique sur un initramfs, via <code>tryboot</code>, réduit la partition racine de Buster et crée deux partitions derrière elle, <code>p3</code> (boot Trixie) et <code>p4</code> (racine Trixie) ;</li>
+<li><strong>Écriture</strong> de l'image dans <code>p3</code>/<code>p4</code> <em>depuis Buster en marche</em>, avec vérification sha256 ;</li>
+<li><strong>Préparation</strong> : configuration, nouvelles clés d'hôte SSH, médias, identité VPN ;</li>
+<li><strong>Essai</strong> : un redémarrage d'essai sur Trixie. Tant que la bascule n'est pas figée, <strong>un redémarrage normal, ou même une coupure de courant, ramène sur Buster</strong> ;</li>
+<li><strong>Validation</strong> : une commande séparée, jamais enchaînée automatiquement, fige Trixie comme partition de démarrage.</li>
+</ol>
+<p>La seule fenêtre à risque est la réduction de la partition, qui dure quelques minutes. C'est pourquoi la santé de la carte SD est contrôlée avant : une carte fatiguée qui ne revient pas de l'initramfs m'a appris à le faire. L'accès à distance passe par un VPN maillé (Headscale, le serveur de contrôle Tailscale auto-hébergé), qui remplace l'ancien outil de prise en main à distance.</p>
+<hr/>
+<h2 id="ce-que-je-retiens">Ce que je retiens</h2>
+<ul>
+<li><strong>Choisir des versions LTS.</strong> Toujours, dans un produit qui doit durer.</li>
+<li><strong>Des clients légers et une seule source de vérité.</strong> C'est ce qui a rendu possible le remplacement d'Avalonia sans toucher au serveur de jeu.</li>
+<li><strong>Un protocole vaut mieux qu'un framework</strong> quand des équipements hétérogènes doivent se parler. MQTT a remplacé Akka.NET et le Hello Service, et il a ouvert la porte à Python et à l'ESP32.</li>
+<li><strong>« Connecté » n'est pas « vivant ».</strong> Il faut mesurer un aller-retour de bout en bout plutôt qu'un indicateur intermédiaire, et se méfier des tests verts qui valident un mécanisme plutôt qu'un résultat.</li>
+<li><strong>Le logiciel en conteneur, le matériel en natif.</strong></li>
+<li><strong>Mettre la configuration terrain là où un technicien peut l'éditer</strong>, c'est-à-dire sur une partition FAT, pas dans un JSON à modifier en SSH.</li>
+<li><strong>Garder chaque étape réversible</strong> : rollback des paquets, démarrage d'essai A/B.</li>
+<li><strong>Reproduire avant d'améliorer.</strong> Une migration réussie est d'abord une migration que personne ne remarque.</li>
+</ul>
+<hr/>
+<h2 id="et-aujourdhui-">Et aujourd'hui ?</h2>
+<p>La salle tourne. La plupart des agences ont basculé sur la nouvelle pile, les parties s'enchaînent, les écrans se reconnectent seuls, et une intervention qui demandait un déplacement se règle désormais à distance. Surtout, les retours des joueurs sont là :</p>
+<div class="pic_wrapper"><img alt="Avis Google 1" loading="lazy" src="/wwwroot/images/projects/donut-quiz/google-review-1.png" title="Avis Google 1"/></div><div class="pic_wrapper"><img alt="Avis Google 2" loading="lazy" src="/wwwroot/images/projects/donut-quiz/google-review-2.png" title="Avis Google 2"/></div><div class="pic_wrapper"><img alt="Avis Google 3" loading="lazy" src="/wwwroot/images/projects/donut-quiz/google-review-3.png" title="Avis Google 3"/></div>
+<p>La suite est déjà sur la table : des buzzers sur ESP32, une image unique pour tous les rôles, résolue par <code>donutquiz.conf</code>, et toujours plus d'outils pour que le siège et les franchisés gèrent leur contenu sans moi. Mais la salle n'est plus un chantier permanent, et c'était tout l'objectif de cette refonte.</p>
+				<div id="crdny">posté le 27/10/2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>Donut Quiz</li>
+						<li>.NET</li>
+						<li>MQTT</li>
+						<li>Raspberry Pi</li>
+						<li>SSE</li>
+						<li>DMX</li>
+						<li>IoT</li>
+						<li>Architecture</li>
+						<li>Retour d'expérience</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

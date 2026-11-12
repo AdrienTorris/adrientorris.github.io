@@ -1,0 +1,440 @@
+<!DOCTYPE html><html lang="fr-FR" xml:lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=UA-85948839-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-85948839-1');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Des props qui ne doivent jamais tomber : notre socle firmware ESP32</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="fr" />
+		<meta name="keywords" content="Team Break,ESP32,ESP-IDF,Firmware,C,FreeRTOS,MQTT,OTA,Électronique,Escape game" />
+		<meta name="description" content="Dans un escape game, les props sont l'endroit où le logiciel touche le monde physique : un digicode, un coffre à électroaimant, des vases canopes qui reconnaissent les statuettes posées dessus, un canon, un kraken qui cligne des yeux." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/team-break/esp32-socle-firmware.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/team-break/esp32-firmware-base.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/fr/index.html" title="">Accueil</a></li>
+					<li>Projets</li>
+					<li>Team Break</li>
+					<li class="active"><a href="https://adrientorris.github.io/fr/projects/team-break/esp32-socle-firmware.html" title="Des props qui ne doivent jamais tomber : notre socle firmware ESP32">Des props qui ne doivent jamais tomber : notre socle firmware ESP32</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Des props qui ne doivent jamais tomber : notre socle firmware ESP32</h1>
+<p>Dans un escape game, les <em>props</em> sont l'endroit où le logiciel touche le monde physique : un digicode, un coffre à électroaimant, des vases canopes qui reconnaissent les statuettes posées dessus, un canon, un kraken qui cligne des yeux. Chez Team Break, la plupart de ces accessoires sont pilotés par un <strong>ESP32</strong> programmé en C avec <strong>ESP-IDF</strong>. Pour qu'ils se ressemblent tous (même configuration, même page web, même comportement en cas de panne), ils partagent un <strong>socle firmware</strong> commun.</p>
+<p>Dans le <a href="https://adrientorris.github.io/fr/projects/team-break/team-break-architecture.html">premier article</a> de cette série, j'ai survolé l'électronique. Ici, j'entre dans le détail : pourquoi ce socle existe, comment il est construit, et ce que le terrain nous a appris.</p>
+<h2 id="lenvironnement--hostile-et-sans-personne-sur-place">L'environnement : hostile, et sans personne sur place</h2>
+<p>Un accessoire d'escape game vit dans des conditions qu'on ne retrouve pas souvent en informatique :</p>
+<ul>
+<li><strong>Tout est en 12 V</strong>, rien en USB. Les alimentations sont partagées avec des électroaimants, des moteurs et des relais.</li>
+<li><strong>Les câbles sont longs</strong> et passent à côté de charges inductives qui commutent en permanence. Le moindre front parasite est une entrée fantôme potentielle.</li>
+<li><strong>La salle est pleine de métal</strong> (et d'autres accessoires qui émettent) : le Wi-Fi n'y est pas toujours le bienvenu.</li>
+<li><strong>Le courant est coupé brutalement</strong>, parfois plusieurs fois par jour.</li>
+<li><strong>Les joueurs manipulent tout</strong>, et pas toujours avec délicatesse.</li>
+<li><strong>Il n'y a pas d'Internet</strong> dans certaines salles, et <strong>personne pour appuyer sur reset</strong> au milieu d'une session.</li>
+</ul>
+<p>Ajoutons une diversité de câblage qu'aucune documentation ne capture vraiment : selon les sites, le même capteur est monté à l'envers, ou en contact normalement fermé. Et quelques surprises mécaniques : à La Défense, les dagues d'une énigme sont de petits moteurs de fermeture centralisée automobile, qu'il ne faut <em>jamais</em> alimenter en continu.</p>
+<p>Côté matériel, le standard est l'<strong>ESP32-WROOM</strong> avec 4 Mo de flash. Pour les besoins en relais, nous utilisons des cartes <strong>Kincony KC868-A16</strong> : un ESP32, 16 relais et 16 entrées sur des expandeurs I2C PCF8574, et de l'Ethernet via un PHY LAN8720. On trouve encore quelques Arduino Uno avec shield Ethernet sur des installations plus anciennes, et des panneaux d'E/S tiers.</p>
+<h2 id="pourquoi-un-socle">Pourquoi un socle</h2>
+<p>Au départ, chaque accessoire avait son firmware, copié depuis un gabarit. La configuration y était décrite par des <strong>X-macros</strong> :</p>
+<pre><code class="cpp">#define TB_CONFIG_CHAR_ITEMS                                   \
+    TB_CONFIG_CHAR_ITEM(char *, ssid, "")                      \
+    TB_CONFIG_CHAR_ITEM(char *, hostname, "New")               \
+    TB_CONFIG_CHAR_ITEM(char *, mqtt_broker, "mqtt://mqtt.eclipse.org")
+#define TB_CONFIG_ITEMS                                        \
+    TB_CONFIG_ITEM(int, mqtt_port, 1883)                       \
+    TB_CONFIG_ITEM(int, ma_nouvelle_valeur, 42)</code></pre>
+<p>Cela produisait une structure plate (<code>config.ssid</code>, <code>config.mqtt_port</code>), sans validation ni migration. Pour ajouter un champ à un accessoire, la documentation conseillait… de modifier le code partagé. Le composant réseau était devenu un « composant-dieu » qui embarquait le Wi-Fi, MQTT et le serveur HTTP, avec 11 dépendances et une dépendance circulaire avec le pilote Ethernet. Chaque copie divergeait, et chaque correction devait être reportée à la main.</p>
+<p>Le socle actuel est né de ce constat. C'est un dépôt de composants ESP-IDF que chaque firmware d'accessoire inclut comme <strong>sous-module Git</strong>. Côté accessoire, il suffit d'une ligne dans le <code>CMakeLists.txt</code> racine :</p>
+<pre><code class="nohighlight">set(EXTRA_COMPONENT_DIRS ${CMAKE_SOURCE_DIR}/shared_components)</code></pre>
+<p>L'accessoire n'apporte que ce qui lui est propre : son brochage, sa logique de jeu, ses messages et sa section de configuration. Le découpage du composant réseau a retiré 1 052 lignes et ramené ses dépendances de 11 à 3.</p>
+<p>Le socle compile avec <strong>ESP-IDF 5.5 et 6.0</strong>. La v6 a sorti plusieurs composants du framework (cJSON, le client MQTT, le pilote LAN87xx) vers le registre de composants : ils sont déclarés conditionnellement dans les <code>idf_component.yml</code> (<code>if: "idf_version &gt;=6.0"</code>). Une règle est gravée dans chaque spécification : <strong>mettre à jour le sous-module ne doit exiger aucune modification des firmwares hôtes</strong>.</p>
+<p>Il compte aujourd'hui une vingtaine de composants, environ 13 000 lignes de C et 6 900 lignes d'interface web :</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Domaine</th>
+<th>Composants</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Réseau</td>
+<td><code>tb_network</code> (pile TCP/IP, mDNS, interfaces), <code>tb_wifi</code>, <code>tb_lan8720</code>, <code>tb_mqtt</code>, <code>tb_ntp</code>, <code>tb_http_server</code></td>
+</tr>
+<tr class="even">
+<td>Système</td>
+<td><code>tb_storage</code> (LittleFS), <code>tb_config</code>, <code>tb_log</code>, <code>tb_watchdog</code>, <code>tb_recovery</code>, <code>tb_infos</code></td>
+</tr>
+<tr class="odd">
+<td>Matériel</td>
+<td><code>tb_gpio</code>, <code>tb_i2c</code>, <code>tb_pcf8574</code>, <code>tb_sx1509</code>, <code>tb_neopixel</code>, <code>lib8tion</code>, <code>tb_rfid</code>, <code>tb_pn532</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="des-interfaces-en-c-avec-des-pointeurs-de-fonctions">Des interfaces en C, avec des pointeurs de fonctions</h2>
+<p>Pour qu'un accessoire n'ait pas à savoir si son réseau passe par le Wi-Fi ou l'Ethernet, si une broche est interne ou sur un expandeur I2C, ou quel modèle de lecteur RFID il utilise, le socle définit des <strong>interfaces</strong> à l'ancienne : des structures de pointeurs de fonctions.</p>
+<pre><code class="cpp">// Réseau : Wi-Fi ou Ethernet, même contrat
+struct tb_network_interface_t {
+  get_state get_state;   // NOT_CONFIGURED / DISCONNECTED / CONNECTING / CONNECTED
+  get_infos get_infos;   // cJSON* pour la page web
+  get_name  get_name;
+  void *datas;           // données de l'implémentation
+  void *netif;           // esp_netif_t*
+};
+
+// GPIO : broches internes, PCF8574, SX1509…
+struct tb_gpio_interface_t {
+  read_gpio read;              write_gpio write;
+  get_gpio_type get_type;      set_gpio_type set_type;
+  get_interface_name get_name; get_gpio_count get_count;
+  set_interface_name set_name; void *datas;
+};
+
+// RFID : PN532 aujourd'hui, autre chose demain
+struct tb_rfid_interface_t {
+  tb_rfid_read_uid read_uid;   tb_rfid_get_reader_state get_state;
+  tb_rfid_reset_reader reset_reader; tb_rfid_get_reader_count get_count;
+  tb_rfid_get_interface_name get_name;
+  void *datas;
+};</code></pre>
+<p>Un expandeur d'E/S n'est qu'une implémentation de <code>tb_gpio_interface_t</code> : le reste du code (filtres, callbacks, page web) le traite exactement comme les broches de l'ESP32.</p>
+<h2 id="lordre-de-démarrage-est-une-décision-de-sécurité">L'ordre de démarrage est une décision de sécurité</h2>
+<p>L'ordre d'initialisation est fixé et documenté, avec une raison pour chaque étape :</p>
+<ol type="1">
+<li><strong>Le stockage</strong> d'abord : la configuration, les logs, l'état de récupération et la page web sont des fichiers.</li>
+<li><strong>La récupération</strong> avant la configuration : elle peut remplacer une configuration cassée par la dernière configuration valide. Lire la configuration avant reviendrait à charger celle qui est cassée.</li>
+<li><strong>La configuration, les logs, le watchdog.</strong></li>
+<li><strong>Le matériel.</strong></li>
+<li><strong>Le réseau.</strong></li>
+<li><strong>NTP et MQTT</strong>, sauf en mode sans échec.</li>
+<li><strong>Le serveur HTTP</strong> en dernier, puis on arme le marqueur de démarrage réussi.</li>
+</ol>
+<p>La quatrième étape est la plus importante. La documentation l'explique en une phrase :</p>
+<blockquote>
+<p><strong>Hardware before network.</strong> An output should reach its safe state (locks closed, motors off) as early as possible, not after a Wi-Fi connection that can take several seconds or never come.</p>
+</blockquote>
+<p>Le firmware de la carte Kincony pousse la logique encore plus loin : il initialise les relais <em>avant même le stockage</em>, et les force à l'état repos dès les premières millisecondes.</p>
+<pre><code class="cpp">tb_gpio_init();
+tb_i2c_init(&amp;(tb_i2c_config_t){.sda = 4, .scl = 5});
+in1  = init_pcf8574_with_retry(0x21, "in1");   in2  = init_pcf8574_with_retry(0x22, "in2");
+out1 = init_pcf8574_with_retry(0x24, "out1");  out2 = init_pcf8574_with_retry(0x25, "out2");
+configure_output_bank(out1, 0); configure_output_bank(out2, 8);   // écrire 1 = relais au repos
+configure_input_bank(in1, 0);   configure_input_bank(in2, 8);
+tb_storage_init_flash();
+tb_recovery_init();  bool safe = tb_recovery_is_safe_mode_active();
+tb_config_init(&amp;config); tb_log_init(); tb_watchdog_init();
+tb_network_init();
+tb_network_add_interface(tb_lan8720_init(&amp;eth_config));
+tb_network_add_interface(tb_wifi_init());
+if (!safe) { tb_ntp_init(); /* … puis MQTT et ses callbacks */ }
+if (tb_http_server_init() == ESP_OK) tb_recovery_mark_boot_successful();</code></pre>
+<h2 id="une-configuration-décrite-par-des-schémas">Une configuration décrite par des schémas</h2>
+<p>Chaque composant déclare sa section de configuration avec des macros déclaratives. Voici celle du client MQTT :</p>
+<pre><code class="cpp">_Static_assert(MQTT_MAX_TOPIC_SIZE - 1 == 255, "sub_topic max length must follow MQTT_MAX_TOPIC_SIZE");
+TB_CONFIG_GENERATE_PARSER(tb_mqtt, TB_MQTT, "tb_mqtt",
+    TB_FIELD_STRING(tb_mqtt_config_t, broker, "localhost", 256),
+    TB_FIELD_UINT32_RANGE(tb_mqtt_config_t, port, 1883, 1, 65535),
+    TB_FIELD_STRING_LEN(tb_mqtt_config_t, sub_topic, "/sub_topic", 1, 255),
+    TB_FIELD_STRING(tb_mqtt_config_t, pub_topic, "/pub_topic", 256)
+);
+TB_CONFIG_DEFINE_GETTER(tb_mqtt, "tb_mqtt", false);</code></pre>
+<p>Un accessoire déclare sa propre section de la même façon, dans son propre code, sans toucher au socle. Pour le kraken du <em>Trésor des pirates</em>, cela donne une fenêtre et un temps de recharge réglables :</p>
+<pre><code class="cpp">TB_CONFIG_GENERATE_PARSER(kraken, KRAKEN, "kraken",
+    TB_FIELD_UINT32_RANGE(kraken_config_t, window,   5000, 500, 60000),
+    TB_FIELD_UINT32_RANGE(kraken_config_t, cooldown, 3000, 100, 30000));
+TB_CONFIG_DEFINE_GETTER(kraken, "kraken", true);
+// usage : uint32_t window_ms = kraken_get_config()-&gt;window;</code></pre>
+<p>À la compilation, CMake découvre tous les fichiers <code>*_config_schema.h</code>, et des générateurs Python produisent deux choses : un en-tête de validation pour le firmware, et des <strong>JSON Schemas</strong> à partir desquels la page web de l'accessoire construit ses formulaires. Ajouter un réglage, c'est ajouter une ligne : le parsing, la validation, le getter typé et le champ de formulaire suivent. Le fichier de configuration final ressemble à ceci (valeurs d'exemple) :</p>
+<pre><code class="json">{
+  "tb_mqtt":        { "broker": "mqtt://&lt;broker&gt;", "port": 1883,
+                      "sub_topic": "/my_prop_sub", "pub_topic": "/my_prop_pub" },
+  "tb_network":     { "hostname": "room-my-prop" },
+  "tb_ntp":         { "enabled": true, "timezone": "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00" },
+  "log":            { "enabled": true, "max_file_size": 65536, "log_level": "warn" },
+  "tb_recovery":    { "stable_uptime_s": 3600 },
+  "my_prop":        { "tolerance_ms": 800 }
+}</code></pre>
+<h3 id="toujours-avoir-un-plan-b-et-un-plan-c">Toujours avoir un plan B, et un plan C</h3>
+<p>Une configuration peut être perdue de plein de façons : une écriture interrompue par une coupure, un fichier tronqué envoyé depuis la page web, une erreur de saisie. Le chargement suit donc une chaîne de repli, décidée par une fonction pure :</p>
+<ol type="1">
+<li>le fichier courant, s'il est valide ;</li>
+<li>sinon, la <strong>dernière configuration valide connue</strong> (<code>tb_config.last-known-good.json</code>) ;</li>
+<li>sinon, les <strong>valeurs d'usine</strong> (<code>tb_config.factory-defaults.json</code>) ;</li>
+<li>sinon, les valeurs par défaut des schémas, avec le point d'accès Wi-Fi de secours joignable.</li>
+</ol>
+<p>Le fichier invalide n'est pas supprimé : il est renommé <code>tb_config.invalid.json</code> pour le diagnostic. Et un fichier présent mais <em>illisible</em> (mémoire insuffisante, erreur d'E/S) n'est jamais écrasé, car il est peut-être parfaitement valide.</p>
+<p>Les modifications depuis la page web sont fusionnées avec la configuration courante, validées, puis écrites de façon atomique (fichier temporaire, puis renommage). Le bouton « Appliquer maintenant » réapplique le Wi-Fi, MQTT, le réseau, NTP et les logs à chaud ; si l'application échoue, la configuration revient à la dernière version valide.</p>
+<h2 id="ne-jamais-rester-planté">Ne jamais rester planté</h2>
+<h3 id="le-watchdog-et-le-core-dump">Le watchdog et le core dump</h3>
+<p>Le watchdog de tâches d'ESP-IDF est réglé à 10 s, avec panic, et surveille les tâches <em>idle</em> des deux cœurs ainsi que les tâches du socle (GPIO, MQTT, logs en direct). En cas de plantage, un core dump est écrit dans une partition dédiée de 64 Ko, lisible ensuite avec <code>idf.py coredump-info</code>.</p>
+<h3 id="le-mode-sans-échec">Le mode sans échec</h3>
+<p>Un watchdog qui redémarre la carte, c'est bien. Une carte qui redémarre en boucle parce que sa configuration la fait planter, c'est un accessoire perdu pour la journée. Le composant <code>tb_recovery</code> compte donc les démarrages ratés :</p>
+<ul>
+<li>comptent comme des échecs : panic, watchdogs, baisse de tension (<em>brownout</em>) et redémarrage logiciel <strong>non annoncé</strong> ;</li>
+<li>ne comptent pas : mise sous tension, reset externe, et redémarrages annoncés (reboot depuis la page web, OTA, retour aux valeurs d'usine) ;</li>
+<li>un démarrage n'est considéré comme réussi qu'après <code>stable_uptime_s</code>, <strong>60 minutes par défaut</strong>. C'est la durée d'une partie : un plantage au milieu d'une session compte comme un échec.</li>
+</ul>
+<p>Au <strong>deuxième échec consécutif</strong>, la carte démarre en mode sans échec : configuration restaurée, Wi-Fi et page web actifs, mais <strong>pas de MQTT</strong>. Elle reste joignable pour le diagnostic, et surtout hors du jeu : un accessoire instable ne doit pas envoyer d'événements fantômes au moteur de la salle.</p>
+<p>La décision est une fonction pure, sans aucun appel matériel :</p>
+<pre><code class="cpp">// A software restart announced by tb_recovery_note_intentional_restart()
+// (reboot, OTA, factory reset from the web page) is not a crash: like a
+// power-on, it resets the counter.
+const bool announced_restart =
+    previous-&gt;intentional_restart_pending &amp;&amp; reason == ESP_RST_SW;
+decision.user_requested = previous-&gt;safe_mode_requested;
+
+if (previous-&gt;boot_marked_successful || announced_restart ||
+    tb_recovery_reason_resets_counter(reason)) {
+  next-&gt;failed_boot_count = 0;
+} else if (!decision.user_requested &amp;&amp; tb_recovery_reason_is_crash(reason)) {
+  next-&gt;failed_boot_count = previous-&gt;failed_boot_count + 1;
+  decision.counted_as_failure = true;
+}
+decision.repeated_failures = next-&gt;failed_boot_count &gt;= TB_RECOVERY_SAFE_MODE_THRESHOLD;
+decision.safe_mode_active  = decision.user_requested || decision.repeated_failures;</code></pre>
+<p>Parce qu'elle est pure, elle se teste sur PC, cas par cas, comme on le verra plus bas.</p>
+<h3 id="des-logs-qui-survivent-au-redémarrage">Des logs qui survivent au redémarrage</h3>
+<p>Les macros <code>TB_LOGx</code> s'utilisent comme <code>ESP_LOGx</code>, mais poussent aussi chaque ligne dans un tampon de 8 Ko en RAM. Une tâche d'écriture de faible priorité vide ce tampon vers <code>app.log</code> toutes les 500 ms, ou dès qu'il est rempli au quart, avec rotation à une taille configurable. Juste avant un redémarrage volontaire, le tampon est vidé en au plus une seconde.</p>
+<p>Cette architecture asynchrone vient d'un bug trouvé sur le banc : l'ancienne version écrivait en flash sous mutex, et sur une carte sans réseau, <strong>65 lignes de log ont été perdues en 30 minutes</strong> pour cause de contention. Aujourd'hui, l'appelant n'attend jamais plus de 10 ms, et les lignes perdues sont <em>comptées</em> : une ligne « N log line(s) lost » est écrite, et un compteur est exposé par l'API. On peut perdre des logs ; on ne doit pas perdre le fait qu'on en a perdu.</p>
+<h2 id="le-réseau--ethernet-dabord-wi-fi-quand-il-le-faut">Le réseau : Ethernet d'abord, Wi-Fi quand il le faut</h2>
+<h3 id="ethernet">Ethernet</h3>
+<p>Dans une salle pleine de métal, l'Ethernet est le choix par défaut dès que la carte le permet. Le composant <code>tb_lan8720</code> pilote le MAC interne de l'ESP32 avec un PHY LAN8720 (Kincony, Olimex ESP32-POE, WT32-ETH01). ESP-IDF v6 a supprimé les options Kconfig de l'horloge RMII ; le composant les redéclare avec les mêmes noms, chargées uniquement en v6, pour que les <code>sdkconfig.defaults</code> des firmwares existants continuent de fonctionner sans modification.</p>
+<h3 id="wi-fi-et-un-décalage-de-bits">Wi-Fi, et un décalage de bits</h3>
+<p>Le Wi-Fi se reconnecte indéfiniment avec un backoff de 1, 2, 4, 8, 16 s, puis toutes les 30 s. La première version calculait le délai avec <code>BASE * (1 &lt;&lt; retry_num)</code>, sans borne. Après environ 13 minutes sans point d'accès, le décalage débordait, le délai tombait à zéro, et la carte tentait de se reconnecter en boucle serrée. La logique est désormais une fonction pure et bornée :</p>
+<pre><code class="cpp">uint32_t tb_wifi_retry_delay_ms(int retry_num) {
+  if (retry_num &lt; 0) {
+    retry_num = 0;
+  }
+  // 1000 &lt;&lt; 5 = 32000 is already above the maximum: no shift beyond 4
+  if (retry_num &gt;= 5) {
+    return TB_WIFI_RETRY_MAX_DELAY_MS;
+  }
+  uint32_t delay_ms = (uint32_t)TB_WIFI_RETRY_BASE_DELAY_MS &lt;&lt; retry_num;
+  return (delay_ms &gt; TB_WIFI_RETRY_MAX_DELAY_MS) ? TB_WIFI_RETRY_MAX_DELAY_MS : delay_ms;
+}</code></pre>
+<h3 id="mqtt-volontairement-simple">MQTT, volontairement simple</h3>
+<p>Le client MQTT de l'accessoire fait peu de choses, mais les fait de façon prévisible : QoS 0, topics exacts (pas de jokers), au plus 10 callbacks, des messages jusqu'à 1 Ko. Une tâche surveillée par le watchdog vérifie la connexion toutes les 5 s et se réabonne à chaque reconnexion.</p>
+<p>Quelques décisions de conception :</p>
+<ul>
+<li><strong>Une carte neuve n'a pas de broker.</strong> L'initialisation réussit quand même, et le client démarre dès qu'un broker est enregistré depuis la page web, sans redémarrage.</li>
+<li><strong>Le topic d'abonnement peut changer à chaud.</strong> Le client se désabonne de l'ancien et déplace tous les callbacks vers le nouveau.</li>
+<li><strong>Les callbacks s'exécutent dans la tâche MQTT.</strong> C'est le piège numéro un, documenté en gras : pendant qu'un callback tourne, aucun autre message n'est lu. On y stocke la commande (une variable, une file FreeRTOS) et une tâche de l'accessoire agit ensuite.</li>
+</ul>
+<p>La revue de code a trouvé deux bugs savoureux dans la réception. Le tampon de payload n'était pas terminé par un zéro, si bien que <code>"30"</code> pouvait être lu comme <code>"30_lights_on…"</code>, reste du message précédent. Et la comparaison des topics ne vérifiait pas les longueurs : un topic qui était le préfixe d'un autre le capturait.</p>
+<h3 id="ntp-en-local">NTP, en local</h3>
+<p>Les logs ont besoin d'une heure réelle. Le socle utilise SNTP avec une chaîne de fuseau POSIX ; avant la synchronisation, les lignes sont horodatées <code>boot+&lt;ms&gt;ms</code>. Dans les salles sans Internet, il faut un serveur NTP local, et pour mesurer des durées, on utilise <code>esp_timer_get_time()</code>, jamais l'heure murale.</p>
+<h2 id="les-entrées-sorties--le-polling-assumé">Les entrées-sorties : le polling, assumé</h2>
+<h3 id="pourquoi-pas-tout-en-interruptions-">Pourquoi pas tout en interruptions ?</h3>
+<p>Le composant <code>tb_gpio</code> lit toutes les entrées déclarées depuis une tâche qui tourne toutes les 10 ms, puis leur applique un filtre : anti-rebond (50 ms par défaut, réglable par broche) ou moyenne glissante exponentielle pour les entrées analogiques. La question « pourquoi pas des interruptions ? » revient régulièrement. La réponse est écrite dans la feuille de route, et elle est entièrement dictée par le terrain :</p>
+<blockquote>
+<p>Escape-room wiring is long and sits next to switching relays and electromagnets. Polling plus debounce ignores glitches; an interrupt fires on each one, and a floating or noisy line can flood the CPU until the interrupt watchdog resets the board.</p>
+</blockquote>
+<p>S'y ajoutent les contacts mécaniques qui rebondissent (il faudrait de toute façon un anti-rebond temporisé derrière l'interruption), les expandeurs et les entrées analogiques qui resteraient de toute façon en polling, et des accessoires en production validés ainsi. Les interruptions existent, mais en option, pour les impulsions trop courtes pour le polling : une bille qui traverse un faisceau infrarouge en 15 ms environ. Dans ce cas, l'ISR pousse des fronts horodatés dans une file, et tient un compteur de fronts par broche.</p>
+<p>Pour la diversité de câblage évoquée plus haut, une option <code>invert_logic</code> inverse réellement les lectures, les callbacks et les écritures d'une broche. Un capteur monté à l'envers sur un site devient une ligne de configuration, pas une branche de code.</p>
+<h3 id="le-relais-qui-claquait">Le relais qui claquait</h3>
+<p>Les cartes Kincony pilotent leurs relais via des PCF8574, des expandeurs 8 bits sur I2C. Le PCF8574 n'a pas de registre de direction : on écrit l'octet complet du port à chaque fois. La revue sur carte a trouvé deux défauts gênants dans une salle :</p>
+<ul>
+<li><strong>Un relais claquait à chaque écriture.</strong> La fonction d'écriture repassait la broche en sortie, ce qui envoyait le bit à 0, <em>puis</em> la valeur réelle.</li>
+<li><strong>Tous les relais pulsaient au démarrage.</strong> La copie locale du port démarrait à <code>0x00</code> : la première écriture tirait toutes les sorties vers le bas un instant.</li>
+</ul>
+<p>La correction tient en peu de lignes : une copie locale (<em>shadow</em>) initialisée à <code>0xFF</code>, et <strong>une seule transmission par écriture</strong>, qui ne change que le bit visé.</p>
+<pre><code class="cpp">esp_err_t tb_pcf8574_port_write(uint8_t *port, uint8_t io, int32_t value,
+                                tb_pcf8574_tx_t tx, void *ctx) {
+  if (port == NULL || tx == NULL || io &gt;= PCF8574_LOGIC_NB_PINS) {
+    return ESP_ERR_INVALID_ARG;
+  }
+  uint8_t next;
+  if (value) {
+    next = *port | (uint8_t)(1U &lt;&lt; io);
+  } else {
+    next = *port &amp; (uint8_t)~(1U &lt;&lt; io);
+  }
+  esp_err_t err = tx(ctx, next);
+  if (err == ESP_OK) {
+    *port = next;
+  }
+  return err;
+}</code></pre>
+<p>La copie locale n'est mise à jour qu'après une transmission réussie. Cette logique est testée de façon exhaustive : 256 états de port, 8 broches et 2 valeurs.</p>
+<h3 id="lexpandeur-débranché-qui-redémarrait-la-carte">L'expandeur débranché qui redémarrait la carte</h3>
+<p>Autre trouvaille : débrancher un expandeur I2C faisait redémarrer la carte. Les transactions I2C utilisaient un timeout de <code>-1</code> (attente infinie) dans une tâche surveillée par le watchdog de 10 s. La documentation du composant le dit maintenant sans détour : « A <code>-1</code> timeout blocks forever… that reboots the board. » Les timeouts sont désormais de 50 ms, une lecture ratée renvoie <code>-1</code> (valeur inconnue), et un expandeur qui ne répond plus produit <em>une</em> ligne de log quand il tombe et une quand il revient, pas une par tick.</p>
+<h3 id="rfid--un-lecteur-muet-nest-pas-un-objet-absent">RFID : un lecteur muet n'est pas un objet absent</h3>
+<p>Le composant RFID gère des lecteurs PN532 (jusqu'à 8 sur un même bus SPI), avec une réinitialisation automatique après 20 lectures ratées, qui réapplique le gain et le niveau RF. Deux choix méritent d'être soulignés :</p>
+<ul>
+<li>les tentatives passives du PN532 sont limitées à 1, parce que le comportement par défaut (réessayer indéfiniment) « makes an empty reader look like a dead one » ;</li>
+<li>côté API, <strong>« pas de badge » n'est pas une erreur</strong> : <code>ESP_OK</code> avec une longueur d'UID à zéro. Une erreur signifie que <em>le lecteur</em> ne répond pas. C'est ce qui permet à un accessoire de signaler un lecteur en panne au lieu d'attendre éternellement un objet.</li>
+</ul>
+<p>Les UID attendus sont stockés sous forme de chaînes dans la configuration. Les vases canopes de notre salle égyptienne (quatre lecteurs RFID) fonctionnent ainsi : remplacer une statuette perdue est un changement de configuration, pas un nouveau firmware.</p>
+<h3 id="et-la-lumière">Et la lumière</h3>
+<p>Le composant NeoPixel pilote des rubans WS2812 en RGB, hexadécimal ou HSV, avec la bibliothèque mathématique 8 bits de FastLED portée en C pour les animations. La luminosité est plafonnée par défaut à 50/255. Ce n'est pas qu'esthétique : à 60 mA par LED en blanc plein, un ruban qui s'allume d'un coup peut faire chuter une alimentation partagée avec un électroaimant.</p>
+<h2 id="une-page-web-dans-chaque-accessoire">Une page web dans chaque accessoire</h2>
+<p>Chaque accessoire sert une page web depuis sa partition LittleFS, accessible par son nom mDNS (<code>http://&lt;hostname&gt;.local/</code>) :</p>
+<ul>
+<li>l'<strong>état en direct</strong> des entrées-sorties, en SSE (au plus 10 clients par flux, <em>keepalive</em> toutes les 25 s) ;</li>
+<li>l'<strong>éditeur de configuration</strong>, dont les formulaires sont générés à partir des schémas ;</li>
+<li>les <strong>logs</strong>, un explorateur de fichiers, le redémarrage, le mode sans échec, le retour aux valeurs d'usine ;</li>
+<li>la <strong>mise à jour OTA</strong> du firmware, et la mise à jour séparée de l'interface web (<code>www_update.tar</code>).</li>
+</ul>
+<p>C'est l'outil de diagnostic de premier niveau : sur le réseau de la salle (ou via le VPN), un navigateur suffit pour voir ce que voit l'accessoire.</p>
+<h2 id="ota-signée-et-releases-reproductibles">OTA signée et releases reproductibles</h2>
+<p>La table de partitions est la même pour tous les accessoires : deux emplacements d'application de 1,25 Mo (<code>ota_0</code>, <code>ota_1</code>), 1,4 Mo de LittleFS pour la configuration, les logs et la page web, et 64 Ko pour le core dump.</p>
+<p>La CI construit le firmware sur chaque tag, avec ESP-IDF épinglé, et publie l'ensemble des artefacts : application, bootloader, table de partitions, image de stockage, archive de l'interface web, paquet de flash complet. Elle produit aussi un <strong>manifeste</strong> (version, commit, taille et SHA-256 de chaque artefact), <strong>signé en RSA-3072</strong>. La clé publique est injectée à la compilation dans un en-tête généré, et l'accessoire vérifie la signature avec mbedTLS, puis la taille et l'empreinte de l'artefact, avant d'accepter une mise à jour. Les builds sont reproductibles (<code>CONFIG_APP_REPRODUCIBLE_BUILD=y</code>, pas de date de compilation dans le bootloader).</p>
+<p>Sur le terrain, la mise à jour passe par la page web : le firmware est écrit dans l'emplacement inactif, et la configuration est conservée. Une règle de notre base de maintenance mérite d'être citée : <strong>ne jamais reflasher les vases canopes par le port série</strong>. <code>idf.py flash</code> réécrit aussi la partition de stockage, et efface donc les statuettes apprises. On passe par l'OTA, ou par <code>idf.py app-flash</code>, qui ne touche qu'à l'application.</p>
+<p>Ce qui manque encore : le retour arrière automatique sur l'ancienne partition si le nouveau firmware ne démarre pas. C'est sur la feuille de route.</p>
+<h2 id="brancher-un-accessoire-sur-maestro">Brancher un accessoire sur Maestro</h2>
+<p>Côté moteur de salle, un accessoire ESP32 est un <strong>fournisseur électronique</strong> de plus, avec son format de message (<code>tb_esp32</code>) et ses topics :</p>
+<pre><code class="json">{
+  "key": "esp32_digicode",
+  "message_format": "tb_esp32",
+  "input_topics": [ "/games/chocolaterie/rooms/iceroom/digicode/state" ],
+  "output_topic": "/games/chocolaterie/rooms/iceroom/digicode"
+}</code></pre>
+<p>Quand le digicode publie <code>{"module":"in2","pin":0,"value":"off"}</code>, l'agent électronique de Maestro en déduit la clé <code>esp|min2|p0|voff</code>, la compare aux proxys déclarés dans le gameflow, et publie une notification métier (<code>digicode_unlocked</code>) à l'orchestrateur de la salle. Dans l'autre sens, la commande <code>trappe_unlock</code> devient <code>{"command":"set","data":[{"module":"out1","pin":0,"value":"on"}]}</code>. La même salle combine sans difficulté des panneaux d'E/S tiers et des accessoires ESP32 : chaque fournisseur a son broker, ses topics et son format.</p>
+<p>Le protocole de la carte Kincony est volontairement minimal :</p>
+<pre><code class="json">{"command":"set","data":[{"module":"out1","pin":2,"value":"on"},{"module":"out2","pin":3,"value":"off"}]}
+{"command":"get","data":[{"module":"in1","pin":3}]}
+{"command":"get_all_infos"}</code></pre>
+<p><code>get_all_infos</code> renvoie l'état complet de la carte : plateforme (version du SDK, mémoire libre, uptime), réseau, MQTT, stockage, et chaque GPIO avec son filtre, son type et sa valeur. Côté Maestro, la page technique de la console GM utilise <code>get</code> pour relire l'état des broches à la demande.</p>
+<h2 id="tester-un-firmware-sans-carte">Tester un firmware sans carte</h2>
+<p>Une bonne partie de la logique du socle se teste <strong>sans ESP32</strong>. ESP-IDF sait compiler pour une cible <code>linux</code>, et nous en profitons : 9 applications de test, <strong>124 tests Unity</strong>, compilés et exécutés sur PC par la CI.</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Composant</th>
+<th>Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>tb_config</code></td>
+<td>49</td>
+</tr>
+<tr class="even">
+<td><code>tb_gpio</code></td>
+<td>21</td>
+</tr>
+<tr class="odd">
+<td><code>tb_recovery</code></td>
+<td>13</td>
+</tr>
+<tr class="even">
+<td><code>tb_mqtt</code></td>
+<td>12</td>
+</tr>
+<tr class="odd">
+<td><code>tb_pcf8574</code></td>
+<td>8 (dont un test exhaustif)</td>
+</tr>
+<tr class="even">
+<td><code>tb_neopixel</code></td>
+<td>7</td>
+</tr>
+<tr class="odd">
+<td><code>tb_log</code></td>
+<td>6</td>
+</tr>
+<tr class="even">
+<td><code>tb_http_server</code></td>
+<td>5</td>
+</tr>
+<tr class="odd">
+<td><code>tb_wifi</code></td>
+<td>3</td>
+</tr>
+</tbody>
+</table></div>
+<p>La méthode est toujours la même : plutôt que de bouchonner un composant entier, on <strong>isole la logique de décision dans un fichier pur</strong> (<code>tb_wifi_logic.c</code>, <code>tb_recovery_decision.c</code>, <code>tb_pcf8574_logic.c</code>, <code>tb_config_source.c</code>) et on le teste directement. Les noms des tests citent les critères d'acceptation des spécifications (<code>test_crit10_safe_mode_at_two_failures</code>, <code>test_crit37_retry_delay_never_zero</code>).</p>
+<p>La CI compile aussi un firmware qui utilise <em>tous</em> les composants, avec ESP-IDF 5.5.2 <strong>et</strong> 6.0.2, vérifie la découverte des schémas (y compris l'ajout et le retrait d'un schéma entre deux builds), et surveille le budget flash : le firmware de la carte Kincony doit garder au moins 3,5 % de marge.</p>
+<h2 id="une-revue-sur-carte-et-une-règle-de-priorité">Une revue sur carte, et une règle de priorité</h2>
+<p>En octobre, nous avons passé le socle en revue complète : documentation, lecture de code et tests sur banc avec une carte de développement. Le résultat est une liste de défauts, dont certains sont décrits plus haut. Deux autres méritent d'être racontés :</p>
+<ul>
+<li><strong>Une configuration tronquée sortait la carte du réseau.</strong> Envoyée depuis la page web, elle faisait retomber tous les composants sur leurs valeurs codées en dur. Pire : un enregistrement juste après écrasait la dernière configuration valide avec <code>{}</code>. D'où la chaîne de repli décrite plus haut, et la règle de ne jamais écrire la dernière configuration valide à partir d'une configuration non chargée.</li>
+<li><strong>« MQTT reconnected successfully » était journalisé trop tôt</strong>, quand la demande de reconnexion était acceptée, pas quand la connexion était établie. Un log qui ment est pire que pas de log.</li>
+</ul>
+<p>Les corrections ont été regroupées en lots, avec une règle d'ordonnancement qui résume assez bien notre métier :</p>
+<blockquote>
+<p>Ordering rule: what stops a prop in the middle of a session comes first, then what fails silently on props already in production (MQTT, network), then what breaks a build or a new project, then hardware drivers, then comfort and diagnostics.</p>
+</blockquote>
+<p>La feuille de route compte 45 chantiers : 31 terminés, 2 en cours, 12 à faire (dont le retour arrière OTA et des tests d'intégration).</p>
+<h2 id="pour-comparaison--larduino-qui-répondait-au-ping">Pour comparaison : l'Arduino qui répondait au ping</h2>
+<p>Tous nos accessoires ne sont pas sur ce socle. Les trappes de l'ascenseur de la Chocolaterie tournent sur un Arduino Uno avec un shield Ethernet W5500, et elles m'ont appris une leçon que je raconte dans le <a href="https://adrientorris.github.io/fr/projects/team-break/team-break-architecture.html">premier article</a> : la carte se figeait de temps en temps, mais répondait toujours au ping, parce que le W5500 gère l'ICMP tout seul. La bibliothèque Ethernet attendait le contrôleur dans des boucles sans timeout, et les parasites d'un électroaimant suffisaient à la bloquer.</p>
+<p>La solution ressemble, en miniature, à ce que fait le socle ESP32 : un watchdog matériel de 4 s, des timeouts réseau courts, plus aucune boucle bloquante, l'électroaimant alimenté dès le début de <code>setup()</code>. Et un fil d'Ariane qui survit au reset :</p>
+<pre><code class="cpp">struct Persist { uint16_t magic; uint16_t bootCount; uint8_t step; };
+Persist persist __attribute__((section(".noinit")));  // survit au reset, pas à la coupure
+// setup() : MCUSR = 0; wdt_disable(); warmBoot = (persist.magic == 0xC0C1);
+// loop()  : wdt_reset(); persist.step = STEP_MQTT_LOOP; client.loop(); ...</code></pre>
+<p>À chaque connexion, la carte publie un message de diagnostic <em>retained</em> avec le nombre de démarrages, le type du dernier reset et l'étape où se trouvait le code juste avant (<code>reset_step</code>). Le tout tient dans 829 octets de RAM sur les 2 048 disponibles, grâce aux chaînes en <code>F()</code> et à l'abandon de <code>String</code>.</p>
+<h2 id="ce-que-jen-retiens">Ce que j'en retiens</h2>
+<ol type="1">
+<li><strong>Le matériel d'abord.</strong> Un actionneur doit être dans un état sûr avant que la carte sache qu'elle a une adresse IP.</li>
+<li><strong>Un accessoire instable sort du jeu.</strong> Le mode sans échec garde la carte joignable mais coupe MQTT : mieux vaut un accessoire muet qu'un accessoire qui envoie des événements fantômes.</li>
+<li><strong>Les décisions sont des fonctions pures.</strong> Reconnexion, récupération, choix de configuration, écriture de port : tout ce qui décide se teste sur PC, cas par cas.</li>
+<li><strong>La configuration est une donnée, avec un plan B et un plan C.</strong> Elle est validée, versionnée par schémas, et ne doit jamais pouvoir rendre une carte injoignable.</li>
+<li><strong>Le terrain décide.</strong> Polling plutôt qu'interruptions, Ethernet plutôt que Wi-Fi, anti-rebond, logique inversable par configuration : chaque choix vient d'une salle réelle.</li>
+<li><strong>Mettre à jour le socle ne casse aucun accessoire.</strong> C'est une règle écrite dans chaque spécification, et la CI la vérifie.</li>
+<li><strong>Un firmware se livre comme un logiciel.</strong> Signé, reproductible, publié par la CI, mis à jour à distance sans toucher à la configuration.</li>
+</ol>
+<p>Un bon accessoire, c'est celui dont personne ne parle : le coffre s'ouvre quand il faut, la statuette est reconnue du premier coup, et le jour où quelque chose ne va pas, la carte le dit au lieu de se taire.</p>
+				<div id="crdny">posté le 10/11/2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>ESP32</li>
+						<li>ESP-IDF</li>
+						<li>Firmware</li>
+						<li>C</li>
+						<li>FreeRTOS</li>
+						<li>MQTT</li>
+						<li>OTA</li>
+						<li>Électronique</li>
+						<li>Escape game</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

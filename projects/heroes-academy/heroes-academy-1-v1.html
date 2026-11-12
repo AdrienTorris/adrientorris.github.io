@@ -1,0 +1,250 @@
+<!DOCTYPE html><html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=UA-85948839-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-85948839-1');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Heroes Academy (1/3): designing software for a physical game venue</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="en" />
+		<meta name="keywords" content="Team Break,Heroes Academy,.NET,C#,MQTT,Raspberry Pi,IoT,Architecture,Lessons learned" />
+		<meta name="description" content="A venue where people climb, jump and run is a real-time distributed system. A look back at V1: .NET 5, Avalonia, MongoDB and Raspberry Pis, and what it taught me." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/heroes-academy/heroes-academy-1-la-v1.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-1-v1.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>Projects</li>
+					<li>Heroes Academy</li>
+					<li class="active"><a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-1-v1.html" title="Heroes Academy (1/3): designing software for a physical game venue">Heroes Academy (1/3): designing software for a physical game venue</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Heroes Academy (1/3): designing software for a physical game venue</h1>
+<blockquote>
+<p><strong>The Heroes Academy series</strong></p>
+<ol type="1">
+<li><strong>Designing software for a physical game venue</strong> (you are here)</li>
+<li><a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-2-v2-rewrite.html">The V2 rewrite for Canada</a></li>
+<li><a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-3-ai-assisted-development.html">Eight months of AI-assisted development</a></li>
+</ol>
+</blockquote>
+<p>In some projects, a bug gives you a stack trace. In others, it gives you a team of six players stuck in a room in front of a frozen screen, while the next team waits at the door.</p>
+<p>Heroes Academy is the second kind. It is an "active game" concept: teams go through a series of physical rooms where they climb ropes, jump on a light-up floor, shoot baskets or cross a room without touching the ground. Everything is timed, scored, narrated by voice-overs and accompanied by videos. There are three Heroes Academy venues today: two in France, in Lille and Tarbes, and one in Canada, in Brossard, near Montréal.</p>
+<p>I have been developing the software for these venues from the start. This series covers the technical challenges in three parts: the first version and its lessons (this article), the full rewrite done for the Canadian venue, and the role AI-assisted development came to play.</p>
+<hr/>
+<h2 id="a-game-venue-is-a-distributed-system">A game venue is a distributed system</h2>
+<p>From the outside, a Heroes Academy is a sequence of rooms. From the code's point of view, it is a real-time distributed system. It runs on a dozen machines per site, in an environment that looks nothing like a datacenter.</p>
+<p>A team follows a <strong>route</strong>: Dressing, Briefing, Warm Up, then the game rooms (Ropes, Snake, Don't Touch The Floor, Logs, Balls, Communication), then the Debriefing. Each game room lasts a few minutes and contains some or all of the following:</p>
+<ul>
+<li>backlit <strong>target buttons</strong> to hit, sometimes high up;</li>
+<li><strong>magnetic-lock doors</strong>, which lock the entrance during the game and release the exit at the end;</li>
+<li><strong>beacons</strong> and ambient lighting;</li>
+<li>a <strong>screen</strong> for instructions, timer, score and videos, and <strong>speakers</strong> for music, voice-overs and sirens;</li>
+<li>depending on the room, a <strong>floor grid of tiles</strong> (Snake), <strong>floor sensors</strong> (Don't Touch The Floor) or <strong>basket sensors</strong> with point displays (Balls);</li>
+<li>a <strong>secondary mission</strong>: hidden green buttons that unlock a hint video, followed by a multiple-choice question.</li>
+</ul>
+<p>The resulting constraints look nothing like those of a web application:</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Constraint</th>
+<th>Technical consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rooms are <strong>chained</strong></td>
+<td>One stuck room blocks the whole route, and every team behind it.</td>
+</tr>
+<tr class="even">
+<td>The game is <strong>physical</strong></td>
+<td>A lost button press, or one counted twice, is noticed immediately.</td>
+</tr>
+<tr class="odd">
+<td>The hardware is <strong>embedded</strong></td>
+<td>Raspberry Pis on SD cards, power cuts, a switch turned off by mistake.</td>
+</tr>
+<tr class="even">
+<td>On-site staff are <strong>not technical</strong></td>
+<td>A Game Master must be able to restart a room without a terminal.</td>
+</tr>
+<tr class="odd">
+<td>Sites are <strong>far away</strong></td>
+<td>Lille, Tarbes, and soon Montréal: nobody can just drop by and reboot a Pi.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="electronics-mqtt-rather-than-gpio">Electronics: MQTT rather than GPIO</h3>
+<p>The very first structural decision concerned the electronics. The earliest versions drove I/O straight from the Raspberry Pi: GPIO and MCP23017 I²C expanders polled every 50 ms. That code still exists in V1… fully commented out.</p>
+<p>We quickly moved to <strong>networked I/O boards</strong> that speak MQTT. Each board publishes its inputs and receives its outputs as very simple text messages:</p>
+<pre><code class="nohighlight">/io/input   ←  /c0m2p5/on     (controller 0, module 2, pin 5: button pressed)
+/io/input   ←  /c0m2p5/off    (button released)
+/io/output  →  /c1m0p3/on     (light the matching target's LED)</code></pre>
+<p>This is probably the decision that aged best. The software no longer needs to know <em>how</em> a button is wired: it receives strings. That means a whole room can be simulated with <code>mosquitto_pub</code>. This decision survived the rewrite.</p>
+<hr/>
+<h2 id="v1-one-monolith-per-raspberry-pi">V1: one monolith per Raspberry Pi</h2>
+<p>V1 was started by a contractor: the services company where I was then a managing partner. It was developed on Azure DevOps before the code moved to GitHub in 2023. It opened Lille, then Tarbes. Its architecture fits in one diagram:</p>
+<pre><code class="nohighlight">                 ┌────────────────────────────────────────┐
+                 │  Central server (Windows)              │
+                 │  ASP.NET Core 5 (admin, Razor Pages)   │
+                 │  MongoDB                               │
+                 └───────────────▲────────────────────────┘
+                                 │  long-lived MongoDB connections
+         ┌───────────────────────┼───────────────────────┐
+         │                       │                       │
+┌────────┴─────────┐   ┌─────────┴────────┐    ┌─────────┴────────┐
+│ "Ropes" Pi       │   │ "Snake" Pi       │    │ "Balls" Pi       │  …
+│ Avalonia 0.10    │   │ Avalonia 0.10    │    │ Avalonia 0.10    │
+│ logic + UI +     │   │ logic + UI +     │    │ logic + UI +     │
+│ audio (LibVLC) + │   │ audio (LibVLC) + │    │ audio (LibVLC) + │
+│ MQTT, 1 process  │   │ MQTT, 1 process  │    │ MQTT, 1 process  │
+│ local Mosquitto  │   │ local Mosquitto  │    │ local Mosquitto  │
+└────────▲─────────┘   └────────▲─────────┘    └────────▲─────────┘
+         │ MQTT                  │ MQTT                  │ MQTT
+    I/O boards              I/O boards              I/O boards</code></pre>
+<p>Each Pi ran <strong>a single Avalonia desktop application</strong> on .NET 5, published self-contained for <code>linux-arm</code>. It contained everything: game logic, UI, audio (LibVLC with four parallel players for ambience, voices, effects and siren), and the MQTT client for the local broker the I/O boards talked to.</p>
+<h3 id="mongodb-as-the-integration-bus">MongoDB as the integration bus</h3>
+<p>There was no message bus between the rooms and the server. <strong>The database played that role.</strong> Every second, each Pi asked MongoDB whether it had a session to play:</p>
+<pre><code class="csharp">// V1, simplified: every Raspberry Pi polls MongoDB once per second
+var session = gameSessionService.GetSession(roomId);   // SlotStart &lt;= now &lt; GameEnd
+
+bool isRecovering = session.TimeElapsed != TimeSpan.Zero
+    &amp;&amp; session.TimeLeft &gt; session.GameEndDateTime - DateTime.Now + TimeSpan.FromSeconds(6);
+
+if (isRecovering)      current.Recover(session);                       // restarted mid-game
+else if (isPlaying)    current.ComparePersistentDataSession(session);  // admin edited the session
+else                   current.Start(session);</code></pre>
+<p>In the other direction, every game wrote its remaining time back to the database <strong>every second</strong>. Game Master actions ("skip mission", "reset room") were just flags set on the session document, which the Pi discovered on its next tick.</p>
+<p>It wasn't elegant, but it worked, and it was easy to reason about. The <code>Recover</code> logic even let a room resume a running game after a crash, by recomputing the remaining time from the scheduled end time.</p>
+<p>It did have a hidden cost: correct behaviour depended on <strong>each Pi's system clock</strong> and on a <strong>permanent database connection</strong>.</p>
+<h3 id="the-zombie-process">The zombie process</h3>
+<p>This is the most frequent incident in V1's whole history, and it almost always happened in the morning, before opening.</p>
+<p>The central server restarts, because of an overnight Windows update or a power cut. When it comes back, no room works, and the only known fix is to <strong>reboot every Raspberry Pi</strong>.</p>
+<p>For a long time we suspected MQTT. We were wrong: each Pi has its own Mosquitto, and a server reboot cannot kill it. The real cause was found by watching the TCP connections opened from a Pi. The application kept a <strong>pool of long-lived connections to MongoDB</strong>. The server reboot killed those sockets, and the client never rebuilt the pool.</p>
+<p>The detail that made the problem nasty: <strong>the process didn't die</strong>. It kept running, attached to dead sockets. Each Pi did have a relaunch script:</p>
+<pre><code class="nohighlight"># ha-keepalive.sh, started with the graphical session
+while :; do
+    $dq_app_path &amp; pid=$!
+    wait $pid
+    sleep 2s
+done</code></pre>
+<p>But that script relaunches a <em>dead</em> process, not a <em>useless</em> one. The fix took the form of a watchdog. It probes the database port every 15 seconds and, on an "unreachable, then back" transition, kills the game so that <code>ha-keepalive</code> restarts it:</p>
+<pre><code class="nohighlight">reachable() { timeout 3 bash -c "exec 3&lt;&gt;/dev/tcp/$MONGO_HOST/$MONGO_PORT" 2&gt;/dev/null; }
+
+while :; do
+  if reachable; then
+    ok=$((ok + 1))
+    if [[ $state == down &amp;&amp; $ok -ge 4 ]]; then   # 4 successful probes in a row
+      restart_game                               # kill, then ha-keepalive relaunches
+      state=up
+    fi
+  else
+    ok=0; state=down
+  fi
+  sleep 15
+done</code></pre>
+<p>The safeguards are deliberate:</p>
+<ul>
+<li>a room whose database never went away is never touched;</li>
+<li>a network hiccup of a few seconds triggers nothing;</li>
+<li>the log is truncated at 256 KB, because these machines run on SD cards.</li>
+</ul>
+<p>The lesson goes beyond this case: <strong>a live process is not a working process.</strong></p>
+<h3 id="the-other-pain-points">The other pain points</h3>
+<p>The zombie process was the most visible problem, but not the only one:</p>
+<ul>
+<li><strong>A frozen stack.</strong> .NET 5 has been out of support since May 2022, and V1 was pinned to Avalonia 0.10. Upgrading meant migrating the runtime, the UI framework and the LibVLC integration on ARM all at once, with no safety net. Avalonia itself is not to blame. The problem was putting it at the centre: when the UI framework also hosts the game logic and the audio, everything is tied to its lifecycle.</li>
+<li><strong>Concurrency.</strong> Several timers ran in parallel (session polling, countdown, per-game timers), on top of MQTT callbacks and the UI dispatcher. To avoid concurrent access, some games used <code>Monitor.TryEnter(padlock, TimeSpan.Zero)</code>. A button press arriving while the lock was held was therefore <strong>silently dropped</strong>. Snake, for its part, ran multi-second <code>Thread.Sleep</code> calls for its animations.</li>
+<li><strong>Hand-made deployments.</strong> The process was the same every time: <code>dotnet publish</code>, delete the config files, zip, copy to the site, unzip, restore the local configuration. A room's wiring (which button on which pin) lived in <strong>three different places</strong>, and they drifted apart: an output remapped by hand to work around a dead pin, a site file copied from another site. Some differences between sites were even handled by commenting or uncommenting a line before compiling (<code>// For Lille</code> / <code>// For Tarbes</code>).</li>
+<li><strong>Media.</strong> Videos were committed to the Git repository (over 600 MB of <code>.git</code>, including a 321 MB video that GitHub rejected). Full-screen playback spawned an external <code>vlc</code> process, which was later killed by name.</li>
+<li><strong>The Windows server.</strong> The admin was a console application launched from the Startup folder. It therefore depended on a user logging in, and on an ASP.NET development certificate that eventually expired. One day a switch was turned off by mistake: fourteen machines went down at once, and the admin didn't come back when power returned.</li>
+<li><strong>Real hardware.</strong> In Tarbes, the Balls room sensors sit at the top of the basket. A ball bouncing on the rim therefore scored twice, and we had to add a one-second per-basket debounce. None of this appears in any specification.</li>
+</ul>
+<h3 id="the-arena-or-the-art-of-keeping-teams-apart">The Arena, or the art of keeping teams apart</h3>
+<p>V1 also introduced the <strong>Arena</strong>, a shared room where each team spends 30 seconds between two game rooms answering a question on a touchscreen. On paper, it's simple. In practice, the Arena is shared by every team on the route, and two teams must never meet there.</p>
+<p>The scheduler pre-computed a team's entire route when the session was created, one step per document. We had to rework the spacing between starts (Briefing + Dressing + 3 × Arena) and add unit tests over 30 to 50 consecutive sessions to guarantee that no crossing remained possible.</p>
+<h3 id="a-v1-that-did-its-job">A V1 that did its job</h3>
+<p>It would be unfair to remember only the problems. V1 opened two sites and kept them running for years. It also evolved a lot through contact with the field:</p>
+<ul>
+<li>Balls baskets weighted by the number of players;</li>
+<li>a redesigned Snake, with random sequences and a dedicated scenario for teams of six;</li>
+<li>voice-overs at halftime, one minute and ten seconds before the end;</li>
+<li>questions read aloud in the Arena.</li>
+</ul>
+<p>Some settings were made, unmade and remade within a few days, directly on site. That's the nature of a physical game: you don't know whether a mechanic is fun until you've watched a team play it.</p>
+<hr/>
+<h2 id="what-v1-taught-me">What V1 taught me</h2>
+<ol type="1">
+<li><strong>A database is not a message bus.</strong> Polling a shared database creates hidden coupling, to the clock as much as to the connection. The day the connection dies without the process dying, nothing moves anymore, and nothing reports it.</li>
+<li><strong>A live process is not a working process.</strong> Supervising a PID is not enough; you must supervise the function.</li>
+<li><strong>Whatever can drift will drift.</strong> Configuration copied to three places ends up with three versions. A site difference handled with a comment ends up compiled for the wrong site.</li>
+<li><strong>The field is always right.</strong> Bouncing balls, a switch turned off, a server rebooting at night: no spec replaces an hour in the room.</li>
+</ol>
+<p>When the Canadian project took shape, the question was simple: install yet another copy of this V1 more than 5,000 km away, with no way to drop by and reboot a Pi in the morning? The answer was no. That is the subject of part two.</p>
+<hr/>
+<blockquote>
+<p><strong>Next in the series</strong> 2. <a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-2-v2-rewrite.html">The V2 rewrite for Canada</a>: V2's architecture, principles and bugs. 3. <a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-3-ai-assisted-development.html">Eight months of AI-assisted development</a>: what the Git history says about AI in the project.</p>
+</blockquote>
+<p><em>Code excerpts in this article are simplified. Addresses, credentials and site-specific infrastructure details have been deliberately left out.</em></p>
+				<div id="crdny">October 14, 2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>Heroes Academy</li>
+						<li>.NET</li>
+						<li>C#</li>
+						<li>MQTT</li>
+						<li>Raspberry Pi</li>
+						<li>IoT</li>
+						<li>Architecture</li>
+						<li>Lessons learned</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

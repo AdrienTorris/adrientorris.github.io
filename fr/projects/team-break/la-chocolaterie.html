@@ -1,0 +1,351 @@
+<!DOCTYPE html><html lang="fr-FR" xml:lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=UA-85948839-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-85948839-1');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>La Chocolaterie : dans les coulisses techniques d'un escape game en cinq actes</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="fr" />
+		<meta name="keywords" content="Team Break,La Chocolaterie,Escape game,Maestro,MQTT,Godot,C#,Raspberry Pi,Retour d'expérience" />
+		<meta name="description" content="Un plateformer qui se joue sur un vrai décor, un Guitar Hero à huit joueurs dans un ascenseur, et des équipes qui doivent traverser cinq salles sans jamais rester coincées. Retour d'expérience." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/team-break/la-chocolaterie.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/team-break/la-chocolaterie.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/fr/index.html" title="">Accueil</a></li>
+					<li>Projets</li>
+					<li>Team Break</li>
+					<li class="active"><a href="https://adrientorris.github.io/fr/projects/team-break/la-chocolaterie.html" title="La Chocolaterie : dans les coulisses techniques d'un escape game en cinq actes">La Chocolaterie : dans les coulisses techniques d'un escape game en cinq actes</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>La Chocolaterie : dans les coulisses techniques d'un escape game en cinq actes</h1>
+<p><em>Un plateformer qui se joue sur un vrai décor, un Guitar Hero à huit joueurs dans un ascenseur, et des équipes qui doivent traverser cinq salles sans jamais rester coincées. Retour d'expérience.</em></p>
+<hr/>
+<p>De tous les jeux sur lesquels j'ai travaillé, <strong>La Chocolaterie</strong> est celui qui m'a donné le plus de fil à retordre. Ce n'est pas une salle, mais <strong>cinq salles enchaînées</strong> : la confiserie (<em>Candy Store</em>), le jardin chocolaté (<em>Chocolate Garden</em>), l'ascenseur (<em>Elevator</em>), la chambre froide (<em>Ice Room</em>) et la salle des inventions (<em>Inventing Room</em>). Les joueurs y sont accompagnés par Pinch, un petit personnage qui apparaît dans les vidéos, commente ce qu'ils font et finit même par devenir… le héros d'un jeu de plateforme. Et pour corser le tout, jusqu'à trois équipes peuvent y jouer en même temps.</p>
+<p>Les premières lignes de code datent de l'été 2024. Il a fallu beaucoup d'itérations, de soirées en salle et de corrections pour arriver à un jeu qui tourne tous les jours sans surprise. Aujourd'hui, la salle donne satisfaction, et ce sont les joueurs qui le disent mieux que moi :</p>
+<div class="pic_wrapper"><img alt="Avis Google 1" loading="lazy" src="/wwwroot/images/projects/team-break/la-chocolaterie/google-review-1.png" title="Avis Google 1"/></div><div class="pic_wrapper"><img alt="Avis Google 2" loading="lazy" src="/wwwroot/images/projects/team-break/la-chocolaterie/google-review-2.png" title="Avis Google 2"/></div>
+<p>Dans cet article, je reviens sur les trois chantiers qui m'ont le plus occupé : <strong>le plateformer</strong>, <strong>le Guitar Hero</strong> et <strong>la gestion du flux des joueurs</strong> à travers les cinq salles. Et sur ce que j'en retiens.</p>
+<h2 id="la-chocolaterie-en-quelques-chiffres">La Chocolaterie en quelques chiffres</h2>
+<div class="table_wrapper"><table>
+<tbody>
+<tr class="odd">
+<td><strong>5</strong></td>
+<td>salles enchaînées, chacune avec son propre orchestrateur</td>
+</tr>
+<tr class="even">
+<td><strong>3</strong></td>
+<td>équipes en jeu en même temps, au maximum</td>
+</tr>
+<tr class="odd">
+<td><strong>312</strong></td>
+<td>entrées/sorties électroniques déclarées (capteurs, relais, portes, ventilateurs…)</td>
+</tr>
+<tr class="even">
+<td><strong>78</strong></td>
+<td>fichiers JSON de gameflow</td>
+</tr>
+<tr class="odd">
+<td><strong>275</strong></td>
+<td>handlers de notifications</td>
+</tr>
+<tr class="even">
+<td><strong>615</strong></td>
+<td>commandes (audio, vidéo, électronique, agents spécifiques)</td>
+</tr>
+<tr class="odd">
+<td><strong>341</strong></td>
+<td>versions du gameflow publiées à ce jour</td>
+</tr>
+<tr class="even">
+<td><strong>13</strong></td>
+<td>agents .NET spécifiques au jeu, plus un jeu Godot et un firmware ESP32</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="larchitecture-en-deux-mots">L'architecture en deux mots</h2>
+<p>Tous nos jeux reposent sur <strong>Maestro</strong>, la plateforme que j'ai construite pour piloter nos salles. Le principe : des agents spécialisés qui communiquent par <strong>MQTT</strong>, et un <strong>gameflow</strong> décrit en JSON plutôt qu'en code.</p>
+<pre><code class="nohighlight">                    ┌──────────────────────┐
+                    │   GM UI  /  GM API   │   game masters
+                    └──────────┬───────────┘
+                               │
+                    ┌──────────▼───────────┐
+                    │  Game Orchestrator   │   enchaîne les salles
+                    └──────────┬───────────┘
+                               │ MQTT
+     ┌───────────┬─────────────┼─────────────┬──────────────┐
+     ▼           ▼             ▼             ▼              ▼
+  Room orch.  Room orch.   Room orch.    Room orch.     Room orch.
+  R1 Candy    R2 Garden    R3 Elevator   R4 Ice room    R5 Inventing
+     │
+     ├── Electronic agent ── cartes d'E/S (capteurs, relais, portes)
+     ├── Audio player       (Python / pygame)
+     ├── Video player       (mpv, sur Raspberry Pi)
+     └── Agents spécifiques (Guitar Hero, plateformer, machine à pompe…)</code></pre>
+<ul>
+<li>Chaque <strong>room orchestrator</strong> exécute le gameflow de sa salle : il reçoit des notifications (un capteur, la fin d'une vidéo, un agent qui annonce une réussite), applique des filtres (tel jalon est-il validé ?) et publie des commandes.</li>
+<li>L'<strong>electronic agent</strong> traduit le format brut des cartes d'E/S (du genre <code>/c3m4p4/on</code> : contrôleur 3, module 4, broche 4) en clés métier comme <code>fanbtns_1_pressed</code>. Ce mapping, les <em>electronic proxies</em>, est lui aussi dans le gameflow.</li>
+<li>Les agents génériques (audio, vidéo, électronique, orchestrateurs, interface GM) ne contiennent <strong>aucun code spécifique à un jeu</strong>. Tout ce qui est propre à La Chocolaterie vit soit dans le gameflow, soit dans un agent dédié.</li>
+</ul>
+<p>Ce choix « data-driven » a été déterminant. Les 341 versions du gameflow sont autant d'ajustements (un indice qui arrive trop tôt, une vidéo trop longue, un filtre manquant) que j'ai pu déployer <strong>sans recompiler quoi que ce soit</strong>.</p>
+<h2 id="chantier-n1--un-plateformer-qui-se-joue-sur-un-vrai-décor">Chantier n°1 : un plateformer qui se joue sur un vrai décor</h2>
+<h3 id="le-concept">Le concept</h3>
+<p>Dans la chambre froide, Pinch devient le héros d'un jeu de plateforme. Mais le but n'est pas d'afficher un jeu : c'est de donner <strong>l'illusion que Pinch se déplace réellement dans la salle</strong>. En production, le fond est noir et <strong>seuls Pinch et les bulles qui simulent le vent sont affichés</strong>. Tout le reste est physique : Pinch se déplace sur les <strong>tuyaux</strong> de la salle, et les ventilateurs qui le soulèvent sont de <strong>vrais ventilateurs</strong>, installés dans la pièce.</p>
+<p>Les joueurs pilotent Pinch avec des commandes physiques (gauche, droite, saut) câblées sur l'électronique de la salle. Pour franchir certains passages, ils doivent activer ou désactiver les ventilateurs : le vrai souffle et la zone de vent du jeu se déclenchent ensemble. Au niveau 2, il faut <strong>déplacer des tuyaux</strong> en salle : leur position, lue par des capteurs, ouvre ou ferme les murs correspondants dans le jeu.</p>
+<h3 id="la-stack">La stack</h3>
+<ul>
+<li><strong>Godot 4.4 édition .NET</strong>, scripts en <strong>C#</strong>, rendu <em>GL Compatibility</em> ;</li>
+<li><strong>deux Raspberry Pi 4</strong> (Linux arm64), un par niveau, lancés avec <code>-level 1</code> ou <code>-level 2</code> ;</li>
+<li>toutes les entrées arrivent par <strong>MQTT</strong> : en build release, le clavier n'existe plus.</li>
+</ul>
+<h3 id="un-level-design-invisible">Un level design… invisible</h3>
+<p>Le premier vrai problème est géométrique. Le niveau existe bel et bien dans le jeu, avec ses murs et ses plateformes, mais il n'est jamais affiché en production : <strong>les collisions doivent coller au plus près à des tuyaux que les joueurs voient, mais que le jeu, lui, ne voit pas</strong>. Un mur virtuel décalé de quelques centimètres, et Pinch flotte dans le vide ou passe à travers un tuyau.</p>
+<p>Le calage se fait donc sur site. Un build debug affiche tout le niveau, murs compris : c'est lui qui permet de vérifier, en salle, que les murs du jeu sont bien calés sur les tuyaux physiques. Les zones des ventilateurs, elles, n'étaient visibles qu'en debug, car leur affichage était figé à la compilation par <code>#if DEBUG</code>. J'en ai fait une option de lancement, utilisable directement sur le build release du Pi :</p>
+<pre><code class="nohighlight">./plateformer.sh -level 2 -debug-zones</code></pre>
+<p>Les zones de vent apparaissent en rouge, les limites en vert, les zones d'émission en bleu, et on ajuste face aux vrais ventilateurs. C'est aussi comme ça qu'un « mur du frigo » est apparu dans le niveau 2, un an après la première version : le décor avait sa propre opinion sur la question.</p>
+<h3 id="la-physique-des-ventilateurs">La physique des ventilateurs</h3>
+<p>Dans le jeu, un ventilateur, c'est un émetteur de particules (les bulles) et deux <code>Area2D</code> : une <strong>zone de vent</strong> qui pousse Pinch, et une <strong>zone limite</strong> au sommet où il flotte. Pour éviter un personnage figé en l'air, il oscille doucement autour de ce point :</p>
+<pre><code class="csharp">if (_isInVerticalFanLimit)
+{
+    // En haut du flux d'air : légère oscillation
+    float oscillation = Mathf.Sin(_oscillationTime * OscillationSpeed) * OscillationStrength;
+    velocity.Y = oscillation;
+}
+else if (_isInVerticalFan)
+{
+    // Dans le flux : poussée vers le haut
+    velocity.Y += -350 * (float)delta;
+}
+else if (!IsOnFloor())
+{
+    velocity.Y += 1000.0f * (float)delta; // gravité
+}</code></pre>
+<p>Côté électronique, j'ai câblé le vrai ventilateur <strong>en réflexe</strong> : le proxy du bouton déclenche directement la sortie du ventilateur sur la carte, sans aller-retour par l'orchestrateur ni par le jeu. Le souffle se déclenche donc à l'instant même où l'on appuie, et le jeu reçoit la même information en parallèle.</p>
+<h3 id="des-indices-qui-viennent-du-jeu-lui-même">Des indices qui viennent du jeu lui-même</h3>
+<p>Quand Pinch reste bloqué au pied d'un ventilateur, il entre dans une <code>DetectionZone</code>. La première fois, le jeu publie une notification (<code>plateformer_ventilation_pinch_stuck</code>), et le gameflow déclenche un indice audio. C'est un indice contextuel, qui dépend de la <strong>position du personnage</strong> et pas d'un simple chronomètre. Les game masters disposent en plus de commandes de déblocage (<code>solve_fans</code>, validation d'un niveau…).</p>
+<h3 id="lintro-vidéo--des-images-plutôt-quune-vidéo">L'intro vidéo : des images plutôt qu'une vidéo</h3>
+<p>Godot ne lit nativement que l'Ogg Theora, et sur un Pi 4 le résultat ne m'a pas convaincu. L'intro a donc été découpée en images :</p>
+<pre><code class="nohighlight">ffmpeg -i intro.mp4 -vf scale=960:540,fps=15 frames2/frame_%04d.jpg</code></pre>
+<p>Plus tard, j'ai remarqué que sur les 369 images, <strong>80 étaient des copies exactes</strong> de la précédente. En fusionnant chaque séquence en une seule entrée du <code>SpriteFrames</code>, avec une durée égale à sa longueur, j'ai obtenu <strong>22 % de mémoire et de temps de chargement en moins</strong>, pour un rendu identique.</p>
+<h3 id="le-vrai-boss-de-fin--mqtt">Le vrai boss de fin : MQTT</h3>
+<p>Godot n'a pas de client MQTT natif. Le jeu embarque donc un <strong>client minimaliste sur WebSocket</strong>, porté dans le projet. Il a fonctionné pendant des mois… jusqu'à ce que je cherche pourquoi la salle se bloquait de temps en temps. En l'auditant, j'ai trouvé une belle collection :</p>
+<ul>
+<li><strong>Aucune reconnexion, jamais.</strong> La machine à états ne relançait une connexion que si <code>_reconnectTimer &gt; 0</code>, mais après un échec ce timer valait <code>0</code>. Si le Pi démarrait avant le broker, le jeu restait sourd jusqu'au redémarrage.</li>
+<li><strong>Aucune connexion du tout en mode silencieux</strong> : l'appel <code>ConnectToUrl(...)</code> était imbriqué dans un <code>if (_verboseLevel != 0)</code>.</li>
+<li><strong>Encodage des paquets</strong> : la taille du <code>PUBLISH</code> était calculée avec <code>sz/127 + 1</code> au lieu de la vraie longueur variable. À partir de 255 octets, un octet nul en trop partait après le paquet et le broker coupait la connexion. Le ping de monitoring faisait 147 octets : on n'en était pas loin. La longueur restante de <code>CONNECT</code>/<code>SUBSCRIBE</code> tenait sur un seul octet, et le keep-alive de 120 s était annoncé à 124 s à cause d'un <code>OR 0x3C</code>.</li>
+<li><strong>Un seul paquet traité par frame</strong> : une rafale de N messages était appliquée avec N-1 frames de retard.</li>
+<li><strong>Un paquet empoisonné</strong> : le tampon de réception n'était pas vidé à la déconnexion. Un paquet tronqué restait en tête, faisait échouer chaque nouvelle connexion avant le <code>CONNACK</code>, en boucle.</li>
+<li><strong>La fin de niveau perdue</strong> : <code>levelN_succeed</code> partait en QoS 0. Sur un lien mort pas encore détecté (jusqu'à environ 30 s), le message partait dans le vide, le niveau était déjà masqué, et l'orchestrateur ne l'apprenait jamais. <strong>La salle restait bloquée.</strong></li>
+<li>Et pour finir, un <em>last will</em> <code>"BB"</code> publié sur le topic <code>last</code>, reste d'un test, ainsi que <strong>trois générateurs d'identifiant client aléatoire</strong> qui se marchaient dessus.</li>
+</ul>
+<p>La correction a pris la forme d'une spécification avec des critères d'acceptation chiffrés, puis d'une série de petites PR :</p>
+<ul>
+<li>un <strong>backoff exponentiel</strong> (1, 2, 4, 8 puis 10 s plafonnées), un timeout de 5 s sur chaque état transitoire, et une détection de lien mort après deux <code>PINGRESP</code> manqués ;</li>
+<li>la fin de niveau publiée en <strong>QoS 1</strong>, conservée dans une <em>outbox</em> jusqu'au <code>PUBACK</code> et réémise à chaque reconnexion. On accepte un doublon possible, mais plus aucune perte ;</li>
+<li>un vrai <em>last will</em> « offline » sur le topic de monitoring ;</li>
+<li>un <strong>identifiant client stable</strong>, <code>choco-r4-plateformer-&lt;hôte&gt;-level&lt;N&gt;</code>. Le niveau en fait partie pour que deux Pi restés sur le nom d'hôte par défaut ne s'éjectent pas mutuellement du broker.</li>
+</ul>
+<p>Surtout, toute cette logique a été extraite dans des <strong>classes pures</strong> (<code>MqttReconnectionPolicy</code>, <code>MqttPacketCodec</code>, <code>MqttCriticalNotificationOutbox</code>…), testées en xUnit <strong>sans instancier le moteur Godot</strong>, avec un temps injecté. Mille échecs de connexion consécutifs se simulent en quelques millisecondes.</p>
+<p>Au passage, un autre bug discret : le joueur était instancié dès le chargement du niveau, invisible mais <strong>physiquement actif</strong>. Un Pinch fantôme pouvait donc atteindre la sortie avant même le début de la partie. Il est désormais désactivé (<code>ProcessMode.Disabled</code>) en dehors d'un niveau en cours.</p>
+<h2 id="chantier-n2--un-guitar-hero-à-huit-dans-un-ascenseur">Chantier n°2 : un Guitar Hero à huit dans un ascenseur</h2>
+<h3 id="le-brief">Le brief</h3>
+<p>Dans l'ascenseur, <strong>huit boutons</strong> sont répartis par paires à côté des écrans. Une vidéo accompagnée d'une bande-son fait défiler des notes, et les joueurs doivent appuyer au bon moment, parfois longtemps pour les notes tenues. Le cahier des charges tenait en quelques lignes, dont certaines étaient lourdes de conséquences :</p>
+<ul>
+<li>une difficulté adaptée <strong>au nombre de joueurs</strong> ;</li>
+<li>un jeu <strong>de plus en plus permissif</strong> à chaque échec, avec un nombre de recommencements limité ;</li>
+<li>un cadran en surimpression qui indique le nombre d'erreurs encore autorisées ;</li>
+<li>une note manquée compte comme une erreur ;</li>
+<li>la vidéo et l'audio sont gérés par d'autres agents.</li>
+</ul>
+<p>Et une question restait ouverte dans le README d'origine : <em>« Comment tester le jeu ? Obligé d'être en salle, à plusieurs ? »</em></p>
+<h3 id="le-temps-ennemi-n1">Le temps, ennemi n°1</h3>
+<p>Les notes sont décrites dans un <code>Scenarios.json</code> (début et fin en millisecondes sur la vidéo, <code>solo</code> pour les notes rouges du solo), validé au démarrage : un bouton inexistant ou une note qui se termine avant d'avoir commencé fait échouer le chargement. Le problème n'est pas là. Le problème, c'est que <strong>le jeu et la vidéo ne partagent pas la même horloge</strong>. Le jeu démarre son chronomètre quand il envoie la commande de lecture, et la vidéo démarre… un peu plus tard.</p>
+<p>Dans le code, une constante témoigne de la façon dont j'ai d'abord traité le problème :</p>
+<pre><code class="csharp">// En réalité toutes les notes ont du retard sur leur prog, cause à identifier.
+internal const int REALITY_LAG_SO_TIMELAPSE_TO_ADD = 1000;</code></pre>
+<p>C'est une compensation empirique, mesurée en salle. Elle fonctionne, mais en boucle ouverte. Depuis, le lecteur vidéo sait signaler le <strong>vrai début de lecture</strong>, et le jeu sait <strong>recaler son horloge</strong> dessus. Cette boucle fermée est prête mais encore dormante : l'activer imposera de recalibrer la constante, et en salle on ne touche pas à ce qui marche sans une session de test.</p>
+<h3 id="une-seule-boucle-de-jeu-sans-verrou">Une seule boucle de jeu, sans verrou</h3>
+<p>Les appuis arrivent par MQTT, le minuteur de détection des notes manquées tourne sur son propre thread, et les commandes de démarrage et d'arrêt arrivent du gameflow. Les premières versions avaient évidemment des <strong>races</strong>. La version actuelle repose sur un modèle simple : tous les événements sont mis dans un <code>Channel&lt;T&gt;</code> et <strong>un seul consommateur</strong> modifie l'état du jeu. Les retours (son, cadran, voix de Pinch) partent dans un second canal vidé par une pompe dédiée, pour que la boucle ne bloque jamais sur le réseau.</p>
+<pre><code class="csharp">private void Dispatch(GameEvent gameEvent)
+{
+    switch (gameEvent)
+    {
+        case StartEvent: HandleStart(); break;
+        case StopEvent:  HandleStop();  break;
+        // Un événement daté d'une manche précédente porte un temps de l'ancienne horloge :
+        // l'appliquer aux nouvelles notes marquerait des notes ratées ou compterait des erreurs.
+        case ButtonPressedEvent e when e.Round == _round:
+            HandleButtonPressed(e.ButtonId, e.TimestampMs);
+            break;
+        case TickEvent e when e.Round == _round:
+            HandleTick(e.TimestampMs);
+            break;
+        // ...
+    }
+}</code></pre>
+<p>Ce numéro de <strong>manche</strong> (<code>_round</code>) a réglé un bug vicieux. Un appui mis en file juste avant un redémarrage était traité juste après, avec un horodatage de l'ancienne horloge (60 000 ms par exemple), et appliqué aux notes toutes neuves. Un seul tick pouvait alors marquer d'un coup sept notes comme ratées et déclencher un faux redémarrage.</p>
+<h3 id="les-règles-du-jeu-version-escape-game">Les règles du jeu, version escape game</h3>
+<p>Quelques choix qui paraissent anodins, mais qui ont fait toute la différence :</p>
+<ul>
+<li><strong>Un appui résout au plus une note</strong> : la plus ancienne encore en attente sur ce bouton. Une ancienne version pouvait en résoudre jusqu'à sept, ce qui faussait le score et provoquait des redémarrages injustes.</li>
+<li><strong>Une fenêtre large</strong> : ±600 ms, plus une tolérance de 250 ms. On n'est pas en mode Expert. Les joueurs ne sont pas des gamers, ils sont huit, et ils découvrent les boutons.</li>
+<li><strong>Une note n'est déclarée manquée qu'après un délai de grâce</strong> de 350 ms au-delà de sa fenêtre, pour qu'un appui tardif ne soit pas doublé par la vérification. Celle-ci tourne chaque seconde et ne marque pas plus de sept notes par passage, pour que le cadran descende progressivement.</li>
+<li><strong>La difficulté dépend du nombre de joueurs</strong> (transmis par la session) : <em>easy</em> jusqu'à 2, <em>medium</em> à 3 ou 4, <em>high</em> au-delà.</li>
+<li><strong>Le jeu ne peut pas être perdu indéfiniment</strong> : 15 erreurs autorisées au premier essai, 30 au deuxième, la tolérance s'élargit de 200 ms à chaque redémarrage, et au dernier essai autorisé la tolérance passe à 1 500 ms avec un plafond d'erreurs inatteignable. <strong>La victoire est garantie.</strong></li>
+</ul>
+<p>Ce dernier point résume une règle que je considère comme fondamentale : <strong>dans un escape game, une épreuve ne doit jamais être une impasse.</strong> L'équipe doit sortir de l'ascenseur, avec le sentiment d'avoir mérité sa victoire.</p>
+<h3 id="tester-sans-être-huit-dans-un-ascenseur">Tester sans être huit dans un ascenseur</h3>
+<p>La réponse à la question du README s'appelle <code>GuitarHero.AutomaticTest</code> : un outil qui <strong>rejoue des scénarios d'appuis et de relâchements</strong> horodatés sur MQTT, exactement comme les vrais boutons. Il y a des scénarios « parfaits », d'autres volontairement imprécis, d'autres qui doivent provoquer un redémarrage. On lance le jeu, on lance le scénario, on regarde le cadran. Ce n'est pas un test unitaire au sens strict, mais c'est infiniment plus reproductible que « on y retourne à quatre ce soir ».</p>
+<h2 id="chantier-n3--faire-circuler-les-joueurs-dans-cinq-salles">Chantier n°3 : faire circuler les joueurs dans cinq salles</h2>
+<h3 id="trois-équipes-en-même-temps">Trois équipes en même temps</h3>
+<p>La Chocolaterie n'accueille pas une équipe à la fois. <strong>Jusqu'à trois équipes peuvent jouer en même temps</strong> : une en salle 1, une en salle 3, une en salle 5. C'est le fonctionnement normal de la salle, et c'est très fréquent le week-end.</p>
+<p>Cela change complètement la nature du problème. Une salle n'est plus une partie isolée, c'est une étape d'un pipeline : chaque équipe avance avec une salle d'écart sur la précédente, et cet écart doit tenir du début à la fin. Une équipe qui prend du retard, c'est l'équipe suivante qui la rattrape.</p>
+<p>L'architecture s'y prête bien : chaque salle a son propre room orchestrator, avec son propre gameflow et son propre état. Trois parties tournent donc en parallèle sans se marcher dessus, et les game masters disposent d'une vue multi-salles pour les suivre.</p>
+<h3 id="lenchaînement">L'enchaînement</h3>
+<p>Chaque salle a son propre <strong>room orchestrator</strong>, mais une équipe vit une seule partie. C'est le <strong>game orchestrator</strong> qui fait le lien : quand une salle publie <code>room_succeed</code>, il enregistre la fin, trouve la salle suivante et la démarre <strong>avec la même session</strong>. Tout commence par la première salle (préparation, briefing, lancement), et les suivantes sont démarrées par l'enchaînement. La session suit l'équipe, pas la salle : son nom, sa langue et son nombre de joueurs (celui qui règle la difficulté du Guitar Hero) passent ainsi de salle en salle, même avec trois équipes dans le bâtiment.</p>
+<p>Les transitions physiques sont scénarisées. Dans le sas de l'ascenseur, par exemple, la vidéo d'accueil <strong>boucle tant que les joueurs n'ont pas fermé la porte</strong> :</p>
+<pre><code class="json">{
+  "notification": "r3_sas_play_ended",
+  "description": "Fin de la scéno, on recommence si les joueurs n'ont pas fermé la porte",
+  "filters": [{ "behavior": "milestone_not_validated", "key": "r3_door_closed" }],
+  "behaviors": [
+    { "behavior": "command_publish", "key": "r3_sas_entrance_video_play" },
+    { "behavior": "command_publish", "key": "r3_sas_entrance_audio_play" }
+  ]
+}</code></pre>
+<h3 id="le-budget-temps--des-indices-puis-des-filets-de-sécurité">Le budget temps : des indices, puis des filets de sécurité</h3>
+<p>C'est le vrai défi de conception. Dans une salle unique, une équipe en retard finit simplement sans avoir terminé. Dans un parcours en cinq actes, <strong>une équipe bloquée en salle 2 ne verra jamais les salles 3, 4 et 5</strong>, qui sont pourtant le cœur de l'expérience. Et avec trois équipes en jeu, elle retarde aussi <strong>l'équipe qui arrive derrière elle</strong>. Le budget temps de chaque salle n'est donc pas un confort, c'est une contrainte d'exploitation.</p>
+<p>Chaque salle a donc un budget temps, géré en deux couches dans le gameflow :</p>
+<ol type="1">
+<li><strong>Des indices automatiques progressifs</strong>, déclenchés par des <em>scheduled actions</em> relatives à un jalon. Par exemple, 4 minutes après la pose du badge dans la caisse enregistreuse, un indice sur les jarres, puis 8 minutes après, un indice sur les robinets, et ainsi de suite. Chaque indice est conditionné : s'il n'est plus utile, il ne part pas.</li>
+<li><strong>Des validations forcées</strong>, en dernier recours, qui font avancer la salle à la place des joueurs, de façon scénarisée.</li>
+</ol>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Salle</th>
+<th>Filets de sécurité (temps depuis le déclencheur)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>R1 – Candy Store</td>
+<td>2, 8, 23 et 25 min</td>
+</tr>
+<tr class="even">
+<td>R2 – Chocolate Garden</td>
+<td>12, 22 et 30 min</td>
+</tr>
+<tr class="odd">
+<td>R3 – Elevator</td>
+<td>2 et 18 min (et le Guitar Hero imperdable)</td>
+</tr>
+<tr class="even">
+<td>R4 – Ice Room</td>
+<td>trappe ouverte à 10 min, plateformer validé à 40 min</td>
+</tr>
+<tr class="odd">
+<td>R5 – Inventing Room</td>
+<td>9, 12 et 22 min</td>
+</tr>
+</tbody>
+</table></div>
+<p>Dans la chambre froide, si le digicode n'est pas trouvé au bout de 10 minutes, c'est Pinch qui l'ouvre lui-même. Le joueur ne vit pas un échec, il vit une péripétie :</p>
+<pre><code class="json">{
+  "description": "Au bout de 10 minutes, on ouvre le conduit",
+  "trigger_type": "room_event",
+  "trigger_key": "room_started",
+  "delay": 600,
+  "conditions": [{ "behavior": "milestone_not_validated", "key": "r4_digicode_unlocked" }],
+  "behaviors": [
+    { "behavior": "command_publish",   "key": "trappe_unlock" },
+    { "behavior": "milestone_validate", "key": "r4_digicode_unlocked" },
+    { "behavior": "command_publish",   "key": "digicode_unlocked_bypinch_audio_play" }
+  ]
+}</code></pre>
+<p>Tout cela s'ajoute aux game masters, qui voient les jalons en temps réel, peuvent envoyer des indices, valider une épreuve ou débloquer un ventilateur depuis leur interface. L'automatique gère le cas général, et l'humain garde la main.</p>
+<h3 id="arrêter-proprement-cest-aussi-du-gameplay">Arrêter proprement, c'est aussi du gameplay</h3>
+<p>Un point que j'ai sous-estimé au début : <strong>l'arrêt d'une salle</strong>. Un stop du game master doit ouvrir toutes les portes et trappes, mettre les vidéos de Pinch au noir, masquer le plateformer, couper les effets. Plusieurs corrections récentes du gameflow ne concernent que ça, par exemple « l'arrêt GM masque Pinch et le plateformer », ou « la validation GM du niveau 2 masque le niveau et Pinch ». Et comme les équipes se suivent de près, un état résiduel à l'arrêt devient très vite un bug pour l'équipe suivante.</p>
+<h2 id="exploitation--la-salle-doit-tourner-sans-moi">Exploitation : la salle doit tourner sans moi</h2>
+<p>Un escape game, c'est plusieurs parties par jour, tous les jours. Ici, jusqu'à trois en parallèle. Quelques briques qui ne se voient pas mais qui comptent :</p>
+<ul>
+<li><strong>La sécurité.</strong> L'agent d'urgence écoute l'entrée de l'alarme incendie et met la salle en sécurité côté logiciel (sons coupés, lumière, déverrouillages). La sécurité vitale, elle, <strong>reste câblée en dur, hors logiciel</strong>. Le lecteur audio garde sa propre surveillance de l'alarme : il y a deux chemins indépendants vers le silence, et un seul chemin, explicite, vers la reprise. Un reset est refusé tant que l'alarme est encore active.</li>
+<li><strong>Les coupures de courant.</strong> La remise en route autonome d'une salle après une coupure fait l'objet d'un banc de test dédié, sur une VM qu'on coupe brutalement.</li>
+<li><strong>Les déploiements.</strong> Le plateformer se déploie en une commande sur le Pi, avec une sauvegarde de la version précédente et une procédure de retour arrière documentée.</li>
+<li><strong>Les cartes SD.</strong> Pendant une coupure du broker, les avertissements MQTT ajoutaient des milliers de lignes de log par jour sur la carte SD d'un Pi qui tourne en continu. J'ai donc mis en place un <code>logrotate</code> en <code>copytruncate</code>, pour ne pas avoir à relancer le jeu.</li>
+</ul>
+<p>Dernière étape en date : une phase de <strong>durcissement systématique</strong>. J'ai mis en place une « usine logicielle » multi-agents : une spécification avec des critères d'acceptation testables, une validation humaine, l'implémentation, puis une vérification adversariale. Elle a permis de traiter des dizaines de petits défauts latents sous forme de PR courtes et relisibles. Le client MQTT du plateformer et le Guitar Hero en ont été les premiers bénéficiaires.</p>
+<h2 id="ce-que-jen-retiens">Ce que j'en retiens</h2>
+<ol type="1">
+<li><strong>Le monde physique ment.</strong> Latence média, capteurs qui rebondissent, décor qui ne correspond pas au plan. Toute constante de timing doit être mesurée en salle, et documentée comme telle.</li>
+<li><strong>Une épreuve ne doit jamais être une impasse.</strong> Tolérance croissante, indices progressifs, validations forcées scénarisées : le joueur doit toujours avancer, et avoir l'impression d'y être pour quelque chose.</li>
+<li><strong>Penser pipeline.</strong> Avec trois équipes en parallèle, une salle n'est plus une partie mais une étape : son temps de traversée compte autant que son contenu.</li>
+<li><strong>Data-driven ou rien.</strong> 341 versions du gameflow, c'est 341 fois où je n'ai pas eu à recompiler un agent pour décaler un indice de deux minutes.</li>
+<li><strong>Les briques « simples » sont celles qui cassent.</strong> Le gameplay du plateformer a été stable très tôt. C'est un client MQTT de quelques centaines de lignes qui bloquait la salle.</li>
+<li><strong>Rendez testable ce qui ne l'est pas.</strong> Un moteur de jeu, un ascenseur, huit boutons : rien de tout ça ne tourne en CI. En revanche, une politique de reconnexion, un codec de paquets ou une boucle d'événements, si. Il faut extraire ces parties, et on peut les tester.</li>
+<li><strong>Un client qui disparaît doit le dire.</strong> Last will, identifiants stables, logs explicites : en exploitation, savoir <em>qui</em> est tombé vaut autant que de le relever.</li>
+</ol>
+<p>La Chocolaterie a été un vrai défi, technique autant que de game design. Voir aujourd'hui des équipes ressortir de la salle des inventions avec le sourire, et le raconter ensuite dans leurs avis, c'est la meilleure récompense pour toutes ces heures passées à caler des murs invisibles et à traquer des octets nuls.</p>
+<div class="pic_wrapper"><img alt="Avis Google 3" loading="lazy" src="/wwwroot/images/projects/team-break/la-chocolaterie/google-review-3.png" title="Avis Google 3"/></div>
+				<div id="crdny">posté le 23/10/2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>La Chocolaterie</li>
+						<li>Escape game</li>
+						<li>Maestro</li>
+						<li>MQTT</li>
+						<li>Godot</li>
+						<li>C#</li>
+						<li>Raspberry Pi</li>
+						<li>Retour d'expérience</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

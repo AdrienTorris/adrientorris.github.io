@@ -1,0 +1,191 @@
+<!DOCTYPE html><html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=UA-85948839-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-85948839-1');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Donut Quiz: syncing a head office and its venues without silently losing anything</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="en" />
+		<meta name="keywords" content="Team Break,Donut Quiz,.NET,Synchronization,MongoDB,Hangfire,System.Text.Json,Architecture,Lessons learned" />
+		<meta name="description" content="A watermark that followed the wrong clock, properties vanishing behind a 200 OK, an enrolment that 'succeeded' without doing anything: lessons learned from the content sync between the head office and the Donut Quiz rooms." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/donut-quiz/donut-quiz-synchronisation-siege-agences.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/donut-quiz/donut-quiz-head-office-sync.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>Projects</li>
+					<li>Donut Quiz</li>
+					<li class="active"><a href="https://adrientorris.github.io/projects/donut-quiz/donut-quiz-head-office-sync.html" title="Donut Quiz: syncing a head office and its venues without silently losing anything">Donut Quiz: syncing a head office and its venues without silently losing anything</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Donut Quiz: syncing a head office and its venues without silently losing anything</h1>
+<blockquote>
+<p>This post follows on from <a href="https://adrientorris.github.io/projects/donut-quiz/donut-quiz-behind-the-scenes.html">Donut Quiz: behind the scenes of a connected quiz room</a>, which covers the room, its architecture and the software rewrite. Here I focus on a single piece of the puzzle: the sync between the head office and the venues.</p>
+</blockquote>
+<p>A Donut Quiz room has to keep playing even if the venue's internet connection drops. So each venue has its own MongoDB database and its own media volume (13 to 19 GB of images, videos and sounds). Content (questions, themes, special events, slides, award cards, texts, game settings…) is written at the head office and flows down to the venues. In the other direction, played games, customers and the history of questions asked to each customer flow up. That history lets the game generator avoid asking a returning customer the same question twice.</p>
+<p>On paper, this is a textbook problem. In practice, it's the part of the system where defects are the sneakiest, because a sync that loses data doesn't crash: it answers 200, reports success, and the gap only shows up weeks later, when a game master wonders why a special event is missing.</p>
+<blockquote>
+<p><strong>TL;DR</strong></p>
+<ul>
+<li>The watermark followed the venue's clock, while the data is timestamped by the head office. It is now derived from what was actually written.</li>
+<li>System.Text.Json, with <code>IgnoreReadOnlyProperties</code>, silently dropped every property without a public setter. A startup guard now refuses to launch the application if a property doesn't make it across.</li>
+<li>A venue can see what it's missing and trigger a sync on demand. The head office can see the state of the whole fleet.</li>
+<li>Content can belong to a franchisee, with strict isolation between venues.</li>
+<li>The head office never connects to a venue: everything starts from the venue, over outbound HTTPS.</li>
+</ul>
+</blockquote>
+<hr/>
+<h2 id="how-it-works">How it works</h2>
+<p>In the first version of the software, the sync was the last component to arrive. It ran at night, between 1 a.m. and 5 a.m., except for games, which synced every five minutes. The principle hasn't changed, but almost everything else has.</p>
+<ul>
+<li><strong>A dedicated service.</strong> On the venue side, <code>ContentSynchronization.AgenceApp</code> runs Hangfire jobs, stored in MongoDB. Fifteen entities travel: all of them flow down, and three also flow up (games, customers, question history).</li>
+<li><strong>A staggered schedule.</strong> Content syncs at night. Each venue picks a random start time within a five-hour window beginning at 10 p.m., which spreads the load on the head office. Games and customers sync every five minutes, because a booking made online has to reach the room quickly.</li>
+<li><strong>One watermark per entity.</strong> Each entity has its own watermark (<code>Since</code>). The venue calls <code>POST /siege/api/sync/{Entity}/pull</code> to get everything that changed since that point (<code>LastUpdated &gt;= Since</code>). The head office returns the full entities along with their media links, and the venue writes them to its database, then downloads the media into the shared volume.</li>
+<li><strong>Purging deleted content.</strong> A <code>check-dead</code> route lets the venue ask which of its items no longer exist at the head office, so it can purge them.</li>
+<li><strong>Token-based enrolment.</strong> To enrol, a venue exchanges a single-use generic token for its own venue token, then registers its code with the head office.</li>
+<li><strong>One worker per queue</strong>: one ffmpeg conversion at a time, and never two pulls of the same entity in parallel.</li>
+</ul>
+<p>Nothing revolutionary. As always, the devil is in what happens when things go wrong… without saying so.</p>
+<hr/>
+<h2 id="two-clocks-one-watermark">Two clocks, one watermark</h2>
+<p>At the end of each run, the watermark was set to the venue's local time (<code>DateTime.Now</code>). But the documents' <code>LastUpdated</code> is set by the <strong>head office</strong> clock.</p>
+<p>A venue clock running a few minutes ahead is enough to create a permanent gap: a document changed at the head office during that window will never pass the <code>LastUpdated &gt;= Since</code> filter again.</p>
+<p>To top it off, an item that arrived without data was counted as "applied". So a run could move the watermark forward without writing a single row. And the field meant to record the last application never changed after the tracking document was created: a run that applied nothing left exactly the same trace as a run that applied everything.</p>
+<p>The watermark is now derived from what was <strong>actually written</strong>:</p>
+<pre><code class="csharp">// Before: the venue's local time, whatever happened
+contentSynchronizationInfo.Since = executionDate; // DateTime.Now, venue side
+
+// After (in principle): the highest LastUpdated actually applied, stamped by the head office,
+// capped if implausible, pulled back to the oldest failed item,
+// and left unchanged if nothing was written.</code></pre>
+<p>An item without data no longer counts as applied, and the tracking document records a real last-application date. The clock itself is injected (<code>ISynchronizationClock</code>), so clock-drift scenarios can be tested without waiting for a venue to produce them.</p>
+<hr/>
+<h2 id="a-200-ok-proves-nothing">A 200 OK proves nothing</h2>
+<p>Both ends serialize with System.Text.Json and <code>IgnoreReadOnlyProperties = true</code>. With that setting, a property without a public setter is <strong>neither written by the sender nor read by the receiver</strong>. No exception, no trace, and a 200 in response.</p>
+<p>Pushing games up stacked several problems:</p>
+<ul>
+<li>it went through a projection DTO that declared only 20 of a game's 35 properties;</li>
+<li>that DTO's team list was never filled in. Since the head office replaces the whole document on every push, it received <strong>games without teams, and therefore without scores or rankings</strong>;</li>
+<li>finished games had one more problem: their awards were stored in a dictionary that MongoDB refused to persist in its default representation, so <strong>the whole game</strong> was rejected. Precisely the games the head office needs most.</li>
+</ul>
+<p>The "obvious" fix, removing <code>IgnoreReadOnlyProperties</code>, would have broken the pull: some entities expose computed properties typed as interfaces, which the deserializer can't instantiate. The flag was actually hiding a domain model that had never been designed to be serialized.</p>
+<h3 id="a-guard-rather-than-a-list">A guard rather than a list</h3>
+<p>So I went property by property with <code>[JsonInclude]</code>. But a list of properties to watch ages badly: the next property added with a private setter will bring the defect back without anyone noticing.</p>
+<p>So at startup, a guard uses reflection to inspect each of the fifteen entities, in both directions. If a property doesn't make it across, the application refuses to start. The only properties that escape it are computed ones, exempted automatically since they have no setter, and two properties exempted by name, with the reason written down.</p>
+<p>The error message names the type, the property, the direction and the cause, and never just a count:</p>
+<pre><code class="csharp">/// "3 properties lost" would survive a regression on a DIFFERENT property:
+/// the count doesn't move, the message stays true, and the loss quietly changes victims.
+public override string ToString()
+    =&gt; $"{Entity.Name}.{Property} does not travel in direction {Direction}: {Cause}";</code></pre>
+<p>An inventory of what travels, property by property and in each direction, is also versioned in the repository. A test checks that it covers all fifteen entities in both directions: deleting a section makes it fail.</p>
+<h3 id="a-played-game-is-a-fact">A played game is a fact</h3>
+<p>Once game rounds made it across, a new trap appeared. The question bank contained incomplete questions, and model validation would have rejected outright any game that included one. But a played game is a fact: you don't reject it.</p>
+<p>So when a game is pushed, and for that action only, model validation is lifted. The game is written as is, and each missing field produces a warning naming the game, the round and the property. The question bank gets cleaned up by observation, not by blocking. Every other head-office endpoint keeps its validation.</p>
+<h3 id="everyday-silences">Everyday silences</h3>
+<p>While inspecting the sync, I found a job that had been calling, every five minutes, a route the head office didn't serve: no controller existed for that entity. It got a 404, applied nothing… and nothing reported it.</p>
+<p>Finally, the venue stays in charge of what it plays. A game in progress is never overwritten by the sync, and a local copy at least as recent as the head office's wins.</p>
+<hr/>
+<h2 id="see-whats-missing-and-pull-it-without-waiting-for-the-night">See what's missing, and pull it without waiting for the night</h2>
+<p>When a game master notices that a new special event is missing, waiting for the nightly sync isn't an answer. But first, you have to know what's missing: until then, the only way to count missing questions was to download every question.</p>
+<ul>
+<li><strong>The head office can count.</strong> An inventory endpoint returns, per entity, how many items the venue doesn't have yet, without downloading their content.</li>
+<li><strong>The venue sees what it's missing.</strong> Its admin site shows those counters, entity by entity, with a single button that triggers the pull right away.</li>
+<li><strong>Clicking is safe.</strong> Repeated requests are coalesced per entity: a click while a pull is queued or running doesn't start a second one. And no pull starts while a game is running.</li>
+<li><strong>The head office sees the whole fleet.</strong> Each venue reports its watermark. A fleet view shows which venues are up to date and which are lagging, along with how fresh that information is.</li>
+</ul>
+<p>The admin site and the scheduler are two separate processes. So the admin button calls an HTTP endpoint on the scheduler, restricted to the local origin, while role checks stay entirely in the admin site.</p>
+<h3 id="an-enrolment-that-no-longer-succeeds-silently">An enrolment that no longer succeeds silently</h3>
+<p>A venue's enrolment could "succeed" silently through four different exits, without a single log line. And a token being present was taken as proof that it was valid: an expired token, a revoked one, or one issued by another head office would do just as well.</p>
+<p>Only the head office can judge a token. It now checks it and says why it refuses, while the venue logs and displays the reason. A green screen no longer means "a string happens to be present in a file".</p>
+<hr/>
+<h2 id="content-for-each-franchisee">Content for each franchisee</h2>
+<p>The latest change: franchisees now create content at the head office for their own venue only.</p>
+<ul>
+<li><strong>An optional owner.</strong> A question or a special event has an owner. No owner means "global", which avoided any migration of existing data.</li>
+<li><strong>A sync filtered by owner.</strong> The pull, the counters, the media links and the detection of deleted content all take the owner into account, with strict isolation: a venue never receives another venue's content.</li>
+<li><strong>No central approval.</strong> A venue's content goes to its room as soon as it's enabled, and only to the owning venue.</li>
+<li><strong>"Putting it in the pot".</strong> Venue content that deserves to benefit the whole network can be copied as global content.</li>
+</ul>
+<hr/>
+<h2 id="no-inbound-connection-to-a-venue">No inbound connection to a venue</h2>
+<p>Even to retrieve the game history of the older venues, the rule stays the same: <strong>the head office never connects to a venue.</strong> No inbound access, no SSH key.</p>
+<pre><code class="nohighlight">VENUE (read-only)                               HEAD OFFICE
+  mongodump --archive --gzip                    PUT /…/ingest/&lt;venue&gt;/&lt;collection&gt;
+        │  (streamed, no temporary file)          └─&gt; archive dropped
+        └── curl -T -  ──── outbound HTTPS ───&gt;   restored into a throwaway database
+                                                  then merged into the main database</code></pre>
+<p>The ingestion route is token-authenticated and <strong>inert unless configured</strong>: without a configured token, it answers 404. It can therefore be deployed anywhere safely, since the configuration, and only the configuration, turns it on. On the venue side, everything is read-only: no service installed, no temporary file, no write to MongoDB, and the operation can be interrupted at any time.</p>
+<hr/>
+<h2 id="what-i-take-away-from-this">What I take away from this</h2>
+<ul>
+<li><strong>A 200 OK proves nothing.</strong> Judge a sync by what was actually written.</li>
+<li><strong>A clock is only valid for the machine that read it.</strong> Derive a watermark from the data you received, never from local time.</li>
+<li><strong>A guard beats a list.</strong> What must stay true should be checked at startup, by construction, rather than in a list nobody will keep up to date.</li>
+<li><strong>Name things, don't count them.</strong> A message that names the lost property can't stay true after a regression somewhere else.</li>
+<li><strong>The room stays in charge of what it plays.</strong> A game in progress is never overwritten.</li>
+<li><strong>Never connect inbound to a venue.</strong> Everything starts from the venue, over outbound HTTPS.</li>
+</ul>
+<p>For the rest of the story (web-based desks, MQTT, sound, lighting and deploying to Raspberry Pis), see the main post: <a href="https://adrientorris.github.io/projects/donut-quiz/donut-quiz-behind-the-scenes.html">Donut Quiz: behind the scenes of a connected quiz room</a>.</p>
+				<div id="crdny">October 30, 2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>Donut Quiz</li>
+						<li>.NET</li>
+						<li>Synchronization</li>
+						<li>MongoDB</li>
+						<li>Hangfire</li>
+						<li>System.Text.Json</li>
+						<li>Architecture</li>
+						<li>Lessons learned</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

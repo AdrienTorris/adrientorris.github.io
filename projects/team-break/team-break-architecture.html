@@ -1,0 +1,403 @@
+<!DOCTYPE html><html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=UA-85948839-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-85948839-1');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Escape rooms driven by MQTT: how I build software at Team Break</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="en" />
+		<meta name="keywords" content="Team Break,MQTT,Architecture,IoT,Raspberry Pi,ESP32,Linux,Debian,.NET,systemd,Distributed systems" />
+		<meta name="description" content="At Team Break, a bug usually means six people locked in a room, a countdown ticking, and a trapdoor that won't open." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/team-break/team-break-architecture.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/team-break/team-break-architecture.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>Projects</li>
+					<li>Team Break</li>
+					<li class="active"><a href="https://adrientorris.github.io/projects/team-break/team-break-architecture.html" title="Escape rooms driven by MQTT: how I build software at Team Break">Escape rooms driven by MQTT: how I build software at Team Break</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Escape rooms driven by MQTT: how I build software at Team Break</h1>
+<p>At Team Break, a bug usually means six people locked in a room, a countdown ticking, and a trapdoor that won't open.</p>
+<p>I build the software that runs Team Break's escape rooms. It isn't a web app behind a load balancer. It's a distributed system whose nodes are mini PCs, Raspberry Pis, ESP32s, Arduinos, Android tablets, TVs, projectors, DMX moving heads, electromagnets and smoke machines. It runs unattended across thirteen sites. It has to survive power cuts, damaged network cables and players who hit the props a little too hard. And it must never, ever put anyone at risk.</p>
+<p>This article walks through the technical choices that follow from that: a decentralized architecture, MQTT as the backbone, a small army of specialized agents, in-house electronics, a heterogeneous Linux base, and how all of it is operated remotely.</p>
+<h2 id="a-room-is-a-distributed-system">A room is a distributed system</h2>
+<p>Let's start with the basic unit: a room. On paper it's a 60-minute game. In practice it's a small datacenter that fits in a technical closet.</p>
+<pre><code class="nohighlight">                        ┌───────────────────────────────────────────┐
+                        │   Room central server (mini PC)           │
+                        │   Debian 13 + Docker                      │
+                        │                                           │
+                        │  Mosquitto · Room/Game Orchestrator       │
+                        │  GM API · GM UI · Agents API · PostgreSQL │
+                        │  Electronic · Emergency · Healthcheck     │
+                        └──────────────────┬────────────────────────┘
+                                           │  MQTT (LAN, offline)
+      ┌──────────────────┬─────────────────┼──────────────────┬───────────────────┐
+      │                  │                 │                  │                   │
+ Raspberry Pi       Raspberry Pi       ESP32 / Kincony    Arduino + W5500    Tablets, screens
+ video (mpv)        audio, DMX         sensors, relays    hatches, LEDs      web kiosks
+ labwc / KMS        game agents        RFID, keypads      sequencers         (Chromium, Android)</code></pre>
+<p>A central server, usually an Intel N95 or N100 mini PC, runs the Maestro stack (our orchestration engine) in Docker. Around it sit edge machines (<em>edge points</em>), each with one narrow job: play a video on a TV, play an ambient soundscape, send DMX frames to a light, read an RFID tag inside a canopic jar, count the turns of a crank.</p>
+<p>A concrete example: <em>La Chocolaterie</em>, in Lille. It's one experience split into five software rooms, with sixteen Raspberry Pis and one central server. Its <em>gameflow</em> (more on that below) has 68 files, 588 commands, 247 notification handlers and 312 electronic I/O points. An ARP scan of the Lille room network finds 69 devices.</p>
+<p>Across the fleet, that adds up to about 150 machines enrolled on our VPN, spread over 13 sites (company-owned and franchised), with a target of around 300 once the older rooms are migrated. Alongside Maestro, the fleet also hosts two other in-house products (Donut Quiz and Heroes Academy) and our site operations platform, Archipel.</p>
+<p>Three constraints shape everything else:</p>
+<ol type="1">
+<li><strong>A room must work without the Internet.</strong> The site network can go down and the VPS can be under maintenance; the game in progress must not notice.</li>
+<li><strong>Everything restarts, all the time.</strong> Power cuts (at Aéroville, the morning ones come from the shopping centre's evacuation drills), TVs going to sleep, sound cards dropping off the bus.</li>
+<li><strong>People's safety does not depend on software.</strong> Door maglocks stay hard-wired to the fire-alarm system. Software follows it; it doesn't make the call.</li>
+</ol>
+<h2 id="mqtt-the-nervous-system">MQTT, the nervous system</h2>
+<p>All these machines talk over MQTT, through a Mosquitto broker running on each room's central server.</p>
+<p>Why MQTT rather than REST, gRPC or an enterprise bus? Because we need a protocol that everything can speak, from an Arduino Uno with 2 KB of RAM to a .NET service, by way of a Python script on a Pi and a web page in a kiosk. Pub/sub naturally decouples producers from consumers: the keypad sensor doesn't need to know who's waiting for its signal. And MQTT gives us two primitives for free that matter a lot here: <em>retained</em> messages (the last known state is handed to every new subscriber) and <em>Last Will</em> (the broker announces a client's death on its behalf).</p>
+<h3 id="a-topic-convention">A topic convention</h3>
+<p>Every agent has its own inbox, built deterministically from the game, the room and the agent type:</p>
+<pre><code class="csharp">private static string GetBaseTopicName(GameAgentEnum agent, string game, string? room) =&gt;
+    !string.IsNullOrWhiteSpace(room) &amp;&amp; agent != GameAgentEnum.GameOrchestrator
+    ? $"/games/{game.ToLower()}/rooms/{room.ToLower()}/"
+    : $"/games/{game.ToLower()}/";
+// suffixes: roomorchestrator, audioplayer, videoplayer, electronics,
+//           lights, dmx, customagents, gamemastering, gameorchestrator</code></pre>
+<p>That gives topics like <code>/games/chocolaterie/rooms/elevator/roomorchestrator</code> or <code>/games/chocolaterie/rooms/candy_store/videoplayer</code>. The game orchestrator, which chains rooms together, lives one level up: <code>/games/chocolaterie/gameorchestrator</code>. Next to these sit a few cross-cutting topics: client presence (<code>/monitoring/clients/status</code>), a retained health snapshot per room, and the emergency latch.</p>
+<h3 id="the-message-is-the-contract">The message is the contract</h3>
+<p>Messages are snake_case JSON. A notification for the room orchestrator looks like this:</p>
+<pre><code class="json">{
+  "key": "stop_room",
+  "sender_id": "chocolaterie-game-orchestrator",
+  "sender_type_id": 8,
+  "room": "elevator",
+  "datas": null,
+  "type_id": 3,
+  "sent_at": null
+}</code></pre>
+<p><code>sender_type_id</code> is an integer: 1 for the room orchestrator, 2 for the audio player, 3 for the electronic agent, 4 for video, 11 for DMX… These integers travel on the wire and are read by agents that weren't necessarily upgraded at the same time. So the rule is strict: <strong>new values are appended, nothing is ever renumbered</strong>. The comment sits in the code, right above the enum.</p>
+<p>The same discipline shows up everywhere. On the Archipel side, tests (<code>WireFormatTests</code>) freeze the JSON format exchanged with the rooms, because <em>a Maestro room can run for a long time on an old package version</em>. On our newest project the protocol is Protobuf, with the same rule written down in an ADR: fields are added, never removed or renumbered.</p>
+<h3 id="qos-game-traffic-vs-safety-traffic">QoS: game traffic vs. safety traffic</h3>
+<p>Game events go out at QoS 0, not retained. That's deliberate fire-and-forget: a sensor that drops will send its state again, and a "late" game message is worthless anyway.</p>
+<p>Critical paths are handled differently. The emergency agent, which relays the fire-alarm system, and the health agent publish at <strong>QoS 1, retained</strong>. When a fire alarm goes off, the <code>/games/&lt;game&gt;/rooms/&lt;room&gt;/emergency</code> topic switches to latched and stays there. An audio player that restarts during the alarm resubscribes, immediately receives that retained message, and comes back muted. There's no race between startup and the alarm: the state lives in the broker, not in a process's memory.</p>
+<p>Another deliberate choice: <strong>no request/response over MQTT</strong>. When the game master (GM) asks for a room to be prepared, the GM UI sets the state to "preparation asked" in the database, and the orchestrator does the work and then confirms over HTTP to the Agents API (backed by PostgreSQL). A room's state machine therefore rests on <em>asked → confirmed</em> handshakes, and the source of truth is a database, not a message that might have been lost.</p>
+<p>With one deliberate exception: for briefing, end of preparation, start and stop triggered from the console, the API confirms the state in the database optimistically, without waiting for the orchestrator. A room stuck in "start asked" with six players inside is worse than a state that is briefly ahead of reality. Preparation and the end of the game are still confirmed by the orchestrator.</p>
+<h3 id="what-mqtt-taught-me-the-hard-way">What MQTT taught me the hard way</h3>
+<ul>
+<li><strong>Keepalive.</strong> Our in-room web pages used a 5,000-second keepalive. I built a test bench (aedes broker, simulated Wi-Fi cut) that showed a silent cut went unnoticed for <strong>about 2 h 05 min</strong>. At 60 s it's detected in 90 s. The reconnect backoff, which used to be a fixed 100 ms, is now progressive.</li>
+<li><strong>The agent that went deaf.</strong> A .NET agent that reconnected didn't re-announce itself on the presence topic. It was connected, but monitoring could no longer see it. Now every (re)connection republishes presence. The first connection never gives up (backoff <code>1 s, 2 s, 5 s, 10 s, 30 s, 60 s</code>), and the retry timer uses a <strong>monotonic clock</strong>, because a Pi has no hardware clock and its time jumps when NTP syncs.</li>
+<li><strong>The hostname, a hidden primary key.</strong> When machines were enrolled on the VPN, our tool renamed the hostname. Nothing happened at the time. But at the next reboot, rooms went out of service, and stayed that way for two days: rooms stuck in "preparation asked", videos present but no sound. There were two causes, both deferred until the reboot. First, our MQTT agents call <code>socket.gethostname()</code> once at startup and ignore messages addressed to any other name (Maestro addresses some machines by hostname). Second, Chromium's <code>SingletonLock</code> contains the hostname, so the kiosk refused to start, silently. Since then, the node name on the VPN is decoupled from the system hostname.</li>
+</ul>
+<h2 id="agents-lots-of-agents">Agents, lots of agents</h2>
+<p>Here, an <strong>agent</strong> is a process with a single responsibility that speaks only MQTT (plus HTTP for durable state) and knows nothing about the storyline. The video player knows how to play a segment between two cue points. It doesn't know it's showing a dinosaur.</p>
+<h3 id="the-net-core">The .NET core</h3>
+<p>Maestro's generic agents are written in C# on .NET 8, with MediatR, EF Core and Npgsql on PostgreSQL 16, Serilog and MQTTnet 5:</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Agent</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Room Orchestrator</td>
+<td>Loads and runs a room's gameflow: notifications, milestones, countdown</td>
+</tr>
+<tr class="even">
+<td>Game Orchestrator</td>
+<td>Chains the rooms of one experience, translates GM or Archipel orders</td>
+</tr>
+<tr class="odd">
+<td>GM API / GM UI</td>
+<td>Game master console, built with native Web Components, no framework</td>
+</tr>
+<tr class="even">
+<td>Agents API</td>
+<td>Data API (PostgreSQL) for every non-GM agent</td>
+</tr>
+<tr class="odd">
+<td>Electronic Agent</td>
+<td>Bridge between the electronics brokers (I/O panels, ESP32, Kincony) and Maestro</td>
+</tr>
+<tr class="even">
+<td>Scheduled Actions</td>
+<td>Delayed or conditional actions, and the automatic hint system</td>
+</tr>
+<tr class="odd">
+<td>Emergency Agent</td>
+<td>Fire-alarm relay: opens doors, turns lights on, cuts sound, holds a latch</td>
+</tr>
+<tr class="even">
+<td>Healthcheck Agent</td>
+<td>Inspects containers and devices, publishes a retained snapshot every 10 s</td>
+</tr>
+</tbody>
+</table></div>
+<p>One rule has no exceptions: <strong>no game-specific code in the generic agents repository</strong>. Every game that needs custom logic gets its own repository. For the Chocolaterie that's about a dozen agents: a home-made guitar rhythm game, a pump machine, a candy dispenser, a UV mushroom, and their web screens.</p>
+<p>Shared code (MQTT messaging, models, gameflow loading) is published as private NuGet packages, each versioned independently: <code>Messaging.Mqtt</code> is at 1.0.146 and <code>Models</code> at 1.0.79. A package version that wasn't bumped fails a unit test. All of it is covered by about 1,800 xUnit tests in the agents and another 500 in the infrastructure libraries, including a no-mock integration test that crosses the whole chain: embedded MQTT broker → real electronics bridge → GM API SSE endpoint → relay in the UI.</p>
+<h3 id="the-deported-python-agents">The "deported" Python agents</h3>
+<p>On the Raspberry Pis, the agents that touch hardware are written in Python and packaged as <code>.deb</code>:</p>
+<ul>
+<li><strong>MQTTmpv</strong>: a libmpv video player with cue-to-cue segments, overlays, picture-in-picture, CEC control of the TVs, and multi-screen over KMS.</li>
+<li><strong>MQTTaudioplayer</strong>: a multitrack player (pygame-ce) with fades, ducking, groups, streaming of long ambient tracks, and GM push-to-talk voice over WebSocket.</li>
+<li><strong>MQTTdmx</strong>: DMX512 frames over an FTDI USB adapter (Enttec Open DMX clones), with loops, fades and blackout.</li>
+<li>Smaller agents: a sequence-puzzle engine (up to a 22-symbol Morse code in a rolling window), an offline keyword spotter (MFCC + DTW against banks of <code>.wav</code> files), and a state keeper for third-party I/O panels.</li>
+</ul>
+<p>They share a common module (a git submodule) that provides a multi-broker MQTT client with reconnection and subscription replay, configuration, logging and <code>sd_notify</code> integration for systemd.</p>
+<p>Commands are JSON, with optional filters (<code>PlayerID</code>, <code>hostname</code>, <code>ip</code>). Without a filter, the command is broadcast. Here's a video segment that notifies the orchestrator when it starts and when it ends:</p>
+<pre><code class="json">{
+  "command": "segment",
+  "data": {
+    "start_cue": "MyCuePoint1", "end_cue": 7, "at_end": "pause",
+    "at_start_topic": "/my_topic/start", "at_start_message": "video started",
+    "at_end_topic": "/my_topic", "at_end_message": "video finished",
+    "play": true
+  }
+}</code></pre>
+<h2 id="orchestration-the-gameflow">Orchestration: the gameflow</h2>
+<p>If the agents are the muscles, the <strong>gameflow</strong> is the central nervous system. It's a declarative JSON description of everything that happens in a room: which notifications exist, which handlers react to them, which behaviors those trigger (publish a command, validate a milestone, change the remaining time, fail the room…), which actions are scheduled, how hints are given out, and how the electronic I/O maps onto business keys.</p>
+<p>Here's a real excerpt from the Chocolaterie, lightly trimmed: an ESP32 keypad unlocks a trapdoor and validates a milestone. The GM can get the same effect from the console.</p>
+<pre><code class="json">{
+  "file_scope_settings": { "room": "ice_room", "electronic_proxies_format": "tb_esp32" },
+  "notification_handlers": [ {
+    "notifications": [ "digicode_unlocked", "milestone_state_change_r4_digicode_unlocked_validate" ],
+    "behaviors": [
+      { "behavior": "command_publish",    "key": "trappe_unlock" },
+      { "behavior": "milestone_validate", "key": "r4_digicode_unlocked" }
+    ]
+  } ],
+  "electronic_agent_proxies": [
+    { "provider": "esp32_digicode", "type": "input",  "command_key": "digicode_unlocked",
+      "label": "Digicode", "mod": "in2",  "pin": 0, "state": "off" },
+    { "provider": "esp32_digicode", "type": "output", "command_key": "trappe_unlock",
+      "label": "Trappe conduit", "mod": "out1", "pin": 0, "state": "on" }
+  ]
+}</code></pre>
+<p>A few choices worth explaining:</p>
+<ul>
+<li><strong>One Git repository per game <em>and per site</em>.</strong> You'd think the same room is identical in Lille and in Grenoble. It never is: a magnet that is active-high here is active-low there. Rather than piling up conditions, each site has its own gameflow.</li>
+<li><strong>Versioning decoupled from Git.</strong> An append-only <code>_versions.json</code> holds the version number, date, author and a description of the changes. Agents compare the latest date with their local copy. As a result, work in progress can be pushed without it reaching the rooms. The Chocolaterie gameflow has 644 entries since July 2024.</li>
+<li><strong>A local copy, pulled at startup only.</strong> Agents fetch the latest version at boot and then work from their copy, which is what makes offline operation possible. Since several agents read the same directory, loading is serialized with an OS-level <code>flock</code>: exclusive for the downloader, shared for readers, and released automatically on a crash or a power cut.</li>
+<li><strong>Layered scenarios.</strong> The same physical room can run a variant (Halloween, a kids' version) through a <code>scenario</code> filter and <code>override</code>s on the affected elements. The scenario is a session option, independent of the language.</li>
+<li><strong>Room tests versioned with the gameflow.</strong> A test protocol (<code>_tests/*.json</code>), never read by the game, is validated in CI and run from a "Tests" page in the GM console, which checks each of the Chocolaterie's 312 I/O points.</li>
+</ul>
+<p>One story shows that a declarative format is still code: for a long time, <code>"filters_behavior": "or"</code> was silently evaluated as AND. The cause was a constructor that assigned the parameter instead of the property. It was fixed in version 1.0.79 of the models package, with a test to go with it.</p>
+<h2 id="electronics-c-on-the-esp32-and-lessons-learned-the-hard-way">Electronics: C on the ESP32, and lessons learned the hard way</h2>
+<p>The props are where software meets the physical world. Our standard is the <strong>ESP32</strong> (WROOM, 4 MB of flash) programmed in C with <strong>ESP-IDF</strong> on FreeRTOS. Where relays are needed, we use <strong>Kincony KC868-A16</strong> boards (ESP32, 16 relays and 16 inputs on PCF8574 I2C expanders, LAN8720 Ethernet) running in-house firmware. There are also Arduino Unos and Megas with Ethernet shields, and third-party I/O panels built on Raspberry Pi and Node-RED.</p>
+<h3 id="a-shared-base-for-every-firmware">A shared base for every firmware</h3>
+<p>Every prop firmware pulls in a shared base as a git submodule; the prop only adds its pinout, game logic and messages. The base builds with ESP-IDF 5.5 and 6.0 and provides about twenty components: networking (Wi-Fi with backoff, Ethernet, mDNS, NTP), an MQTT client, an HTTP server with a configuration page and live state over SSE, LittleFS storage, logs persisted to flash, a watchdog, unified GPIO handling (internal pins or expanders, debounce, filters), PN532 RFID readers (up to 8 on one bus), and WS2812 LED strips.</p>
+<p>A few principles are baked in:</p>
+<ul>
+<li><strong>Hardware before network.</strong> The boot order is fixed and documented. Outputs are initialized <em>before</em> the network, because an output must reach its safe state (locks closed, motors off) as early as possible.</li>
+<li><strong>Schema-driven configuration.</strong> Each component declares its section of <code>tb_config.json</code> in a schema, and the web page builds its forms from those schemas. If the file is corrupted, the firmware falls back to <code>last-known-good</code>, then to <code>factory-defaults</code>, and keeps the broken file for diagnosis.</li>
+<li><strong>Safe mode.</strong> After two failed boots in a row, the board starts in degraded mode: configuration restored, Wi-Fi and web page up, but <strong>no MQTT</strong>, so it stays out of the game. A boot only counts as successful after 60 minutes of uptime, so a crash in the middle of a session counts as a failure. The decision is a pure function, unit-tested on ESP-IDF's <code>linux</code> target.</li>
+<li><strong>Watchdog, core dump and signed OTA.</strong> A 10 s task watchdog with panic, a core dump to flash, two OTA partitions, firmware and web UI updates over HTTP, and an RSA-3072-signed manifest. Builds are reproducible (<code>CONFIG_APP_REPRODUCIBLE_BUILD=y</code>) and published by CI on a tag.</li>
+<li><strong>Ethernet whenever possible.</strong> An escape room is full of metal and of other props that emit: Wi-Fi isn't always welcome there.</li>
+</ul>
+<p>Expected RFID tag UIDs live in the configuration, not in the code. Replacing a statuette lost in the Egyptian room is a configuration change, not a new firmware.</p>
+<p>The Kincony board protocol is deliberately simple:</p>
+<pre><code class="json">{"command":"set","data":[{"module":"out1","pin":2,"value":"on"},{"module":"out2","pin":3,"value":"off"}]}
+{"command":"get","data":[{"module":"in1","pin":3}]}
+{"command":"get_all_infos"}</code></pre>
+<h3 id="the-board-that-answered-ping">The board that answered ping</h3>
+<p>My favorite story. The Chocolaterie's elevator hatches are driven by an Arduino Uno with a W5500 Ethernet shield. Every so often the board froze: serial port silent, game dead… yet it still answered ping. The W5500 handles ICMP on its own, so a ping proves absolutely nothing about the ATmega being alive. The Ethernet library waited on the controller in loops with no timeout, and noise from an electromagnet was enough to hang it forever.</p>
+<p>The fix combines a 4 s AVR watchdog, W5500 retransmissions cut from ~30 s to ~1.5 s to stay under the watchdog, non-blocking MQTT, the electromagnet energized at the very start of <code>setup()</code>, and <code>F()</code> strings to bring static RAM from 57% down to 40%. Above all, the board now publishes a retained diagnostics topic with a boot counter, the cause of the last reset and a breadcrumb (<code>reset_step</code>) showing where the code was before the last restart. That's what remote diagnosis of a microcontroller looks like: leave crumbs before you die.</p>
+<h3 id="dmx-and-stubborn-fixtures">DMX and stubborn fixtures</h3>
+<p>On the lighting side, MQTTdmx generates DMX512 frames in software on an FTDI FT232R: 250 kbaud, 8N2, an 88 µs break, an 8 µs mark-after-break. Some fixtures in HOLD mode produced spurious fades under continuous transmission. So we added a <code>send_on_change</code> mode that sends a <strong>burst of 4 frames</strong> (~130 ms) on each change: a single frame can get lost on a noisy cable, and a HOLD fixture would then keep the wrong value indefinitely.</p>
+<h2 id="linux-everywhere-but-not-the-same-linux-everywhere">Linux everywhere, but not the same Linux everywhere</h2>
+<p>All of this runs on Linux, but not on <em>one</em> Linux. When I measured the fleet to design our SSH certificate authority, the breakdown was:</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Distribution</th>
+<th>Machines</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Debian 13 (Trixie)</td>
+<td>79</td>
+</tr>
+<tr class="even">
+<td>Debian 12 (Bookworm)</td>
+<td>25</td>
+</tr>
+<tr class="odd">
+<td>Raspbian 10 (Buster)</td>
+<td>18</td>
+</tr>
+<tr class="even">
+<td>Raspbian 11 (Bullseye)</td>
+<td>13</td>
+</tr>
+<tr class="odd">
+<td>Ubuntu 20.04</td>
+<td>8</td>
+</tr>
+<tr class="even">
+<td>Ubuntu 24.04 / 26.04</td>
+<td>4</td>
+</tr>
+</tbody>
+</table></div>
+<p>Add a few legacy Windows central servers that we're migrating one by one. On the hardware side: x86 mini PCs (Intel N95/N100, HP ProDesk 400 G4 DM, a Celeron N4020 with 4 GB and eMMC "on the edge of memory saturation"), Raspberry Pi 4s on arm64, even a Pi 3 B, and Debian tablets built on mini PCs. Packages are built for <strong>amd64 and arm64</strong>.</p>
+<h3 id="the-target-standard">The target standard</h3>
+<ul>
+<li><strong>Central servers:</strong> Debian 13 in server mode, no GUI, with <code>docker.io</code> and the Maestro stack.</li>
+<li><strong>Raspberry Pis:</strong> Raspberry Pi OS Lite 64-bit / Debian Trixie arm64. For video, a golden image built with <code>rpi-image-gen</code> (pinned commit for reproducible builds) that boots straight into labwc (Wayland), then the fullscreen player.</li>
+<li><strong>Tablets and front-desk screens:</strong> Debian 12 with Ubuntu Frame (Mir), Chromium and the on-screen keyboard as snaps, which prevents quitting the application. On some Pis, cage + Firefox.</li>
+</ul>
+<h3 id="what-heterogeneity-really-costs">What heterogeneity really costs</h3>
+<p>Every distribution brings its own surprises, and most of them get handled in code:</p>
+<ul>
+<li><code>paho-mqtt</code> 1.4.0 on Buster means keeping a compatibility shim in the shared MQTT module.</li>
+<li>On Bookworm, pygame 2.1.2 exposes <code>mixer.Channel</code> as a function rather than a class, so the <code>Channel | None</code> annotation crashed at import. <code>from __future__ import annotations</code> fixed it.</li>
+<li>On Pi 4 + Trixie, mpv's Vulkan backend (V3DV) is broken, so we force <code>gpu-api=opengl</code>.</li>
+<li>Debian 10's OpenSSH 7.9 doesn't understand the <code>Include</code> directive, which constrained how the SSH certificate authority was rolled out.</li>
+</ul>
+<p>The real answer to heterogeneity is to <strong>reduce the number of targets</strong>. For that, we can now reflash a Pi remotely: the tool sends a full SD image into RAM, writes it from a small system that no longer reads the card, then reboots. First success on the bench: a Pi 4 moved from Raspbian 10 armhf to Debian 13 arm64 without anyone travelling.</p>
+<h3 id="the-debian-package-as-the-unit-of-deployment">The Debian package as the unit of deployment</h3>
+<p>Everything that gets installed on a room machine is a <code>.deb</code>. That's not an aesthetic preference: it's the only format that guarantees, across all these distributions, declared dependencies, configuration preserved across upgrades (<em>conffiles</em>) and a clean uninstall.</p>
+<p>The most interesting case is <code>maestro-room</code>. A single package, <code>maestro-room_&lt;version&gt;_&lt;arch&gt;.deb</code>, embeds every Docker image for the room as an archive that is loaded at install time. There's <strong>no registry pull on site</strong> and no GitHub access needed. Configuration lives in <code>/etc/maestro/room.env</code> (a conffile), and rolling back means reinstalling the previous package. CI builds both architectures with buildx, checks the package contents, tags and publishes the release.</p>
+<p>The rules we apply to our packages were all learned from an incident:</p>
+<ul>
+<li><code>apt install ./package.deb</code> must be enough. Every dependency must be expressible in <code>Depends:</code>. If it isn't, we change the solution: <code>yq</code> was replaced by <code>python3-yaml</code> because two incompatible implementations share that name.</li>
+<li><strong>dpkg maintainer scripts do no networking and start nothing.</strong> Installing a package on a machine in operation must have no visible effect.</li>
+<li><strong>Versions are pinned everywhere.</strong> No <code>latest</code> image, and the Tailscale client is frozen with <code>apt-mark hold</code>. An upgrade is a decision, never a side effect.</li>
+</ul>
+<h3 id="systemd-my-best-friend-and-my-worst-enemy">systemd, my best friend and my worst enemy</h3>
+<p>Almost every agent runs as <code>Type=notify</code>, sending <code>READY=1</code> once it is actually ready. A few settings show what "soft real-time" looks like:</p>
+<pre><code class="nohighlight"># Audio player
+Type=notify
+TimeoutStartSec=600
+Nice=-10
+CPUSchedulingPolicy=fifo
+CPUSchedulingPriority=50
+LimitMEMLOCK=infinity</code></pre>
+<p><code>TimeoutStartSec=600</code> has a story behind it. A catalogue of ~4,000 tracks (5 GiB) preloaded before <code>READY=1</code> exceeded the 90 s timeout: systemd killed the service, which restarted, which preloaded again… Now the player sends <code>EXTEND_TIMEOUT_USEC</code> while loading, and long tracks are streamed in one-second chunks. A 600 MiB ambient track now costs 2 MiB of RSS instead of being decoded into RAM.</p>
+<p>The video player runs as a <strong>user unit</strong> (<code>systemctl --user</code>). That means <code>loginctl enable-linger</code> in the postinst (otherwise the service never starts on a machine with no login screen) and an <code>ExecStartPre</code> that waits for the Wayland or X11 socket. You can't rely on <code>graphical-session.target</code>: labwc on the Pi never activates it. Before this fix, the service started 18 s before the compositor and showed "Display not available" for 2 h 30 min.</p>
+<p>Then there was the "the player no longer outlives its labwc" bug. With <code>PAMName=login</code>, the session script and the player live in the logind session scope, outside the service's cgroup. A <code>systemctl restart</code> killed only labwc: the old player kept running next to the new one, each holding the Jurassik room's big video in RAM, until the OOM killer stepped in on an 8 GB Pi with no swap. The fix is a few lines of shell:</p>
+<pre><code class="nohighlight">/usr/bin/python3 /opt/MQTTmpv/MQTTmpv.py &amp;
+py=$!
+trap 'stop_player; exit 0' TERM INT HUP
+# The player must not outlive its labwc.
+while kill -0 "$py" 2&gt;/dev/null; do
+    if [ -n "$SESSION_LABWC" ] &amp;&amp; ! kill -0 "$SESSION_LABWC" 2&gt;/dev/null; then
+        stop_player; exit 0
+    fi
+    sleep 2
+done</code></pre>
+<p>One last number: a service with <code>Restart=always</code> had restarted <strong>4,655 times</strong> without anyone noticing. Reporting <code>NRestarts</code> in our monitoring is the next step. An "active" service isn't necessarily a healthy one.</p>
+<h3 id="video-rendering-without-a-desktop">Video rendering without a desktop</h3>
+<p>On general-purpose machines we prefer <strong>direct KMS</strong> rendering (<code>vo=gpu</code>, <code>gpu-context=drm</code>) to a graphical session: fewer packages, and no tty taken over. For multi-screen setups, a single process holds the <em>DRM master</em> of <code>/dev/dri/card0</code> and drives several connectors, each with its own <code>PlayerID</code> and VA-API decoding. It can't be any other way: a DRM card accepts only one master. An output that drops is recreated with exponential backoff, and the service only exits when every output is dead.</p>
+<p>Even memory is a negotiation. The player forced a 2 GiB demuxer cache in both directions: with a 1.6 GB video, RAM grew with every game until it froze an 8 GB server. We went back to mpv's defaults, with one deliberate exception: the Chocolaterie elevator, where <strong>five screens</strong> are synchronized with each other and with the sound <em>with no synchronization system at all</em>. Only keeping the whole video in RAM makes that work.</p>
+<h3 id="docker-yes-kubernetes-no">Docker yes, Kubernetes no</h3>
+<p>Docker is used only on the central server, with Compose and <code>live-restore</code> enabled. The question of container orchestration on room machines was settled in writing: <em>a room runs business software, not a cluster.</em></p>
+<p>Power-cut resilience is handled at the systemd level:</p>
+<ul>
+<li><code>maestro-room.service</code> runs <code>docker compose up -d</code>, with a bounded restart limit so that a real failure stays visible.</li>
+<li>A recovery service detects when dockerd restarted "dirty" (ports still allocated) and does a down/up cycle, at most once per boot.</li>
+<li>A watchdog timer restarts unhealthy containers every minute, at most 3 times per service per hour, <strong>never during a game</strong> and never during an upgrade (maintenance lock).</li>
+<li>All of it is validated on a "power cut" bench: a throwaway Debian 13 VM that gets killed abruptly with SysRq.</li>
+</ul>
+<p>A small operations tip: since Pis have no hardware clock, we compare boots with <code>journalctl -o short-monotonic</code> rather than wall-clock time.</p>
+<h2 id="running-150-machines-across-13-sites">Running 150 machines across 13 sites</h2>
+<p>I can't travel every time an audio player misbehaves. Remote operations are therefore a product in their own right, called <em>vigie</em>, also shipped as two Debian packages (server and edge).</p>
+<ul>
+<li><p><strong>A self-hosted VPN that is strictly additive.</strong> We self-host Headscale (pinned version), and machines join the tailnet with the Tailscale client. The VPN touches neither the DNS, nor the routing, nor the interfaces of a machine. Every <code>tailscale up</code> option is passed explicitly, even at its default value, to neutralize any leftover preferences:</p>
+<pre><code class="nohighlight">tailscale up --login-server "$login_server" --auth-key "$authkey" \
+  --hostname "$node_name" --accept-dns=false --accept-routes=false \
+  --advertise-routes= --advertise-exit-node=false --advertise-tags= \
+  --ssh=false --timeout 60s</code></pre></li>
+<li><p><strong>Naming by function, not by machine.</strong> <code>&lt;product&gt;-&lt;site&gt;[-&lt;level&gt;…]-&lt;function&gt;[&lt;n&gt;]</code>, for example <code>maestro-lille-chocolaterie-ascenseur-tv4</code>. A name describes a function at a location: a replacement Pi takes the name of the one it replaces.</p></li>
+<li><p><strong>Push-based monitoring.</strong> Each machine reports its state every minute through a systemd timer (with a randomized delay to smooth the load). With pull, a machine that's off makes everyone wait. With push, <em>an offline machine signals itself by its silence</em>. A node's identity is its tailnet address: no per-machine token, and removing a node from the VPN is enough to silence it.</p></li>
+<li><p><strong>Short-lived SSH certificates</strong> (16 h) issued by an internal certificate authority, instead of keys copied by hand onto every machine.</p></li>
+<li><p><strong>No automatic corrective action.</strong> Monitoring informs; a human decides.</p></li>
+</ul>
+<p>For diagnosis, I built a maintenance knowledge base from two months of interventions: 58 symptoms, 27 procedures, one sheet per site. A few rules apply to every ticket: find the <em>real</em> time of the game, read the logs before the code, and <strong>never act on a room while a game is in progress</strong>. Of the 58 symptoms, 20 can be fixed with a closed action (restart, re-arm), 10 need someone on site, and 16 are code issues. The value is in the diagnosis, not in the restarts.</p>
+<p>Safety has its own procedure: never trigger the emergency to test it, and after a real alarm, explicitly re-arm the audio players. The day nobody did, the Chocolaterie elevator stayed silent for seven hours. The retained latch was doing exactly what it was designed to do.</p>
+<h2 id="archipel-wiring-bookings-into-the-rooms">Archipel: wiring bookings into the rooms</h2>
+<p>Archipel is our site operations platform: sync with the online booking tool, a front-desk check-in kiosk, an in-room tablet for players, and dashboards on the lobby TVs. It runs on one mini PC per site, on .NET 10 with PostgreSQL 16. The front end is vanilla JavaScript (ES modules, no npm, no bundler), fed by SSE with a polling fallback.</p>
+<p>The bridge with Maestro naturally goes through MQTT. Archipel sends instructions (<code>ChangeRoomState</code>, publishing a gameflow) and receives notifications (<code>RoomStateChanged</code>, <code>SessionProgressionInit</code>, <code>SessionProgressionUpdate</code>). The countdown on the in-room tablet sums up the philosophy: Maestro is the authority on time. It sends an <code>Init</code> (total duration, start time) and then an <code>Update</code> about every 30 s, and the tablet <strong>interpolates</strong> the countdown itself from a wall-clock anchor. No per-second message ever crosses the network.</p>
+<p>A recent lesson: one booking that arrived without a slot ID blocked the whole sync pass, which runs every 5 minutes. As a result, no new bookings, cancellations or payments were imported, and teams couldn't be found at the kiosk. The fix is a classic we forget too often: <strong>one invalid record must never block the ones after it</strong>. Each booking is now processed and retried independently.</p>
+<p>Our newest project, a multi-game room, pushes these principles further: a FastAPI server, games written as pure functions <code>(state, action) → (new state, effects)</code>, a game protocol in Protobuf over WebSocket with sequence numbers and a full snapshot on reconnect, MQTT for control (presence via Last Will, retained state, QoS 1 commands), and one constraint at the top of the requirements: it must work <strong>without the Internet</strong>.</p>
+<h2 id="what-about-ai-agents">What about AI agents?</h2>
+<p>In an article about agents, it would be a shame not to mention the other kind. A good part of the code described here was written in pair with Claude Code, and the way we work has adapted:</p>
+<ul>
+<li><strong>Every repository has a <code>CLAUDE.md</code></strong> describing the vocabulary, the design rules and the known pitfalls. On our newest repositories, one rule is explicit: <em>documentation is the only shared memory of the agents working on the repository</em>. Tests check that every path quoted in the docs exists and that no page exceeds 150 lines.</li>
+<li><strong>A three-role "software factory"</strong>: a planner agent writes a spec with testable acceptance criteria, a human approves it, a builder agent implements it, and a verifier agent tries to break it, with at most three fix loops. Tests carry the IDs of the acceptance criteria ("CA-24").</li>
+<li><strong>Guardrails written after incidents</strong> for AI in operations: an explicit human go-ahead before any write on site, one room per tool call, no blocking loops during live debugging (a smoke machine still remembers), and <em>no initiative</em>, after DMX channels were changed "to test". When the assistant goes through our maintenance MCP server, per-site permissions are enforced server-side: we don't rely on the system prompt alone.</li>
+</ul>
+<h2 id="what-i-take-away-from-it">What I take away from it</h2>
+<p>If I had to sum up what this playground has taught me:</p>
+<ol type="1">
+<li><strong>The message is the contract.</strong> Wire formats only grow by addition, and integers are never renumbered. A room can run for years on an old version.</li>
+<li><strong>Everything restarts, all the time.</strong> Every component must republish its real state on reconnect, operations must be idempotent, and critical state must live in the broker (retained) or in a database, not in a process's RAM.</li>
+<li><strong>Hardware first, network second.</strong> An actuator must be in a safe state before the board even knows it has an IP address.</li>
+<li><strong>Silence is information.</strong> Push monitoring, short keepalives, Last Will: you want to know when something is dead, not just when it's alive.</li>
+<li><strong>A Debian package, not a how-to.</strong> If installation needs a manual step, that step will be forgotten on the twentieth machine.</li>
+<li><strong>Don't touch a room mid-game.</strong> Not monitoring, not the watchdog, not me.</li>
+<li><strong>People's safety stays hard-wired.</strong> Software follows the fire-alarm system; it doesn't replace it.</li>
+</ol>
+<p>Building software for escape rooms is distributed computing where every node has a body: a motor, a lock, a speaker. It's demanding, often frustrating (a board that answers ping while it's dead…), and I don't know many playgrounds that teach you as much. And when a team walks out of a room cheering, I know that behind the door, dozens of agents and hundreds of MQTT messages did exactly what was expected of them.</p>
+				<div id="crdny">November 4, 2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>MQTT</li>
+						<li>Architecture</li>
+						<li>IoT</li>
+						<li>Raspberry Pi</li>
+						<li>ESP32</li>
+						<li>Linux</li>
+						<li>Debian</li>
+						<li>.NET</li>
+						<li>systemd</li>
+						<li>Distributed systems</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>
