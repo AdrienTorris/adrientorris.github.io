@@ -1,0 +1,373 @@
+<!DOCTYPE html><html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=G-F924P8Y6HC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-F924P8Y6HC');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>vigie: running 150 machines across 13 sites, with no technician on site</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="en" />
+		<meta name="keywords" content="Team Break,vigie,Operations,Monitoring,Headscale,Tailscale,WireGuard,SSH,Debian,systemd,FastAPI,MCP" />
+		<meta name="description" content="In the previous articles I described what runs in our rooms: the overall architecture, the Maestro engine, the Archipel site platform, and the ESP32 firmware base." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/team-break/vigie-exploitation.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/team-break/vigie-fleet-operations.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>Projects</li>
+					<li>Team Break</li>
+					<li class="active"><a href="https://adrientorris.github.io/projects/team-break/vigie-fleet-operations.html" title="vigie: running 150 machines across 13 sites, with no technician on site">vigie: running 150 machines across 13 sites, with no technician on site</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>vigie: running 150 machines across 13 sites, with no technician on site</h1>
+<p>In the previous articles I described what runs in our rooms: <a href="https://adrientorris.github.io/projects/team-break/team-break-architecture.html">the overall architecture</a>, the <a href="https://adrientorris.github.io/projects/team-break/maestro-orchestration.html">Maestro</a> engine, the <a href="https://adrientorris.github.io/projects/team-break/archipel-orchestration.html">Archipel</a> site platform, and <a href="https://adrientorris.github.io/projects/team-break/esp32-firmware-base.html">the ESP32 firmware base</a>. One question remains: how do you actually operate all of it?</p>
+<p>Team Break's fleet has about 150 enrolled machines spread over 13 sites: 4 company-owned and 9 franchised. They include Maestro room servers, Raspberry Pis driving video or sound, Donut Quiz kiosks and desks (nearly half the fleet, 9 machines per site), Heroes Academy installations and our Archipel servers. The target is around 300 machines once the older rooms are migrated.</p>
+<p><strong>vigie</strong> is the tool I built to operate that fleet from a single VPS. This article covers its design choices and, above all, the incidents that drove them.</p>
+<h2 id="the-problem-isnt-technical">The problem isn't technical</h2>
+<p>vigie's roadmap opens by stating the problem, and I'll quote it because everything else follows from it:</p>
+<blockquote>
+<ul>
+<li><strong>a room that doesn't start in the morning costs slots.</strong> The time between "it's not working" and "it's fixed" is the measure that matters.</li>
+<li><strong>nobody on site is a technician.</strong> Any procedure that assumes an operator in front of the screen is a procedure that fails.</li>
+<li><strong>an intervention during opening hours is an incident</strong>, even a successful one.</li>
+</ul>
+</blockquote>
+<p>So the goal isn't to have tools but to <strong>shorten the time between "it's not working" and "it's fixed", without ever degrading a room in operation</strong>. Four principles follow:</p>
+<ol type="1">
+<li><strong>Additive and reversible.</strong> Nothing vigie installs may degrade a room: not the DNS, not the routing, not the startup of a business service.</li>
+<li><strong>Two sources of truth, explicitly separate.</strong> The Git repository describes the <em>wanted</em> state; the fleet reports the <em>observed</em> state. "The gap between the two is the most useful information in the system."</li>
+<li><strong>Machines are only reachable over the VPN.</strong> No edge-point service is published on the Internet.</li>
+<li><strong>No heavy agent.</strong> apt, systemd, shell and Docker. Whatever the OS already knows how to do, vigie doesn't reimplement.</li>
+</ol>
+<p>And a few refusals, written down in black and white:</p>
+<ul>
+<li><strong>no container orchestration</strong> on room machines: "A room runs business software, not a cluster";</li>
+<li><strong>no automatic correction</strong>: "Diagnose, alert, suggest the command — deciding stays human as long as an incident costs slots";</li>
+<li><strong>no general configuration management</strong>: the day we need one, we'll integrate an existing tool rather than write our own;</li>
+<li><strong>no comfort tooling</strong> installed on room machines.</li>
+</ul>
+<p>These choices live in a decision log (twelve so far, D1 to D12), each with its context, the choice and the cost of reversing it. The roadmap justifies it in one sentence: "better a debatable, written trajectory than an accumulation of tools."</p>
+<h2 id="one-vps-two-packages-one-script">One VPS, two packages, one script</h2>
+<pre><code class="nohighlight">              ┌──────────────────────── VPS ─────────────────────────┐
+              │  "vigie" package                                     │
+              │   headscale (VPN)   webui: PostgreSQL · API · signer │
+              │                     sshca (certificate authority)    │
+              └───────▲───────────────────▲───────────────┬──────────┘
+                      │ reports (push,     │ console       │ read-only relay
+                      │ ingestion port,    │ (browser)     │ (video wall)
+       tailnet        │ every minute)      │               ▼
+  ┌───────────────────┴──────────┐        humans      room cctv-hubs
+  │ edge points ("vigie-edge"    │
+  │ package):                    │◄── SSH, 16 h certificate ───── access workstations
+  │ enroll · report · ssh-trust  │                                ("vigie-access" script)
+  │ order execution              │
+  └──────────────────────────────┘</code></pre>
+<ul>
+<li><strong>On the server</strong>, the <code>vigie</code> package installs three components: Headscale (the VPN control server), the web console (PostgreSQL, a FastAPI API and a separate container that signs SSH certificates) and the certificate authority.</li>
+<li><strong>On the machines</strong>, the <code>vigie-edge</code> package can enroll the machine on the VPN, send a state report, trust the SSH authority and execute orders.</li>
+<li><strong>On access workstations</strong>, a standalone script, <code>vigie-access</code>, finds a machine from a fragment of its name, maintains a managed block in <code>~/.ssh/config</code> and opens a session.</li>
+</ul>
+<p>The server CLI follows a design rule I find healthy: <strong>it hardcodes no component</strong>. <code>vigie &lt;component&gt; &lt;action&gt;</code> resolves either to a Docker Compose verb (<code>up</code>, <code>down</code>, <code>logs</code>…) or to a script <code>components/&lt;component&gt;/scripts/&lt;action&gt;.sh</code>. Adding a building block means adding a directory. And to stop a human in a hurry from running <code>docker compose -f …</code> by hand with the wrong paths, the Compose files require a variable that only the CLI sets:</p>
+<pre><code class="nohighlight">- "${VIGIE_VAR:?a lancer via le CLI vigie}/webui/postgres:/var/lib/postgresql/data"</code></pre>
+<h2 id="name-a-function-not-a-machine">Name a function, not a machine</h2>
+<p>Each machine gets a node name of the form <code>&lt;product&gt;-&lt;site&gt;[-&lt;level&gt;…]-&lt;function&gt;[&lt;n&gt;]</code>, for example <code>maestro-lille-chocolaterie-ascenseur-tv4</code>. The name describes <strong>a function at a location, never a machine</strong>: when a Pi dies, its replacement takes the same name, and with it the same history and the same access. Segments contain no hyphen, and a number only appears where the field already uses one (<code>tv4</code>, never <code>tv04</code>).</p>
+<p>Two decisions frame this name. The first: it is <strong>validated, never parsed</strong>. "A name must never serve as a database": a machine's site or product comes from the inventory, not from splitting a string.</p>
+<p>The second comes from an incident. During enrollment, the tool renamed the system hostname to match the node name. At the end of August, that took rooms out of service for two days, in two ways, both deferred until the next reboot:</p>
+<ul>
+<li>our MQTT agents read the hostname once at startup and ignore messages addressed to any other name;</li>
+<li>Chromium's profile lock contains the hostname, and the kiosk silently refused to start.</li>
+</ul>
+<p>Since then, <strong>the node name and the hostname are independent</strong>. Renaming the system requires an explicit option (<code>--set-hostname</code>), which warns, then purges exactly Chromium's three locks (<code>SingletonLock</code>, <code>SingletonSocket</code>, <code>SingletonCookie</code>), never a broader pattern: "a slightly too wide glob would wipe a 148 MB profile." And no session is restarted: automatic correction on a fleet in operation is ruled out.</p>
+<h2 id="a-strictly-additive-vpn">A strictly additive VPN</h2>
+<p>Machines join a WireGuard tailnet managed by a <strong>self-hosted Headscale</strong>, at a pinned version, with a Tailscale client that is also pinned and frozen with <code>apt-mark hold</code>. "An upgrade is a decision, never a side effect."</p>
+<p>The first principle (additive and reversible) shows up very concretely in the enrollment command. Every security option is passed <strong>explicitly</strong>, even at its default value, to neutralize any leftover preference from a previous install:</p>
+<pre><code class="nohighlight">tailscale up \
+  --login-server "$login_server" \
+  --auth-key "$authkey" \
+  --hostname "$node_name" \
+  --accept-dns=false \
+  --accept-routes=false \
+  --advertise-routes= \
+  --advertise-exit-node=false \
+  --advertise-tags= \
+  --ssh=false \
+  --timeout 60s</code></pre>
+<p>The VPN touches neither the DNS, nor the routing, nor the machine's interfaces. <code>--reset</code> is banned because it would turn DNS management back on. MagicDNS is disabled on the server, and node keys don't expire: a room machine has nobody in front of its screen, and an expiry would cut remote access without warning and force a trip to the site. The trade-off is a periodic review of the nodes.</p>
+<h3 id="partitioning-for-security-and-for-load">Partitioning, for security and for load</h3>
+<p>The access policy isn't hand-written: it's <strong>generated from the inventory</strong>. Each site is a Headscale user, and a single rule (<code>autogroup:self</code>) partitions the whole fleet, present and future: a machine only sees the machines of its own site. Three exceptions are added: access workstations see everything, every node can reach the server <strong>on the report ingestion port only</strong>, and the server can reach the camera hubs.</p>
+<p>Partitioning protects franchises from one another, but it also helps with load. In a mesh network, every state change of a node is propagated to every other node, and every machine configures as many WireGuard peers. The roadmap puts it this way: "At 300 nodes, the load point is not the server but the topology pushed to everyone […]. The lever isn't resizing the VPS, it's partitioning." Measured after rollout: a Lille machine sees 37 peers instead of 145.</p>
+<p>For the same reason, Headscale stays on <strong>SQLite</strong>. PostgreSQL was considered for 300 nodes, then dropped: the project discourages it, only documents migration from PostgreSQL to SQLite, and "choosing PostgreSQL would mean picking the least-tested backend, with no migration tool, for a gain the project itself doesn't promise."</p>
+<h3 id="the-silent-failure">The silent failure</h3>
+<p>One incident shaped how the server is exposed. After a short network cut, a client that reached the server over HTTP on a non-standard port switched to TLS on its own… on that same port, where nothing was listening. The trap: the WireGuard data plane survives, only the control plane breaks. Existing machines keep talking to each other, but new ones become invisible and a revocation is no longer applied. The decision log sums it up: "The failure is silent as long as nothing moves, and reveals itself exactly when you need it."</p>
+<p>The server now sits behind a reverse proxy on standard ports (HTTPS on 443, HTTP on 80 relayed without redirect, and a default server that accepts connections without SNI), with Headscale listening only locally.</p>
+<h2 id="push-based-monitoring-silence-is-information">Push-based monitoring: silence is information</h2>
+<h3 id="why-push-rather-than-pull">Why push rather than pull</h3>
+<p>To know a machine's state there are two options: the server fetches it (<em>pull</em>), or the machine sends it (<em>push</em>). The decision log settles it:</p>
+<blockquote>
+<p>At three hundred, pull forces the server into three hundred connections per refresh, and <strong>a machine that's off makes everyone wait</strong>: the TCP timeout is paid for each one, precisely on the day several are offline, which is the day you look.</p>
+</blockquote>
+<p>Pull would also force the server to hold SSH access to the whole fleet: "compromising the VPS would mean compromising every room." Push reverses every term. The server only receives, the load is spread over time, and "an offline machine signals itself by its silence — which is exactly the information you want, obtained without waiting for anything."</p>
+<h3 id="identity-without-secrets">Identity without secrets</h3>
+<p>A report must be attributed to a machine, and a machine must not be able to pass itself off as another. The usual answer is one token per machine, in other words "a store of three hundred secrets for a read-only service."</p>
+<p>The VPN already provides the answer. The ingestion API only listens on the server's tailnet address, and a packet's source address there is guaranteed by WireGuard: it's bound to a private key that never leaves the machine. The ingestion module's header sets three rules (translated):</p>
+<pre><code class="nohighlight">#   1. the source address must be in the tailnet;
+#   2. it must match a node known to Headscale;
+#   3. the name sent by the machine is never trusted — it is only used
+#      to flag an inconsistency.</code></pre>
+<p>No secret is distributed, stored or revoked: <strong>removing a node from the tailnet is enough to silence it</strong>. And the day a machine is replaced, the one that takes over the name takes over the identity.</p>
+<p>That elegance has a price. When the server moved in October, the Tailscale client's address translation masked source addresses behind the Docker gateway: every machine got a 403. That behaviour had to be disabled (<code>--snat-subnet-routes=false</code>) for identity to become readable again.</p>
+<h3 id="the-report">The report</h3>
+<p>On each machine, a systemd timer triggers a report every minute:</p>
+<pre><code class="nohighlight">[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+RandomizedDelaySec=20s
+AccuracySec=10s
+# No catch-up: a missed report describes a state that no longer exists.
+Persistent=false</code></pre>
+<p>The matching service is a <em>oneshot</em> at <code>Nice=10</code> with <em>idle</em> I/O scheduling because, as the comment says, "a collection must never compete for the CPU with a mechanism." There's no daemon and no open port on the machine. The report itself is JSON (field names stayed in French for compatibility with machines already in the field):</p>
+<pre><code class="nohighlight">rapport = {
+    "version_agent": version_agent,
+    "hostname": os.uname().nodename,
+    "demarrage": demarrage(),          # boot time (btime)
+    "systeme": systeme(),              # distribution, version, kernel, architecture, model
+    "paquets": paquets(interessants),  # versions of tracked packages, by exact name
+    "ressources": ressources(),        # load, cores, memory, disks, temperature
+    "conteneurs": conteneurs(),        # state, health, exit code, image version
+    "services": services(declares),    # systemd units declared for this product
+    "ssh": ssh_access(admin_accounts), # port and admin accounts present
+}</code></pre>
+<p>Three rules govern collection: it never fails as a whole ("a missing source is a missing field"), it modifies nothing, and no secret is read or sent.</p>
+<p>One detail cost a few days: the package installs the timer but doesn't enable it. Explicit registration enables it, in line with the rule that "installing a package has no visible effect". A Rouen machine stayed online, healthy… and missing from the console for days, because it had been enrolled but not registered.</p>
+<h3 id="from-raw-state-to-anomalies">From raw state to anomalies</h3>
+<p>On the server, the analysis distinguishes four situations and never mixes them up:</p>
+<ul>
+<li><strong>offline</strong>: Headscale no longer sees the machine;</li>
+<li><strong>silent</strong>: it's online but hasn't sent a report in 5 minutes;</li>
+<li><strong>no agent</strong>: it doesn't send reports, and that's expected (our last Windows servers): never an anomaly;</li>
+<li><strong>stale report</strong>: a nuance among silent machines.</li>
+</ul>
+<p>For resources, thresholds are <strong>data, in the database, per machine</strong>, resolved in the order node → site → product → default. Each resource has two levels, because "a permanent anomaly stops being read": an <strong>event</strong> threshold ("it's rising"), written once when crossed with an exit margin against flapping, and a stricter <strong>anomaly</strong> threshold ("it's burning").</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Resource</th>
+<th>Event</th>
+<th>Anomaly</th>
+<th>Exit margin</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Temperature</td>
+<td>80 °C</td>
+<td>85 °C</td>
+<td>5 °C</td>
+</tr>
+<tr class="even">
+<td>Load per core</td>
+<td>2</td>
+<td>4</td>
+<td>0.5</td>
+</tr>
+<tr class="odd">
+<td>Free disk</td>
+<td>15 %</td>
+<td>10 %</td>
+<td>5 %</td>
+</tr>
+<tr class="even">
+<td>Free memory</td>
+<td>15 %</td>
+<td>5 %</td>
+<td>5 %</td>
+</tr>
+</tbody>
+</table></div>
+<p>The migration's comment justifies the temperature threshold: Raspberry Pis start throttling around 80 °C; below that, a hot display case is their normal life, not an event. One rule came out of it: <strong>the declared inventory stays in Git; per-machine operating settings go in the database</strong>.</p>
+<h3 id="monitoring-that-lies-costs-more-than-no-monitoring">Monitoring that lies costs more than no monitoring</h3>
+<p>The sentence comes from the roadmap, and it drove a whole batch of fixes: "Monitoring that displays false information costs more than no monitoring at all." Two examples:</p>
+<ul>
+<li><strong>Console load.</strong> The fleet list weighed 176 KB for 146 nodes (around 360 KB at 300), and it was recomputed twice per refresh and per browser. This kind of debt reveals itself as "a VPS that crawls on an opening morning — the worst moment." Today a single shared snapshot (at most 5 s old) serves everyone, and filtering and paging happen in the API.</li>
+<li><strong>Restart loops.</strong> In October, a <code>Restart=always</code> service on a Donut Quiz server had restarted 4,655 times without vigie showing it: as far as systemd was concerned, it was "active". Containers stuck restarting are flagged, but reporting <code>NRestarts</code> for systemd units is the next step.</li>
+</ul>
+<h2 id="the-console">The console</h2>
+<p>The console is a FastAPI application with PostgreSQL and vanilla JavaScript, no framework, refreshed over SSE. The front end fits in three files, on purpose: "the console stays three files you can read end to end." It covers the fleet, anomalies, events, the video wall, SSH access, assistants, nodes, certificates and users.</p>
+<p>Permissions rest on four roles (admin, lead, operator, read-only). Routes name <strong>permissions</strong>, never roles; a route that declares none prevents the service from starting. An account can be limited to some sites, every action is <strong>logged before it runs</strong>, and a machine can be put to sleep (24 h by default, 30 days at most) so it doesn't clutter the anomalies while a room is closed.</p>
+<h2 id="acting-remotely-without-ever-connecting-to-the-machines">Acting remotely without ever connecting to the machines</h2>
+<p>Monitoring isn't enough: you need to read logs, restart a service or a machine. The constraint is strict: <strong>the server never connects to an edge point</strong>. So actions are <strong>pulled orders</strong>:</p>
+<ol type="1">
+<li>an order waits in the database;</li>
+<li>the response to the machine's next report carries it (a 200 with <code>{"orders": […]}</code> instead of a 204);</li>
+<li>the machine runs it and posts the result, identified by its tailnet address, so it can only answer its own orders.</li>
+</ol>
+<p>Order kinds form a closed list: read logs, restart a unit, restart a container, reboot or shut down the machine, and a few room actions. There are plenty of safeguards:</p>
+<ul>
+<li>arguments are checked <strong>on both sides</strong>: declared units only, a closed list of containers per product, <strong>never a free-form command</strong>;</li>
+<li>an action order expires after 2 minutes without an answer, and only one action at a time per machine;</li>
+<li>rebooting a machine requires typing its name, and an order is never run twice;</li>
+<li>a reboot answers first, then runs one minute later (<code>shutdown -r +1</code>), so the result gets back;</li>
+<li>the agent refuses to act unless it runs as root: a test once really rebooted its author's laptop.</li>
+</ul>
+<p>These actions are allowed during opening hours: that's precisely when a room needs them. Automatic updates, once they exist, are what will be confined outside opening hours.</p>
+<h2 id="ssh-16-hour-certificates">SSH: 16-hour certificates</h2>
+<p>For interactive access, vigie doesn't install keys on the machines: it signs <strong>SSH certificates</strong> with an authority that lives on the VPS. A certificate lasts 16 hours, "a working day and its overtime." Signing happens in a separate container reached over a Unix socket: the web application never holds the key.</p>
+<p>From the console, an operator registers their public key once, then requests access from a node's page. They get a certificate limited to that node, with the <code>ssh</code> command ready to copy. Admins can get a certificate valid for the whole fleet.</p>
+<p>Why certificates rather than keys pushed to the machines? Because "a key removed by push stays on a machine that was off." With certificates, revoking means stopping signing, and a still-valid certificate is cut off by expiring the person's VPN node.</p>
+<p>Rollout had to cope with the fleet's heterogeneity. Every OpenSSH version present accepts certificates (7.9 and up), but Debian 10's doesn't know the <code>Include</code> directive, and an <code>Include</code> line makes it reject the whole file. So the <code>ssh-trust</code> command writes either an extra configuration file or a marked block at the top of <code>sshd_config</code>. It validates with <code>sshd -t</code>, rolls back on refusal, replaces files atomically, and reloads sshd rather than restarting it. During rollout, 42 kiosks had an <code>/etc</code> owned by the <code>pi</code> user, which makes sshd reject any principals file: <code>ssh-trust</code> now refuses and prints the <code>chown</code> command that fixes it. The authority is in service on 137 machines.</p>
+<h2 id="changing-a-pis-os-remotely">Changing a Pi's OS remotely</h2>
+<p>Some of our franchises' Pis still run 32-bit Raspbian 10 (armhf). A distribution upgrade keeps the architecture, while our target is Debian 13 on arm64. So the SD card has to be rewritten… with nobody on site.</p>
+<p>The <code>vigie-reflash</code> tool does it in six steps:</p>
+<ol type="1">
+<li>a read-only probe checks that the root is on an SD card and that the machine has enough RAM, <code>sysrq</code>, <code>chroot</code> and a decompressor;</li>
+<li>on the workstation, the image is prepared (configuration injected into the FAT boot partition) and recompressed in a format the target can read;</li>
+<li>the image is copied into <code>/dev/shm</code> and its SHA-256 is checked;</li>
+<li>a mini-system is built in RAM: <code>sh</code>, <code>dd</code>, <code>sync</code> and the decompressor, with their libraries;</li>
+<li>a <strong>dress rehearsal</strong> runs inside the <code>chroot</code> before the point of no return;</li>
+<li>the filesystem is remounted read-only (<code>sysrq u</code>), then the image is written with <code>dd</code> from RAM, synced, and the machine reboots (<code>sysrq b</code>). Nothing is read from the card being overwritten.</li>
+</ol>
+<p>A real write requires confirming the current hostname, <code>--dry-run</code> sends nothing, and the machine doesn't reboot if the write fails. First success on our test bench: a Pi 4 moved from Raspbian 10 armhf to Debian 13 arm64 with the kiosk image, with no physical intervention. The tool is still experimental: the machine comes back without a VPN node, and has to be reached through another machine on the same local network.</p>
+<h2 id="shipping-two-debian-packages-and-a-frugal-ci">Shipping: two Debian packages and a frugal CI</h2>
+<p>vigie ships the way it deploys: as <strong>Debian packages</strong>, <code>vigie</code> for the server and <code>vigie-edge</code> for the machines, both <code>Architecture: all</code>. Every design rule has a story:</p>
+<ul>
+<li><strong>no manual step</strong>: <code>apt install ./package.deb</code> must be enough. <code>yq</code> was dropped for <code>python3-yaml</code> because "two incompatible tools share that name, and the one Ubuntu packages is the wrong one — the read would have been silently wrong";</li>
+<li><strong>dpkg maintainer scripts do no networking and start nothing</strong>: installing a package on a machine in operation has no visible effect. The Tailscale client is installed by enrollment, not by the package (dpkg holds its lock during <code>postinst</code>);</li>
+<li><strong><code>--dry-run</code> on every action that changes state</strong>, and error messages that give the fixing command: "The users of these scripts are often mid-incident";</li>
+<li><strong>xz compression</strong>: Ubuntu's default zstd compression couldn't be read by Debian 10's dpkg.</li>
+</ul>
+<p>CI is deliberately frugal (free GitHub plan): no cache, no workflow artifacts, a single job. A <code>v*</code> tag builds both packages and publishes a GitHub release whose notes are the first section of the <code>CHANGELOG</code>, extracted with one line of <code>awk</code>. The server package also embeds the edge package of the same version.</p>
+<p>The next big piece of work is an internal APT repository (aptly): <code>develop</code>, <code>staging</code> and <code>main</code> channels, GPG-signed, the channel each site follows described in the inventory, and an update on the night from Sunday to Monday, at "a time drawn at random per machine", limited to an explicit list of packages. "Never a system upgrade at the same time."</p>
+<h2 id="the-video-wall">The video wall</h2>
+<p>Each room has its own camera hub (3 to 4 cameras per room). vigie doesn't replace it: it <strong>relays a few routes read-only</strong> (the camera list, a still frame, a live video stream), and the browser never reaches the hub directly. Stills are refreshed every 10 s and cached for 5 s, and a single call goes to the room however many people are watching. Live views are capped per site and stop after 10 minutes. Nothing else is relayed: no camera control, no captures, no admin.</p>
+<p>To develop the wall without depending on the real fleet, the repository has a local bench: the real API, plugged into a fake Headscale and fake hubs streaming test patterns, with one pre-seeded account per permission acceptance case.</p>
+<h2 id="operational-knowledge-and-ai">Operational knowledge, and AI</h2>
+<h3 id="a-knowledge-base-not-someones-memory">A knowledge base, not someone's memory</h3>
+<p>A tool isn't enough: you need to know what to do with it. From two months of interventions I built a maintenance knowledge base in plain Markdown: 58 symptoms, 27 procedures and one sheet per site. The goal: fixing a room shouldn't depend on a single person.</p>
+<p>Every ticket starts with the same reflexes: find the <em>real</em> time of the game (the time reported is often wrong), go in directly over the VPN, read the logs before the code, and never act on a room during a game. For that last point, the simplest test depends on no API at all: listen for a few seconds to the room's MQTT countdown topic.</p>
+<pre><code class="nohighlight">sudo docker exec maestro-mqtt-1 mosquitto_sub -t /timer -C 1 -W 8</code></pre>
+<p>Seconds remaining: a game is on. A timeout: the room is free.</p>
+<p>Actions are sorted into three levels: read-only diagnosis is free; restarting, re-arming the emergency system after an alarm, or unblocking a room's state requires explicit confirmation; changing code, building a package or migrating a room is forbidden within that framework.</p>
+<h3 id="an-mcp-server-that-doesnt-trust-the-prompt">An MCP server that doesn't trust the prompt</h3>
+<p>The next step was to wire that knowledge into vigie as a <strong>maintenance MCP server</strong> usable from Claude. The request was demanding: non-technical people with rights on sites A and B must be able to describe a fault and be guided through it, but <strong>never be able to break a room</strong>, and be able to do nothing on site C, "even when trying to jailbreak: we do not rely on the system prompt alone to block access."</p>
+<p>Before building anything, we classified the knowledge base's 58 symptoms:</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>What fixes the symptom</th>
+<th>Symptoms</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A closed action the MCP can run</td>
+<td>20</td>
+</tr>
+<tr class="even">
+<td>Diagnosis only</td>
+<td>8</td>
+</tr>
+<tr class="odd">
+<td>Someone on site</td>
+<td>10</td>
+</tr>
+<tr class="even">
+<td>A code change or new feature</td>
+<td>16</td>
+</tr>
+<tr class="odd">
+<td>A decision by the technical lead</td>
+<td>4</td>
+</tr>
+</tbody>
+</table></div>
+<p>The MCP helps diagnose 53 of them; plain restarts cover about 7. The value is in the diagnosis, not in the restarts.</p>
+<p>The server exposes 24 tools, annotated read-only or destructive: list sites and nodes, read logs, a room's state and its electronics board, a camera frame, search the knowledge base, open and close an intervention case, prepare and run an action. Every safeguard is <strong>server-side</strong>:</p>
+<ul>
+<li>each call re-reads the account and its rights; a node, room, camera or button on another site answers "not found", without revealing that it exists;</li>
+<li>parameters are resolved against the inventory and the last report, and the machine re-checks its own closed lists;</li>
+<li>an action takes two calls: <code>prepare_action</code> returns a summary in French and a token valid for 5 minutes, then <code>execute_action</code> runs it;</li>
+<li>at execution time, <strong>the machine itself checks that no game is in progress</strong>; an unreadable state blocks too, and overriding requires a reason, which is logged;</li>
+<li>at most 3 restarts per target per hour.</li>
+</ul>
+<p>One of the tests is called <code>test_a_prompt_injection_corpus_never_reaches_a_machine_outside_the_closed_lists</code>. That name sums up the philosophy: assume the model can be manipulated, and make sure it doesn't matter.</p>
+<h2 id="testing-an-operations-tool">Testing an operations tool</h2>
+<p>vigie has 683 tests in 42 suites, discovered automatically by area (core, VPN, SSH, console, edge, access, packaging). They need only bash, coreutils and Python, and start nothing. A sandbox simulates a field machine and records every call, which makes it possible to assert that a command was <strong>not</strong> run. The enrollment suites, for example, check that every security option is passed to <code>tailscale up</code> and that <code>--reset</code> never is. The <code>vigie-edge</code> package even has a test checking that it installs offline.</p>
+<h2 id="whats-left">What's left</h2>
+<p>The roadmap is written down and kept up to date. Delivered: the VPN and its partitioning, the console, monitoring at scale, the SSH authority, permissions, remote actions, the video wall, the server move. Still to come, among others: the APT repository and scheduled updates, reporting systemd restarts, fine-grained certificate revocation, disk hardware health, and managing franchise cameras.</p>
+<h2 id="what-i-take-away-from-it">What I take away from it</h2>
+<ol type="1">
+<li><strong>Measure time to repair, not the number of tools.</strong> Everything else follows.</li>
+<li><strong>An operations tool must never cause an outage.</strong> Additive, reversible, no effect on install: the hostname incident taught us what forgetting that costs.</li>
+<li><strong>Silence is information.</strong> With push, a machine that's off makes nobody wait; its absence is the signal.</li>
+<li><strong>Identity comes from the network, not from distributed secrets.</strong> A VPN that guarantees the source address beats a store of 300 tokens.</li>
+<li><strong>The server never connects to the machines.</strong> Orders are pulled, results are posted, and a compromised server doesn't become a way into every room.</li>
+<li><strong>Deciding stays human.</strong> vigie diagnoses, alerts and suggests the command; it doesn't fix anything on its own.</li>
+<li><strong>Monitoring that lies costs more than no monitoring.</strong> An invisible restart loop, a list that crawls: every lie gets paid for on an opening morning.</li>
+<li><strong>Safeguards live in the server, not in the prompt.</strong> With an AI assistant as with a human in a hurry.</li>
+</ol>
+<p>A good operations tool fades into the background. When a room won't start on a Saturday morning, the operator opens the console, sees what's wrong and gets the command that fixes it. The rest of the time, vigie just listens to the fleet breathe, one minute after another.</p>
+				<div id="crdny">November 11, 2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>vigie</li>
+						<li>Operations</li>
+						<li>Monitoring</li>
+						<li>Headscale</li>
+						<li>Tailscale</li>
+						<li>WireGuard</li>
+						<li>SSH</li>
+						<li>Debian</li>
+						<li>systemd</li>
+						<li>FastAPI</li>
+						<li>MCP</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

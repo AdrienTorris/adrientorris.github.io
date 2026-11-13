@@ -1,0 +1,363 @@
+<!DOCTYPE html><html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=G-F924P8Y6HC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-F924P8Y6HC');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Archipel: orchestrating the orchestrators</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="en" />
+		<meta name="keywords" content="Team Break,Archipel,Maestro,Orchestration,MQTT,SSE,.NET,Escape room,Architecture" />
+		<meta name="description" content="In the previous article I described how Maestro orchestrates an escape room: notifications come in, commands go out, milestones pile up, a countdown runs. But a room doesn't live on its own." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/team-break/archipel-orchestration.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/team-break/archipel-orchestration.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>Projects</li>
+					<li>Team Break</li>
+					<li class="active"><a href="https://adrientorris.github.io/projects/team-break/archipel-orchestration.html" title="Archipel: orchestrating the orchestrators">Archipel: orchestrating the orchestrators</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Archipel: orchestrating the orchestrators</h1>
+<p>In the <a href="https://adrientorris.github.io/projects/team-break/maestro-orchestration.html">previous article</a> I described how Maestro orchestrates an escape room: notifications come in, commands go out, milestones pile up, a countdown runs. But a room doesn't live on its own. At Aéroville, one of our sites, about ten rooms run side by side: up to nine Maestro instances, plus a Donut Quiz that doesn't use Maestro at all.</p>
+<p>So there has to be a level above, one that answers questions no single room can settle:</p>
+<ul>
+<li>which team plays where, at what time, in which language, with how many players?</li>
+<li>when can a room's tablet be opened to players?</li>
+<li>when should the start order be sent, and to which instance?</li>
+<li>which variant of the room (the scenario) should be prepared for the next session?</li>
+<li>what should the lobby TVs show?</li>
+</ul>
+<p>That's the job of <strong>Archipel</strong>, our site operations platform. If Maestro is the conductor of a room, Archipel is the theatre's stage manager: it doesn't play and it doesn't conduct, but nothing starts without it.</p>
+<h2 id="two-levels-of-orchestration-one-clear-boundary">Two levels of orchestration, one clear boundary</h2>
+<p>The most important design point fits in one table: <strong>who is authoritative for what</strong>.</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Archipel is authoritative for…</th>
+<th>Maestro is authoritative for…</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Bookings, slots, sessions</td>
+<td>The actual state of the room</td>
+</tr>
+<tr class="even">
+<td>The team: player count, language, name</td>
+<td>Time: start, duration, remaining time</td>
+</tr>
+<tr class="odd">
+<td>The scenario of the <em>next</em> session</td>
+<td>The gameflow and its execution</td>
+</tr>
+<tr class="even">
+<td>Launch words, access to the tablets</td>
+<td>Hardware, agents, safety</td>
+</tr>
+<tr class="odd">
+<td>What the lobby screens show</td>
+<td>Milestones, hints, the end of the game</td>
+</tr>
+</tbody>
+</table></div>
+<p>Three rules follow from that split, and they show up everywhere in the code:</p>
+<ol type="1">
+<li><strong>Archipel asks, Maestro confirms.</strong> Archipel never writes the state of a Maestro-driven room itself: it sends a request, then waits for the confirmation.</li>
+<li><strong>To Maestro, Archipel is an optional observer.</strong> The room's local MQTT broker is critical; Archipel's isn't. A room must be able to play, get prepared and stop while Archipel is down, under maintenance or on another subnet. On the Maestro side, the connection to Archipel never blocks startup, and publishing to Archipel is best-effort: "a lost notification must not turn an already persisted state change into a 500."</li>
+<li><strong>Tablets only talk to Archipel, never to the game system.</strong> The comment in the check-in endpoints says so explicitly: a future system (Heroes Academy) "will plug in here with no new path on the UI side." Archipel already drives two systems today: Maestro over MQTT, and Donut Quiz over HTTP.</li>
+</ol>
+<p>Technically, Archipel is a .NET 10 application (EF Core and PostgreSQL 16, MQTTnet 5) running on one mini PC per site, in Docker Compose. Application code follows a command/query split with a minimal home-made mediator, and the front end is vanilla JavaScript (ES modules, no npm, no bundler). Several background services keep the site ticking:</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Service</th>
+<th>Cadence</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Room sync</td>
+<td>24 h</td>
+<td>Opens a "gate" that the other syncs wait on</td>
+</tr>
+<tr class="even">
+<td>Booking sync</td>
+<td>5 min</td>
+<td>Imports bookings from the online booking tool</td>
+</tr>
+<tr class="odd">
+<td>Slot sync</td>
+<td>1 h, 14 days ahead</td>
+<td>Imports slots</td>
+</tr>
+<tr class="even">
+<td>Waiting-for-players switch</td>
+<td>30 s</td>
+<td>Opens ready rooms whose slot is close, publishes scenarios</td>
+</tr>
+<tr class="odd">
+<td>Late cancellation</td>
+<td>30 s</td>
+<td>Cancels teams that don't show up</td>
+</tr>
+<tr class="even">
+<td>Next-missions watcher</td>
+<td>10 s</td>
+<td>Feeds the lobby TVs</td>
+</tr>
+<tr class="odd">
+<td>MQTT relay</td>
+<td>event-driven</td>
+<td>Turns Maestro notifications into Archipel state</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="the-life-of-a-session-from-booking-to-leaving-the-room">The life of a session, from booking to leaving the room</h2>
+<p>Here's a team's complete journey, as seen by the stage manager:</p>
+<pre><code class="nohighlight"> Booking         Front-desk   Archipel           Room            Maestro                 Maestro
+ tool            kiosk        (site)             tablet          Game Orchestrator       Room Orchestrator
+     │ bookings (5 min)          │
+     ├──────────────────────────►│ session, slot
+     │             │ identify ──►│
+     │             │ confirm ───►│ language, players,
+     │             │◄── word ────│ launch word
+     │                           │ ◄─────────── RoomStateChanged(Prepared) ──────────────────┐
+     │                           │ Ready → WaitingForPlayers (slot is close)                 │
+     │                           │◄── start {word} ─┤                                        │
+     │                           │ onboarding ─────►│ (story steps)                          │
+     │                           │── ChangeRoomState(StartAsked) + team ────►│               │
+     │                           │                  │                        │ Maestro session
+     │                           │                  │                        ├─ start_room ─►│
+     │                           │◄──────── RoomStateChanged(Started) ───────┤               │
+     │                           │◄──────── SessionProgressionInit/Update ───┤◄──────────────┤
+     │                           │── SSE (1 s) ────►│ interpolated countdown                 │
+     │                           │◄──────── RoomStateChanged(Ended) ─────────┤◄──────────────┤
+     │                           │ next session's scenario ─────────────────►│</code></pre>
+<p>Step by step:</p>
+<ol type="1">
+<li><strong>Import.</strong> Every 5 minutes, Archipel fetches bookings and attaches them to a slot and a room. A "scenario" product (for example <em>Dark Magic School</em>, the Halloween version of our magic school) resolves to the physical room <em>and</em> its variant.</li>
+<li><strong>Check-in at the kiosk.</strong> The team identifies itself (email, order number, name, phone…), confirms its session, picks a language and the number of players. Archipel assigns it a <strong>launch word</strong>: the first word in the room's list, in the chosen language, that no neighbouring session holds, starting from an index derived from the session ID. If the team comes back to the kiosk, it gets the same word. If it declares more players than booked, it's sent to the front desk and the session is blocked for 5 minutes, so it can't simply start over with the right number.</li>
+<li><strong>The room becomes playable.</strong> Once the GM has finished preparing the room, Maestro confirms the <em>Prepared</em> state, which Archipel translates into <em>Ready</em>. Every 30 s, a sweep moves ready rooms whose slot is close to "waiting for players".</li>
+<li><strong>Logging in at the tablet.</strong> The room's tablet shows a grid of 8 words: the launch words of the sessions that can start now, padded with decoys, and never the word of a team that has already launched. The grid is built deterministically from the session ID so it stays stable while the tablet receives a state every second (client-side dedup depends on it). The team gets two attempts; after that the tablet locks for 10 s. The comment explains the choice: "Short cooldown, not a hard lock: a team that picked the wrong tablet must not leave it stuck."</li>
+<li><strong>Story, then launch.</strong> If the room has intro steps, the tablet plays them first, and the start order only goes out at the last one, "so the mission clock does not run while players read the instructions."</li>
+<li><strong>Start on the Maestro side.</strong> The game orchestrator receives the order, creates the Maestro session with the team name, player count, language and scenario, then passes the start instruction to the room orchestrator, flagged as coming from Archipel.</li>
+<li><strong>State coming back.</strong> Maestro publishes the state change and then the progression (initial, then roughly every 30 s). Archipel relays it to the tablet, which shows a countdown.</li>
+<li><strong>End of game.</strong> At the end, Archipel records it, clears the progression, and <em>immediately</em> sends Maestro the next session's scenario. The GM prepares the room, and the cycle starts again.</li>
+</ol>
+<p>Meanwhile the lobby TVs show the upcoming missions; a row disappears as soon as its room goes into play.</p>
+<h2 id="the-contract-between-the-two-worlds">The contract between the two worlds</h2>
+<p>Archipel and Maestro talk over two MQTT topics:</p>
+<ul>
+<li><code>/archipel/games/&lt;room&gt;/commands</code>: instructions from Archipel to Maestro;</li>
+<li><code>/archipel/notifs</code>: notifications from Maestro to Archipel.</li>
+</ul>
+<p>The contract is minimal. Two kinds of instruction: <strong>change a room's state</strong> (<code>ChangeRoomState</code>) and <strong>play a gameflow element</strong> (<code>PublishRoomGameflowCommand</code>: a command, a bundle, a notification or an option). Three kinds of notification: <strong>state changed</strong>, <strong>initial progression</strong>, <strong>progression update</strong>. Here's a start order:</p>
+<pre><code class="json">{
+  "kind": 2,
+  "room": "&lt;Maestro room key&gt;",
+  "command": null,
+  "data": [
+    { "key": "language",      "value": "fr" },
+    { "key": "players_count", "value": "4" },
+    { "key": "team_name",     "value": "The Explorers" },
+    { "key": "scenario",      "value": "halloween" }
+  ],
+  "session_id": 123,
+  "room_state": 5
+}</code></pre>
+<p><code>kind: 2</code> means <em>ChangeRoomState</em>, and <code>room_state: 5</code> means <em>StartAsked</em>. They're integers, as everywhere in our stack, and so subject to the same rule: append, never renumber.</p>
+<h3 id="two-keys-for-one-room">Two keys for one room</h3>
+<p>A room has two identities: its Archipel code (for example <code>jr</code>), used in the topic, and its Maestro key (<code>jurassikroom</code>), carried in the message. Mixing them up was costly. The relay used to resolve the room from the Archipel code alone, and the comment tells what happened: using that key "silently dropped every state confirmation for such rooms." No error, no exception: a room whose two keys differed simply never reported its state. The relay now reads the Maestro key from the message, and only falls back to the Archipel code for single-key deployments.</p>
+<h3 id="a-format-frozen-by-tests">A format frozen by tests</h3>
+<p>The two sides don't evolve at the same pace: a Maestro room can run for a long time on an old package version. So the format is frozen by a test suite (<code>WireFormatTests</code>): field names and order, enums serialized as numbers, data keys, culture-invariant numbers, tolerance of unknown fields. The file header explains what's at stake better than I could:</p>
+<blockquote>
+<p>a changed field name or type (an enum serialized as text, a renamed data key) makes one side silently ignore the other's messages: the room no longer starts from the tablet, or the tablet no longer sees the game.</p>
+</blockquote>
+<p>When we added scenarios, we didn't create a new message type. The scenario travels through the existing "play a gameflow element" instruction, with the <code>gameflow_option</code> type: no new contract, so no new version of the shared library to roll out on both sides at once.</p>
+<h2 id="ask-then-observe">Ask, then observe</h2>
+<p>Archipel has its own state machine for each room (ready, waiting for players, onboarding, playing, ended, stopped, unavailable, GM mode…), but when the room is driven by Maestro, that state is <strong>derived</strong> from Maestro's confirmations:</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Maestro state</th>
+<th>Archipel state</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Preparation asked, in preparation</td>
+<td>Preparing</td>
+</tr>
+<tr class="even">
+<td>Prepared</td>
+<td>Ready</td>
+</tr>
+<tr class="odd">
+<td>Start asked, started</td>
+<td>Playing</td>
+</tr>
+<tr class="even">
+<td>Ended</td>
+<td>Ended</td>
+</tr>
+<tr class="odd">
+<td>Stop asked, at rest</td>
+<td>Stopped</td>
+</tr>
+<tr class="even">
+<td>End of preparation <em>asked</em></td>
+<td>ignored</td>
+</tr>
+</tbody>
+</table></div>
+<p>The last row is the most interesting. "End of preparation asked" is only a request, and the comment says so: "only the request: Maestro can still refuse it." Archipel waits for "Prepared" before opening the room to players.</p>
+<p>Same logic for the GM panel hidden in the tablet: when the GM asks it to prepare or stop the room, Archipel sends the order but doesn't write the state. In the code's words, "the real state is driven by the RoomStateChanged confirmations Maestro sends back", so the panel always reflects Maestro's actual state.</p>
+<p>One last safeguard: a Maestro-driven room that has never reported a state is treated as <strong>stopped</strong>, not ready. Without that rule, a tablet could open to players in a room nobody had prepared.</p>
+<h2 id="launching-a-room-the-order-that-must-go-out-and-the-one-you-undo">Launching a room: the order that must go out, and the one you undo</h2>
+<p>The start is the only moment where Archipel triggers something irreversible: the mission begins, the clock runs, the music starts. Three implementation details show what that implies.</p>
+<p><strong>The order goes out even if the tablet gives up.</strong> A tablet can reload its page, lose Wi-Fi or hit a proxy timeout in the middle of the request. So the send uses <code>CancellationToken.None</code>:</p>
+<pre><code class="csharp">// CancellationToken.None: the tablet may have abandoned the request (reload), the order
+// must go out anyway -- otherwise the room switches to "start asked" with nothing starting.
+ArchipelInstructionMessage startInstruction = ArchipelInstructionMessage.BuildStartRoomInstruction(maestroRoomKey, sessionId)
+    with { Data = await BuildMaestroLaunchDataAsync(sessionId, sessionRepository, logger) };
+
+bool published = await brokerClient.PublishInstructionAsync(startInstruction, CancellationToken.None,
+    topicRoomKey: key);</code></pre>
+<p><strong>QoS 1, because QoS 0 was lying.</strong> The comment explains why the send moved to <em>at least once</em>: "At most once (the builder's default) only meant "written to the socket", so a half-open connection lost the instruction while the API still answered OK." With QoS 1, the broker acknowledges receipt (PUBACK).</p>
+<p><strong>If the order didn't go out, the launch is undone.</strong> The room goes back to waiting for players, the launch timestamps are cleared, and the tablet gets a <code>launch_failed</code> error rather than a misleading "mission started". The team can try again, or call the GM.</p>
+<p>To be honest about the limit: the PUBACK comes from the broker, not from Maestro. If the room's Maestro instance is offline, the order is accepted and the room stays in "start asked". The documented procedure is then a manual fallback from Maestro's GM console. It's a known limitation: an end-to-end acknowledgement would need a new contract and an extra wait on the tablet side.</p>
+<h2 id="time-belongs-to-maestro">Time belongs to Maestro</h2>
+<p>The tablet countdown is a good illustration of the authority split. Maestro owns time: it sends an initial progression (total duration, start time) and then an update roughly every 30 s. Archipel enriches it with what Maestro doesn't know: the player count and language, taken from the session that launched the room.</p>
+<p>Between two messages, three mechanisms keep the display honest:</p>
+<ul>
+<li><p><strong>The server ages the data.</strong> The stored progression dates from Maestro's <em>last</em> message; Archipel brings it up to now before sending it:</p>
+<pre><code class="csharp">// The snapshot holds the timing of Maestro's LAST message: age it to now. Sent as is, a
+// tablet re-anchored on it kept showing the same value until the next Maestro update, and
+// the countdown stopped altogether if Maestro went quiet.
+int age = (int)Math.Max(0, Math.Floor((now - snapshot.UpdatedAt).TotalSeconds));
+int remainingSeconds = Math.Max(0, snapshot.RemainingSeconds - age);</code></pre></li>
+<li><p><strong>The tablet interpolates.</strong> It builds an anchor (remaining time at a given wall-clock instant) and counts down locally, minute by minute and then second by second at the end, even if nothing else arrives.</p></li>
+<li><p><strong>Stale progression expires.</strong> After 10 minutes without news it's dropped: that's the safety net against a frozen progress bar.</p></li>
+</ul>
+<h2 id="scenarios-preparing-the-next-session">Scenarios: preparing the next session</h2>
+<p>A <strong>scenario</strong> is a variant of a physical room: same room, same tablet, same Maestro instance, but a different product in the booking tool and a different option in the gameflow. Our magic school becomes <em>Dark Magic School</em> for Halloween; Prison Break becomes <em>Prison Break Asylum</em>.</p>
+<p>Why not declare a second room in Archipel? Because a Maestro instance listens on a single key, and there's only one tablet state per physical room. So the scenario is a session attribute, and Archipel orchestrates how it gets applied with one simple rule: <strong>outside a game, the scenario selected in Maestro is the next session's.</strong></p>
+<p>It is sent:</p>
+<ul>
+<li><strong>immediately</strong> when a game ends or the room is stopped, even if it hasn't changed (the GM may have switched it during the game);</li>
+<li><strong>by the 30 s sweep</strong>, only if the value has changed (a session booked in the meantime, for example);</li>
+<li><strong>just before</strong> a preparation requested from the tablet;</li>
+<li><strong>inside the start order</strong>, as a safety net;</li>
+<li><strong>never during a game</strong>, nor during a preparation ("the atmosphere would change halfway through"): the GM stays in control.</li>
+</ul>
+<p>On the Maestro side, this option is never relayed to the room in play: it's applied to the gameflow configuration, which the next session picks up when it starts.</p>
+<h2 id="fan-out-from-mqtt-to-the-screens">Fan-out: from MQTT to the screens</h2>
+<p>A Maestro notification reaches the relevant screen within a few seconds at most (under two for a room tablet), by two different paths.</p>
+<p><strong>To the room tablet.</strong> The MQTT relay updates the state in the database (and the progression in memory). One SSE loop per tablet reads a snapshot of the room every second, shared among all readers (a single database query per room), and only sends it if it changed. The definition of "changed" has a history:</p>
+<blockquote>
+<p>Comparing the raw payload never deduplicated anything (serverTime alone changes every second): each tablet got the full payload every second, and since it re-anchors its countdown on each payload, the countdown froze between two Maestro updates.</p>
+</blockquote>
+<p>The signature now excludes the fields that move every second. On the tablet, a guard rejects any message whose <code>serverTime</code> is older than the last one applied, so a late message can never take the screen back in time.</p>
+<p><strong>To the lobby TVs.</strong> The dashboards (next missions, availability) receive <strong>events</strong> rather than snapshots:</p>
+<ul>
+<li>each event carries an <code>epoch-sequence</code> ID, where the <em>epoch</em> is drawn at random every time the server starts;</li>
+<li>the last 512 events are kept in a ring buffer;</li>
+<li>on reconnect, the browser sends <code>Last-Event-ID</code> and the server replays whatever is missing;</li>
+<li>if the gap is too large, or the epoch has changed (the server restarted), the server sends a <code>resync</code> event and the client reloads everything.</li>
+</ul>
+<p>On the client, a sync manager shared by every view handles the polling fallback and reconnection with backoff, and serializes every full reload so two loads never rebuild a view at the same time. A <code>resync</code> triggers a reload deferred by 2 s plus 0–2 s of extra jitter, against the thundering-herd effect when ten screens get the same signal. The TVs, which run for days on end, also do a full reload every 5 minutes, and every view reloads itself after a UI update.</p>
+<p>Finally, on the server, availability events are published by an EF Core interceptor <em>after</em> the transaction commits, whatever the write path: no endpoint can forget to notify the screens.</p>
+<h2 id="integrating-the-outside-world-without-getting-stuck-on-it">Integrating the outside world without getting stuck on it</h2>
+<p>A site orchestrator depends on services it doesn't control: the online booking tool, the MQTT broker, the Maestro instances. The rule is that none of them may block the rest.</p>
+<p><strong>One invalid booking never blocks the ones after it.</strong> In early November, one booking without a slot ID made the whole sync pass fail. Since the booking tool returns the same list on every pass, every booking listed after it stayed frozen: no new bookings, no cancellations, and teams that couldn't be found at the kiosk. The fix isolates each booking:</p>
+<pre><code class="csharp">foreach (var incoming in reservations)
+{
+    try { await UpsertReservationAsync(incoming, ct); }
+    catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+    {
+        _logger.LogError(ex, "… reservation {ReservationId} could not be synced, skipped until the next sync",
+            incoming.ReservationId);
+        _db.ChangeTracker.Clear();   // or every following SaveChanges would retry them
+    }
+}</code></pre>
+<p><strong>The broker may be missing.</strong> The API starts even without a broker, because check-in, dashboards and admin don't need it. A single loop handles reconnection, with a 2 to 60 s backoff and a resubscribe on every reconnect. "Single" matters: an earlier version also reconnected from the disconnect handler, which "raced with it […] and turned a broker outage into a log line every 2 seconds."</p>
+<p><strong>Site data is versioned.</strong> A site's texts, rooms, GM commands and scenarios live in a dedicated Git repository as numbered patches. Archipel remembers the position of the last applied patch in a dedicated Docker volume. Before that volume existed, the position lived inside the container, and every upgrade put every patch back to "pending". A patch that fails is still marked as applied, and you fix it with a new patch: history isn't rewritten.</p>
+<h2 id="deployment">Deployment</h2>
+<p>Archipel fits on one mini PC per site, running Debian 12 with Docker: PostgreSQL, Mosquitto, a migrator that must finish before the API starts, the API, the UI and an nginx gateway. CI publishes images on every merge, tagged <code>vYYYY.MM.DD-&lt;sha&gt;</code>. Production pins a tag; rolling back means putting the previous one back (restoring the database if a migration ran). A backup goes out every night.</p>
+<p>The tablets and lobby screens are mini PCs running Debian 12 with Ubuntu Frame, Chromium and the on-screen keyboard as snaps, which prevents quitting the application. Snap refreshes are confined to between 3 and 5 a.m.</p>
+<h2 id="what-i-take-away-from-it">What I take away from it</h2>
+<ol type="1">
+<li><strong>Each level has its own authority, and it's written down.</strong> Archipel owns the session; Maestro owns the room and the time. As long as that table is clear, conflicts sort themselves out.</li>
+<li><strong>Ask, observe, never assume.</strong> A higher-level orchestrator derives state from the confirmations it receives; it doesn't write it in place of whoever executes.</li>
+<li><strong>Whatever is orchestrated must be able to do without the orchestrator.</strong> A Maestro room plays without Archipel; Archipel checks teams in without a broker. Every dependency is optional for the side that depends on it.</li>
+<li><strong>An irreversible order goes out no matter what, or is cleanly undone.</strong> No "mission started" on screen when nothing went out.</li>
+<li><strong>The contract is frozen by tests</strong>, because the two sides never upgrade at the same time.</li>
+<li><strong>One invalid record never blocks the ones after it.</strong> It's obvious, and yet it caused our last sync incident.</li>
+<li><strong>Screens must never lie.</strong> Age the data, interpolate, deduplicate, reject what arrives out of order: the team in front of the tablet only sees the countdown, and the countdown has to be right.</li>
+</ol>
+<p>Maestro brings a room to life. Archipel brings a site to life: it gets the right team to the right door, at the right time, in the right language, with the right variant of the story. Then it steps aside and lets Maestro play.</p>
+				<div id="crdny">November 9, 2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>Archipel</li>
+						<li>Maestro</li>
+						<li>Orchestration</li>
+						<li>MQTT</li>
+						<li>SSE</li>
+						<li>.NET</li>
+						<li>Escape room</li>
+						<li>Architecture</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

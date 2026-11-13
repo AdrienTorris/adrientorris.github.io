@@ -1,0 +1,290 @@
+<!DOCTYPE html><html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=G-F924P8Y6HC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-F924P8Y6HC');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Heroes Academy (2/3): the V2 rewrite for Canada</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="en" />
+		<meta name="keywords" content="Team Break,Heroes Academy,.NET,C#,MQTT,Raspberry Pi,IoT,Architecture,Lessons learned" />
+		<meta name="description" content="No more Avalonia, no more MongoDB in the rooms, logic split from display and audio, hardware described as data: the architecture of Heroes Academy V2, and the bugs it did not magically fix." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/heroes-academy/heroes-academy-2-la-refonte-v2.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-2-v2-rewrite.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>Projects</li>
+					<li>Heroes Academy</li>
+					<li class="active"><a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-2-v2-rewrite.html" title="Heroes Academy (2/3): the V2 rewrite for Canada">Heroes Academy (2/3): the V2 rewrite for Canada</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Heroes Academy (2/3): the V2 rewrite for Canada</h1>
+<blockquote>
+<p><strong>The Heroes Academy series</strong></p>
+<ol type="1">
+<li><a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-1-v1.html">Designing software for a physical game venue</a></li>
+<li><strong>The V2 rewrite for Canada</strong> (you are here)</li>
+<li><a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-3-ai-assisted-development.html">Eight months of AI-assisted development</a></li>
+</ol>
+</blockquote>
+<p>In <a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-1-v1.html">part one</a>, I described Heroes Academy V1: one Avalonia application per Raspberry Pi, MongoDB used as an integration bus, a zombie process that forced us to reboot every room after each server restart, and hand-made deployments.</p>
+<p>That V1 kept Lille and Tarbes running for years. But the opening of Brossard, near Montréal, was the trigger. Installing yet another copy of V1 more than 5,000 km away, with no way to drop by and reboot a Pi in the morning, was not an option. So I started a full rewrite in September 2025, and V2 was installed in Canada in early 2026, with three goals:</p>
+<ol type="1">
+<li><strong>More evolvable</strong>: add a room, a game mode or a site without duplicating code.</li>
+<li><strong>More stable</strong>: no room may depend on a connection that cannot rebuild itself.</li>
+<li><strong>Lighter to maintain</strong>: no more Avalonia, no more manual deployments, and a single source of truth for configuration.</li>
+</ol>
+<hr/>
+<h2 id="the-architecture">The architecture</h2>
+<pre><code class="nohighlight">┌──────────────────────────── Central server (Ubuntu 24.04) ───────────────────────┐
+│  PostgreSQL ◄── WebApi (.NET 8, EF Core, MediatR)   SessionsOrchestrator (.NET 8) │
+│                    ▲                                        ▲                     │
+│  Admin UI / Kiosk UI (HTML + Web Components + mqtt.js) ─────┤                     │
+│                    │ HTTP                                   │ MQTT                │
+│                    │                       central Mosquitto┘                     │
+└────────────────────┼────────────────────────────▲─────────────────────────────────┘
+                     │                            │
+┌────────────────────┼──────── Room Raspberry Pi (Debian, arm64) ──────────────────┐
+│                    ▼                            ▼                                 │
+│   RoomOrchestrator (.NET 8) ── game logic, one IGame per process                  │
+│        │  JSON /ui            │ JSON /audio            │ /io/input, /io/output    │
+│        ▼                      ▼                        ▼                          │
+│   GameUI (Python, mpv)   MQTT audio player      local Mosquitto ◄─► I/O boards    │
+│                                                        ▲                          │
+│                                     ElectronicsBridge ─┘ (relay to central)       │
+└───────────────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p>On the central server:</p>
+<ul>
+<li><strong>PostgreSQL</strong> replaces MongoDB;</li>
+<li>a .NET 8 <strong>WebApi</strong> (EF Core, Npgsql, MediatR) serves configuration and records sessions and scores;</li>
+<li>a <strong>SessionsOrchestrator</strong> moves teams from room to room.</li>
+</ul>
+<p>In each room, a .NET 8 <strong>RoomOrchestrator</strong> runs the logic of a single game, chosen by configuration at startup. Two separate processes sit alongside it: <strong>display</strong> and <strong>audio</strong>.</p>
+<p>One thing did not change: the electronics still speak MQTT with messages like <code>/c0m2p5/on</code>. It was V1's best decision, and I kept it as is.</p>
+<hr/>
+<h2 id="six-principles">Six principles</h2>
+<h3 id="principle-1-rooms-never-talk-to-the-database">Principle 1: rooms never talk to the database</h3>
+<p>This is the direct lesson of the zombie process. A Pi knows only two things:</p>
+<ul>
+<li><strong>HTTP</strong>, to fetch its settings at startup: durations, wiring, texts, videos. Settings are <strong>cached locally</strong>, with atomic writes and a backup copy, so a room can start even if the API is unreachable.</li>
+<li><strong>MQTT</strong>, for everything that happens during the game, with a strict topic convention:</li>
+</ul>
+<pre><code class="nohighlight">/games/ha                          session bus (room ended, start the next one…)
+/games/ha/rooms/{room}             commands to the room orchestrator
+/games/ha/rooms/{room}/ui          screens
+/games/ha/rooms/{room}/audio       audio
+/games/ha/rooms/{room}/notifs      scores, persisted by the API</code></pre>
+<p>The server can restart: a well-written MQTT client reconnects. I'll explain further down why "well-written" is the hard part.</p>
+<h3 id="principle-2-separate-logic-display-and-audio">Principle 2: separate logic, display and audio</h3>
+<p>In V1, a video-player crash took the game logic down with it. In V2, the screen is a <strong>dumb terminal</strong>. It receives JSON commands and displays them, knowing nothing about the rules:</p>
+<pre><code class="json">{ "command": "start_game",
+  "room": "snake",
+  "datas": { "lang": "en", "team": "The Invincibles", "players_count": 5, "duration": 450 } }
+
+{ "command": "score_update",
+  "datas": { "remaining_time": 212, "score": 340, "score_diff": 20, "is_penalty": false } }</code></pre>
+<p>The GameUI, which replaces Avalonia, is a lightweight Python application (Tkinter, with libmpv for video). It is packaged as a <code>.deb</code> and runs as a systemd <em>user</em> service under Wayland. It reuses Python modules (logging, MQTT, API client) already battle-tested on another of our products.</p>
+<p>The timer runs locally to stay smooth, and the orchestrator <strong>resynchronises</strong> it at key moments: halftime, 60 s, 30 s, 10 s, and with every score update. Audio also lives in its own process, an MQTT-driven audio player with ducking and per-language tracks.</p>
+<p>Each piece can restart independently of the others. And the game logic, in C#, became testable without a screen again.</p>
+<h3 id="principle-3-hardware-is-data">Principle 3: hardware is data</h3>
+<p>In V2, "button #3 of the Ropes room is on <code>c0m2p5</code>" is a <strong>database row</strong>, served by the API. It is no longer a JSON file copied onto each Pi. The same binary runs on every site, and physical differences are described in data.</p>
+<p>The Brossard Snake shows why this matters. In France, the grid is an 8 × 8 floor wired to I/O boards. In Brossard, it is an <strong>8 × 10 grid</strong> of tiles from another manufacturer, connected over <strong>USB/FTDI</strong>, with a dedicated agent publishing <code>{x, y, state}</code> on MQTT. On the game side, all it took was an adapter and a grid size made configurable per site.</p>
+<h3 id="principle-4-a-game-is-a-step-machine">Principle 4: a game is a step machine</h3>
+<p>Every game derives from a <code>BaseGame</code> that runs a step machine. It covers the room start, audio instructions, game start, halftime, siren, countdown, bonus question, answer reveal and results. All of it is driven by a single timer, guarded by a generation counter so that a room that has ended cannot restart its own timer.</p>
+<p>Most of the behaviour is shared, so a "simple" game room fits in a few lines:</p>
+<pre><code class="csharp">// Ropes: climb and hit the 2 red targets that light up at the same time.
+public sealed class RopesGame : BasePairSequentialGame&lt;GenericCustomSettingsApiDto&gt;
+{
+    public RopesGame(IRoomSettingsService settingsService, ISessionDataService sessionDataService,
+        ISecondaryMissionGame secondaryMissionGame, IMqttPublisherFactory publisherFactory,
+        ILogger&lt;RopesGame&gt; logger, IGameCustomSettingsHttpDataService customSettingsHttpDataService)
+        : base(RoomsEnum.Ropes, settingsService, sessionDataService, secondaryMissionGame,
+               publisherFactory, logger, customSettingsHttpDataService)
+    { }
+}</code></pre>
+<p>Richer rooms such as Balls or Snake only override what makes them different.</p>
+<h3 id="principle-5-everything-must-run-without-the-hardware">Principle 5: everything must run without the hardware</h3>
+<p>I couldn't debug Canada from France with a screwdriver. So I had to be able to reproduce the site without a single physical button.</p>
+<p>The first tool, there from the start of the rewrite, is <strong>a whole room in Docker</strong>. The orchestrator, GameUI and audio player run in one container, the screen is exposed over noVNC and the audio is streamed to the browser through a PulseAudio sink. Audio in a container held out longer than anything else, until we switched from PipeWire to plain PulseAudio. And since the electronics speak MQTT, a room can then be driven with <code>mosquitto_pub</code>.</p>
+<p>Other tools came after the opening:</p>
+<ul>
+<li>a <strong>browser-based test UI</strong>: it draws the room from the API (buttons, LEDs, tiles, doors) and every click publishes to <code>/io/input</code>, exactly as a board would;</li>
+<li>a command-line <strong>robot player</strong>, with tunable error rate and reaction time, for the most complex games;</li>
+<li>above all, an <strong>automated test suite</strong>. Time is an injected dependency (<code>TimeProvider</code>), so a 7-minute game is tested in a few milliseconds. It had about ten tests when Canada opened and has over 800 today. I come back to that evolution in <a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-3-ai-assisted-development.html">part three</a>.</li>
+</ul>
+<h3 id="principle-6-deployment-is-a-feature">Principle 6: deployment is a feature</h3>
+<p>Brossard was installed using documented room-by-room procedures: <code>.deb</code> packages, systemd services, one configuration per machine. That was already a clear improvement over V1's zip files, but it was still long and error-prone.</p>
+<p>Since summer 2026, a <strong>one-command deployment tool</strong> has taken over. An inventory file describes the site, one line per machine:</p>
+<pre><code class="nohighlight">"Snake|pi-snake|snake|gameui,audio,iostatus,orchestrator,bridge,mosquitto|"</code></pre>
+<p>The rest follows:</p>
+<pre><code class="nohighlight">./deploy.sh -i inventory/&lt;site&gt;.env preflight            # SSH, sudo, architecture
+./deploy.sh -i inventory/&lt;site&gt;.env --dry-run install    # dry run
+./deploy.sh -i inventory/&lt;site&gt;.env install              # server, then rooms in parallel
+./deploy.sh -i inventory/&lt;site&gt;.env --limit snake update # a single room
+./deploy.sh -i inventory/&lt;site&gt;.env verify               # status of every service</code></pre>
+<p>.NET binaries are published self-contained, so no runtime needs to be installed on the Pis. All configuration is generated from templates, and nothing is edited by hand on the machines. One constraint remains: the machines sit on a private LAN, so deployment is launched from a computer plugged into the site's network.</p>
+<hr/>
+<h2 id="one-codebase-two-game-modes-migrating-lille">One codebase, two game modes: migrating Lille</h2>
+<p>Brossard has no Arena: the bonus question is asked at the end of each room. Lille, on the other hand, wanted to keep its Arena. When Lille migrated from V1 to V2 in September 2026, V2 therefore had to support both modes: a question at the end of each room, or a 45-second visit to the Arena (plus a safety margin) between two game rooms.</p>
+<p>A site never changes mode. So I chose to make it a <strong>compile-time constant</strong> rather than a database setting: <code>dotnet publish -p:GameMode=Arena</code>. Artefacts are stamped with their mode, and the deployment tool refuses to mix binaries from two modes on the same site. A configuration that cannot be changed by mistake is one you don't need to monitor.</p>
+<p>The Arena also brought back an old V1 problem: two teams must never meet there. In V2, this became a visit identity (<code>RoomSessionId</code>) carried end to end, from scheduling to MQTT messages, plus regression tests on crossings.</p>
+<p>Tarbes still runs V1, kept stable by the watchdog described in part one.</p>
+<hr/>
+<h2 id="operating-from-afar">Operating from afar</h2>
+<p>For a site six hours away, the admin has to make it possible to act without being on site:</p>
+<ul>
+<li>restart a Pi or a service from the UI, over SSH;</li>
+<li>force-end a stuck session, with every Game Master action logged;</li>
+<li>view the cameras;</li>
+<li>talk into a room with push-to-talk: the PCM stream goes over WebSocket to the room's audio player, one speaker at a time.</li>
+</ul>
+<p>For statistics, a separate analysis tool reads PostgreSQL dumps and produces KPIs and charts. For example, it flags sessions that were force-ended.</p>
+<p>The admin UI is deliberately plain: static HTML, native Web Components and mqtt.js over WebSocket, with no build step.</p>
+<hr/>
+<h2 id="what-v2-did-not-magically-fix">What V2 did not magically fix</h2>
+<p>A rewrite doesn't remove bugs, it changes their nature. Here are the ones that taught me the most.</p>
+<h3 id="reconnected-but-deaf">Reconnected, but deaf</h3>
+<p>This is the most instructive story of V2. On the Canadian site, the operator suffered regular MQTT disconnections that made the room unplayable. The <code>SessionsOrchestrator</code> did reconnect to the broker. It simply <strong>heard nothing after reconnecting</strong>.</p>
+<p>Digging in, I found a set of defects that reinforced each other:</p>
+<ol type="1">
+<li><strong>No resubscription.</strong> The subscription to <code>/games/ha</code> was made once, at startup. But each reconnection opened a brand-new broker session (<em>clean session</em>): the client came back connected, with no subscriptions at all.</li>
+<li><strong>A ClientId regenerated on every attempt</strong> (<code>ClientId + "-" + Guid.NewGuid()</code>), which piled up ghost sessions on the broker.</li>
+<li><strong>Re-entrancy.</strong> MQTTnet raises <code>DisconnectedAsync</code> even when a <code>ConnectAsync</code> fails. The disconnection handler started a new connection, which waited on a lock held by the attempt that was failing.</li>
+<li><strong>A typo.</strong> The code read <code>"Mqtt:Post"</code> instead of <code>"Mqtt:Port"</code>, so the configured port was ignored.</li>
+<li><strong>No tests</strong> for this service.</li>
+</ol>
+<p>The fix was specified before being coded, with about twenty acceptance criteria. The core principle is <strong>a single reconnection authority</strong>. The disconnection handler only wakes up a single loop, which reconnects, resubscribes to everything and waits for the next loss:</p>
+<pre><code class="csharp">while (!stoppingToken.IsCancellationRequested)
+{
+    // The signal is armed BEFORE the attempt: a disconnection reported
+    // during or right after connecting cannot be lost.
+    var signal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    Volatile.Write(ref _disconnectedSignal, signal);
+
+    if (await TryConnectAsync(port, stoppingToken))
+    {
+        delay = _minDelay;
+        await ResubscribeAllAsync(stoppingToken);          // on EVERY connection
+        await signal.Task.WaitAsync(stoppingToken);        // wait for the next loss
+    }
+
+    await _delayProvider.DelayAsync(ApplyJitter(delay), stoppingToken); // 1 s → 30 s, with jitter
+    delay = IncreaseDelay(delay);
+}</code></pre>
+<p>The expected behaviour is:</p>
+<ul>
+<li>bounded exponential backoff, with jitter so that every service doesn't rush the broker at the same instant;</li>
+<li>a stable ClientId for the whole life of the process;</li>
+<li>delays abstracted behind an interface, so that tests are deterministic.</li>
+</ul>
+<p>The deliverable was built on a base aligned with the production version, not on <code>main</code>, so that it shipped this fix and nothing else.</p>
+<h3 id="the-screen-that-froze">The screen that froze</h3>
+<p>On the GameUI side, a screen sometimes froze mid-game, with no further score updates. The cause came down to a single call.</p>
+<p>The Python MQTT library (paho) calls <code>on_message</code> on <strong>its own network thread</strong>, the very thread that must send the keep-alive PINGREQ. But we were building the next screen there, and loading a background image alone takes about a second. Meanwhile the keep-alive stopped going out, the broker considered the client dead and disconnected it (<code>rc: 7</code>).</p>
+<p>The fix is to hand the work over to the Tk thread:</p>
+<pre><code class="nohighlight">def _show_screen_on_ui(self, screen_id, data=None):
+    # Never do heavy work on paho's network thread: hand it to the Tk thread,
+    # which is the only thread allowed to touch widgets anyway.
+    self.ui.root.after(0, lambda: self.ui.show_screen(screen_id, data))</code></pre>
+<p>It's a rule every UI developer knows: never touch widgets outside the UI thread. Here it comes with a networking rule: never block the thread that keeps the connection alive.</p>
+<h3 id="8-pm-in-montréal">8 pm in Montréal</h3>
+<p>A bug report from Canada: "sessions disappear from the dashboard every evening around 8 pm". The query filtered sessions on the <strong>UTC calendar day</strong>. In Montréal, on summer time, UTC−4, that day rolls over at 8 pm local time.</p>
+<p>The fix replaced the calendar day with a rolling 24-hour window. But the real lesson is that software designed in France had never had to ask itself <em>what day it is</em>. Since then, all the analysis tools work explicitly in <code>America/Toronto</code>.</p>
+<h3 id="concurrency-hardware-and-other-delights">Concurrency, hardware and other delights</h3>
+<ul>
+<li><strong>An ignored answer.</strong> An answer to the bonus question arriving during the reveal window was lost because of a state lock, since replaced with <code>Interlocked</code> operations.</li>
+<li><strong>The Balls baskets</strong>, scored concurrently, needed one lock per basket.</li>
+<li><strong>A hang in the Arena.</strong> A team arriving while the previous team was finishing the room overwrote a shared session identifier, and the session got stuck.</li>
+<li><strong>"Ghost" sessions</strong> that never started pushed the calculation of the following slots into the past. We had to exclude them explicitly, then add detection of stalled sessions and a clean forced end.</li>
+<li><strong>Spurious pulses</strong> on the Don't Touch The Floor floor sensors called for a configurable debounce. On the magnet panels of the Communication room, transitions less than 200 ms apart are ignored.</li>
+<li><strong>Starting under Wayland.</strong> The GameUI sometimes started before the compositor. The service now waits for the Wayland socket before launching.</li>
+</ul>
+<hr/>
+<h2 id="whats-next-the-switchboard">What's next: The Switchboard</h2>
+<p>With the platform stable, I could get back to what matters to players: the game. The latest project is <strong>Le Standard</strong> ("The Switchboard"), a new gameplay for the Communication room. As I write these lines, it is being tested on site, a few days away from going live.</p>
+<p>One player becomes the operator and reads calls on a console, and the others must patch them through on magnet panels. The game engine is <strong>pure</strong>: no MQTT, injected clock. Every phase (rewiring, switchboard, shift change, overload, shutdown) can therefore be tested like a function.</p>
+<p>This project also reminded me that we design for humans. Players have learned to <strong>leave the room as soon as a beacon lights up</strong>. So the Switchboard uses none during play: everything goes through sound and screens. And the end-of-game "general shutdown", which drops the magnet panels after a "Step back! 3-2-1", is disabled by default. It is only enabled once safety has been validated in the room.</p>
+<hr/>
+<h2 id="what-v2-taught-me">What V2 taught me</h2>
+<ol type="1">
+<li><strong>Separate what crashes from what matters.</strong> Display and audio can restart; the game logic must keep going.</li>
+<li><strong>Hardware is data.</strong> Wiring in code means one binary per site.</li>
+<li><strong>Time is a dependency.</strong> For tests (<code>TimeProvider</code>) as much as for production (time zones, timer resynchronisation).</li>
+<li><strong>Reconnection must be tested.</strong> "It reconnects" means nothing until you've checked that it listens again.</li>
+<li><strong>Deployment is part of the product.</strong> One command, a dry run, a verification step: that's what makes it possible to run a site across the Atlantic.</li>
+<li><strong>We design for humans.</strong> Players who flee beacons, a Game Master who must restart a room without a terminal: the architecture has to serve these people.</li>
+</ol>
+<hr/>
+<h2 id="the-players-verdict">The players' verdict</h2>
+<p>After months of work, late-night deployments and remote debugging, V2 delivers: the rooms run, operations are calm, and above all, players come out delighted. I'll let them have the last word.</p>
+<div class="pic_wrapper"><img alt="Google review 1" loading="lazy" src="/wwwroot/images/projects/heroes-academy/v2-rewrite/google-review-1.png" title="Google review 1"/></div>
+<div class="pic_wrapper"><img alt="Google review 2" loading="lazy" src="/wwwroot/images/projects/heroes-academy/v2-rewrite/google-review-2.png" title="Google review 2"/></div>
+<hr/>
+<blockquote>
+<p><strong>Next in the series</strong> 3. <a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-3-ai-assisted-development.html">Eight months of AI-assisted development</a>: from March 2026, AI took a growing share of V2's development. What the Git history says, with numbers.</p>
+<p>To (re)read the beginning: <a href="https://adrientorris.github.io/projects/heroes-academy/heroes-academy-1-v1.html">1. Designing software for a physical game venue</a>.</p>
+</blockquote>
+<p><em>Code excerpts in this article are simplified. Addresses, credentials and site-specific infrastructure details have been deliberately left out.</em></p>
+				<div id="crdny">October 19, 2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>Heroes Academy</li>
+						<li>.NET</li>
+						<li>C#</li>
+						<li>MQTT</li>
+						<li>Raspberry Pi</li>
+						<li>IoT</li>
+						<li>Architecture</li>
+						<li>Lessons learned</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

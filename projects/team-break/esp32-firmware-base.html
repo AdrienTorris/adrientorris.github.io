@@ -1,0 +1,440 @@
+<!DOCTYPE html><html lang="en-US" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=G-F924P8Y6HC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-F924P8Y6HC');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Props that must never fail: our ESP32 firmware base</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="en" />
+		<meta name="keywords" content="Team Break,ESP32,ESP-IDF,Firmware,C,FreeRTOS,MQTT,OTA,Electronics,Escape room" />
+		<meta name="description" content="In an escape room, the props are where software meets the physical world: a keypad, a chest with an electromagnetic lock, canopic jars that recognize the statuettes placed on them, a cannon, a kraken that blinks its eyes." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/team-break/esp32-socle-firmware.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/team-break/esp32-firmware-base.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/index.html" title="">Home</a></li>
+					<li>Projects</li>
+					<li>Team Break</li>
+					<li class="active"><a href="https://adrientorris.github.io/projects/team-break/esp32-firmware-base.html" title="Props that must never fail: our ESP32 firmware base">Props that must never fail: our ESP32 firmware base</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Props that must never fail: our ESP32 firmware base</h1>
+<p>In an escape room, the <em>props</em> are where software meets the physical world: a keypad, a chest with an electromagnetic lock, canopic jars that recognize the statuettes placed on them, a cannon, a kraken that blinks its eyes. At Team Break, most of these props are driven by an <strong>ESP32</strong> programmed in C with <strong>ESP-IDF</strong>. So that they all behave alike (same configuration, same web page, same behaviour when something breaks), they share a common <strong>firmware base</strong>.</p>
+<p>In the <a href="https://adrientorris.github.io/projects/team-break/team-break-architecture.html">first article</a> of this series I skimmed over the electronics. Here I go into the details: why this base exists, how it's built, and what the field has taught us.</p>
+<h2 id="the-environment-hostile-and-nobody-on-site">The environment: hostile, and nobody on site</h2>
+<p>An escape-room prop lives in conditions you don't often see in software:</p>
+<ul>
+<li><strong>Everything runs on 12 V</strong>, nothing on USB. Power supplies are shared with electromagnets, motors and relays.</li>
+<li><strong>Cables are long</strong> and run next to inductive loads that switch all the time. Any glitch is a potential phantom input.</li>
+<li><strong>The room is full of metal</strong> (and of other props that emit): Wi-Fi isn't always welcome.</li>
+<li><strong>Power gets cut abruptly</strong>, sometimes several times a day.</li>
+<li><strong>Players handle everything</strong>, and not always gently.</li>
+<li><strong>Some rooms have no Internet</strong>, and <strong>nobody can press reset</strong> in the middle of a session.</li>
+</ul>
+<p>Add a variety of wiring that no documentation really captures: depending on the site, the same sensor is mounted upside down, or as a normally-closed contact. And a few mechanical surprises: at La Défense, the daggers of one puzzle are small car central-locking actuators, which must <em>never</em> be powered continuously.</p>
+<p>On the hardware side, the standard is the <strong>ESP32-WROOM</strong> with 4 MB of flash. Where relays are needed we use <strong>Kincony KC868-A16</strong> boards: an ESP32, 16 relays and 16 inputs on PCF8574 I2C expanders, plus Ethernet through a LAN8720 PHY. A few Arduino Unos with Ethernet shields remain on older installations, along with some third-party I/O panels.</p>
+<h2 id="why-a-shared-base">Why a shared base</h2>
+<p>At first, every prop had its own firmware, copied from a template. Configuration was described with <strong>X-macros</strong>:</p>
+<pre><code class="cpp">#define TB_CONFIG_CHAR_ITEMS                                   \
+    TB_CONFIG_CHAR_ITEM(char *, ssid, "")                      \
+    TB_CONFIG_CHAR_ITEM(char *, hostname, "New")               \
+    TB_CONFIG_CHAR_ITEM(char *, mqtt_broker, "mqtt://mqtt.eclipse.org")
+#define TB_CONFIG_ITEMS                                        \
+    TB_CONFIG_ITEM(int, mqtt_port, 1883)                       \
+    TB_CONFIG_ITEM(int, ma_nouvelle_valeur, 42)</code></pre>
+<p>That produced a flat struct (<code>config.ssid</code>, <code>config.mqtt_port</code>) with no validation and no migration. To add a field to a prop, the documentation advised… editing the shared code. The network component had become a "god component" that bundled Wi-Fi, MQTT and the HTTP server, with 11 dependencies and a circular dependency on the Ethernet driver. Every copy drifted, and every fix had to be carried over by hand.</p>
+<p>The current base grew out of that. It's a repository of ESP-IDF components that every prop firmware includes as a <strong>Git submodule</strong>. On the prop side, one line in the top-level <code>CMakeLists.txt</code> is enough:</p>
+<pre><code class="nohighlight">set(EXTRA_COMPONENT_DIRS ${CMAKE_SOURCE_DIR}/shared_components)</code></pre>
+<p>The prop only brings what is specific to it: its pinout, its game logic, its messages and its configuration section. Splitting the network component removed 1,052 lines and brought its dependencies down from 11 to 3.</p>
+<p>The base builds with <strong>ESP-IDF 5.5 and 6.0</strong>. Version 6 moved several components out of the framework (cJSON, the MQTT client, the LAN87xx driver) into the component registry; they're declared conditionally in the <code>idf_component.yml</code> files (<code>if: "idf_version &gt;=6.0"</code>). One rule is written into every spec: <strong>updating the submodule must require no change to the host firmwares</strong>.</p>
+<p>Today it has about twenty components, roughly 13,000 lines of C and 6,900 lines of web UI:</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>Components</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Network</td>
+<td><code>tb_network</code> (TCP/IP stack, mDNS, interfaces), <code>tb_wifi</code>, <code>tb_lan8720</code>, <code>tb_mqtt</code>, <code>tb_ntp</code>, <code>tb_http_server</code></td>
+</tr>
+<tr class="even">
+<td>System</td>
+<td><code>tb_storage</code> (LittleFS), <code>tb_config</code>, <code>tb_log</code>, <code>tb_watchdog</code>, <code>tb_recovery</code>, <code>tb_infos</code></td>
+</tr>
+<tr class="odd">
+<td>Hardware</td>
+<td><code>tb_gpio</code>, <code>tb_i2c</code>, <code>tb_pcf8574</code>, <code>tb_sx1509</code>, <code>tb_neopixel</code>, <code>lib8tion</code>, <code>tb_rfid</code>, <code>tb_pn532</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="interfaces-in-c-with-function-pointers">Interfaces in C, with function pointers</h2>
+<p>So that a prop doesn't need to know whether its network runs over Wi-Fi or Ethernet, whether a pin is internal or on an I2C expander, or which RFID reader model it uses, the base defines old-school <strong>interfaces</strong>: structs of function pointers.</p>
+<pre><code class="cpp">// Network: Wi-Fi or Ethernet, same contract
+struct tb_network_interface_t {
+  get_state get_state;   // NOT_CONFIGURED / DISCONNECTED / CONNECTING / CONNECTED
+  get_infos get_infos;   // cJSON* for the web page
+  get_name  get_name;
+  void *datas;           // implementation data
+  void *netif;           // esp_netif_t*
+};
+
+// GPIO: internal pins, PCF8574, SX1509…
+struct tb_gpio_interface_t {
+  read_gpio read;              write_gpio write;
+  get_gpio_type get_type;      set_gpio_type set_type;
+  get_interface_name get_name; get_gpio_count get_count;
+  set_interface_name set_name; void *datas;
+};
+
+// RFID: PN532 today, something else tomorrow
+struct tb_rfid_interface_t {
+  tb_rfid_read_uid read_uid;   tb_rfid_get_reader_state get_state;
+  tb_rfid_reset_reader reset_reader; tb_rfid_get_reader_count get_count;
+  tb_rfid_get_interface_name get_name;
+  void *datas;
+};</code></pre>
+<p>An I/O expander is just another implementation of <code>tb_gpio_interface_t</code>: the rest of the code (filters, callbacks, web page) treats it exactly like the ESP32's own pins.</p>
+<h2 id="boot-order-is-a-safety-decision">Boot order is a safety decision</h2>
+<p>The initialization order is fixed and documented, with a reason for each step:</p>
+<ol type="1">
+<li><strong>Storage</strong> first: configuration, logs, recovery state and the web page are all files.</li>
+<li><strong>Recovery</strong> before configuration: it may replace a broken configuration with the last known-good one. Reading the configuration first would load the broken one.</li>
+<li><strong>Configuration, logs, watchdog.</strong></li>
+<li><strong>Hardware.</strong></li>
+<li><strong>Network.</strong></li>
+<li><strong>NTP and MQTT</strong>, except in safe mode.</li>
+<li><strong>The HTTP server</strong> last, then the boot-success marker is armed.</li>
+</ol>
+<p>Step four is the most important. The documentation explains it in one sentence:</p>
+<blockquote>
+<p><strong>Hardware before network.</strong> An output should reach its safe state (locks closed, motors off) as early as possible, not after a Wi-Fi connection that can take several seconds or never come.</p>
+</blockquote>
+<p>The Kincony board firmware pushes the idea even further: it initializes the relays <em>before storage</em>, and forces them to their rest state in the first few milliseconds.</p>
+<pre><code class="cpp">tb_gpio_init();
+tb_i2c_init(&amp;(tb_i2c_config_t){.sda = 4, .scl = 5});
+in1  = init_pcf8574_with_retry(0x21, "in1");   in2  = init_pcf8574_with_retry(0x22, "in2");
+out1 = init_pcf8574_with_retry(0x24, "out1");  out2 = init_pcf8574_with_retry(0x25, "out2");
+configure_output_bank(out1, 0); configure_output_bank(out2, 8);   // write 1 = relays at rest
+configure_input_bank(in1, 0);   configure_input_bank(in2, 8);
+tb_storage_init_flash();
+tb_recovery_init();  bool safe = tb_recovery_is_safe_mode_active();
+tb_config_init(&amp;config); tb_log_init(); tb_watchdog_init();
+tb_network_init();
+tb_network_add_interface(tb_lan8720_init(&amp;eth_config));
+tb_network_add_interface(tb_wifi_init());
+if (!safe) { tb_ntp_init(); /* … then MQTT and its callbacks */ }
+if (tb_http_server_init() == ESP_OK) tb_recovery_mark_boot_successful();</code></pre>
+<h2 id="schema-driven-configuration">Schema-driven configuration</h2>
+<p>Each component declares its configuration section with declarative macros. Here's the MQTT client's:</p>
+<pre><code class="cpp">_Static_assert(MQTT_MAX_TOPIC_SIZE - 1 == 255, "sub_topic max length must follow MQTT_MAX_TOPIC_SIZE");
+TB_CONFIG_GENERATE_PARSER(tb_mqtt, TB_MQTT, "tb_mqtt",
+    TB_FIELD_STRING(tb_mqtt_config_t, broker, "localhost", 256),
+    TB_FIELD_UINT32_RANGE(tb_mqtt_config_t, port, 1883, 1, 65535),
+    TB_FIELD_STRING_LEN(tb_mqtt_config_t, sub_topic, "/sub_topic", 1, 255),
+    TB_FIELD_STRING(tb_mqtt_config_t, pub_topic, "/pub_topic", 256)
+);
+TB_CONFIG_DEFINE_GETTER(tb_mqtt, "tb_mqtt", false);</code></pre>
+<p>A prop declares its own section the same way, in its own code, without touching the base. For the kraken in <em>Le Trésor des pirates</em>, that gives a tunable window and cooldown:</p>
+<pre><code class="cpp">TB_CONFIG_GENERATE_PARSER(kraken, KRAKEN, "kraken",
+    TB_FIELD_UINT32_RANGE(kraken_config_t, window,   5000, 500, 60000),
+    TB_FIELD_UINT32_RANGE(kraken_config_t, cooldown, 3000, 100, 30000));
+TB_CONFIG_DEFINE_GETTER(kraken, "kraken", true);
+// usage: uint32_t window_ms = kraken_get_config()-&gt;window;</code></pre>
+<p>At build time, CMake discovers every <code>*_config_schema.h</code> file, and Python generators produce two things: a validation header for the firmware, and <strong>JSON Schemas</strong> from which the prop's web page builds its forms. Adding a setting means adding one line: parsing, validation, the typed getter and the form field all follow. The resulting configuration file looks like this (example values):</p>
+<pre><code class="json">{
+  "tb_mqtt":        { "broker": "mqtt://&lt;broker&gt;", "port": 1883,
+                      "sub_topic": "/my_prop_sub", "pub_topic": "/my_prop_pub" },
+  "tb_network":     { "hostname": "room-my-prop" },
+  "tb_ntp":         { "enabled": true, "timezone": "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00" },
+  "log":            { "enabled": true, "max_file_size": 65536, "log_level": "warn" },
+  "tb_recovery":    { "stable_uptime_s": 3600 },
+  "my_prop":        { "tolerance_ms": 800 }
+}</code></pre>
+<h3 id="always-have-a-plan-b-and-a-plan-c">Always have a plan B, and a plan C</h3>
+<p>A configuration can get lost in many ways: a write interrupted by a power cut, a truncated file uploaded from the web page, a typo. So loading follows a fallback chain, decided by a pure function:</p>
+<ol type="1">
+<li>the current file, if it's valid;</li>
+<li>otherwise the <strong>last known-good configuration</strong> (<code>tb_config.last-known-good.json</code>);</li>
+<li>otherwise the <strong>factory defaults</strong> (<code>tb_config.factory-defaults.json</code>);</li>
+<li>otherwise the schema defaults, with the fallback Wi-Fi access point reachable.</li>
+</ol>
+<p>The invalid file isn't deleted: it's renamed <code>tb_config.invalid.json</code> for diagnosis. And a file that exists but <em>can't be read</em> (out of memory, I/O error) is never overwritten, because it may be perfectly valid.</p>
+<p>Changes from the web page are merged into the current configuration, validated, then written atomically (temporary file, then rename). The "Apply now" button re-applies Wi-Fi, MQTT, network, NTP and logging live; if the apply fails, the configuration rolls back to the last valid version.</p>
+<h2 id="never-stay-stuck">Never stay stuck</h2>
+<h3 id="watchdog-and-core-dump">Watchdog and core dump</h3>
+<p>The ESP-IDF task watchdog is set to 10 s with panic, and watches both cores' idle tasks as well as the base's own tasks (GPIO, MQTT, live logs). On a crash, a core dump is written to a dedicated 64 KB partition, readable afterwards with <code>idf.py coredump-info</code>.</p>
+<h3 id="safe-mode">Safe mode</h3>
+<p>A watchdog that reboots the board is good. A board that reboots in a loop because its configuration makes it crash is a prop lost for the day. So the <code>tb_recovery</code> component counts failed boots:</p>
+<ul>
+<li>counted as failures: panic, watchdogs, brownout, and an <strong>unannounced</strong> software restart;</li>
+<li>not counted: power-on, external reset, and announced restarts (reboot from the web page, OTA, factory reset);</li>
+<li>a boot only counts as successful after <code>stable_uptime_s</code>, <strong>60 minutes by default</strong>. That's the length of a game: a crash in the middle of a session counts as a failure.</li>
+</ul>
+<p>On the <strong>second consecutive failure</strong>, the board boots into safe mode: configuration restored, Wi-Fi and web page up, but <strong>no MQTT</strong>. It stays reachable for diagnosis and, above all, out of the game: an unstable prop must not send phantom events to the room engine.</p>
+<p>The decision is a pure function, with no hardware call at all:</p>
+<pre><code class="cpp">// A software restart announced by tb_recovery_note_intentional_restart()
+// (reboot, OTA, factory reset from the web page) is not a crash: like a
+// power-on, it resets the counter.
+const bool announced_restart =
+    previous-&gt;intentional_restart_pending &amp;&amp; reason == ESP_RST_SW;
+decision.user_requested = previous-&gt;safe_mode_requested;
+
+if (previous-&gt;boot_marked_successful || announced_restart ||
+    tb_recovery_reason_resets_counter(reason)) {
+  next-&gt;failed_boot_count = 0;
+} else if (!decision.user_requested &amp;&amp; tb_recovery_reason_is_crash(reason)) {
+  next-&gt;failed_boot_count = previous-&gt;failed_boot_count + 1;
+  decision.counted_as_failure = true;
+}
+decision.repeated_failures = next-&gt;failed_boot_count &gt;= TB_RECOVERY_SAFE_MODE_THRESHOLD;
+decision.safe_mode_active  = decision.user_requested || decision.repeated_failures;</code></pre>
+<p>Because it's pure, it can be tested on a PC, case by case, as we'll see below.</p>
+<h3 id="logs-that-survive-a-reboot">Logs that survive a reboot</h3>
+<p>The <code>TB_LOGx</code> macros are used like <code>ESP_LOGx</code>, but also push each line into an 8 KB RAM buffer. A low-priority writer task flushes that buffer to <code>app.log</code> every 500 ms, or as soon as it's a quarter full, with rotation at a configurable size. Just before a deliberate restart, the buffer is flushed within a second.</p>
+<p>This asynchronous design comes from a bug found on the bench: the old version wrote to flash under a mutex, and on a board without network <strong>65 log lines were lost in 30 minutes</strong> to contention. Today the caller never waits more than 10 ms, and lost lines are <em>counted</em>: an "N log line(s) lost" line is written, and a counter is exposed by the API. You can lose logs; you mustn't lose the fact that you lost some.</p>
+<h2 id="networking-ethernet-first-wi-fi-when-needed">Networking: Ethernet first, Wi-Fi when needed</h2>
+<h3 id="ethernet">Ethernet</h3>
+<p>In a room full of metal, Ethernet is the default whenever the board supports it. The <code>tb_lan8720</code> component drives the ESP32's internal MAC with a LAN8720 PHY (Kincony, Olimex ESP32-POE, WT32-ETH01). ESP-IDF v6 removed the Kconfig options for the RMII clock; the component re-declares them under the same names, loaded only on v6, so existing firmwares' <code>sdkconfig.defaults</code> keep working unchanged.</p>
+<h3 id="wi-fi-and-a-bit-shift">Wi-Fi, and a bit shift</h3>
+<p>Wi-Fi reconnects forever with a backoff of 1, 2, 4, 8, 16 s, then every 30 s. The first version computed the delay as <code>BASE * (1 &lt;&lt; retry_num)</code>, with no bound. After about 13 minutes without an access point the shift overflowed, the delay dropped to zero, and the board retried in a tight loop. The logic is now a pure, bounded function:</p>
+<pre><code class="cpp">uint32_t tb_wifi_retry_delay_ms(int retry_num) {
+  if (retry_num &lt; 0) {
+    retry_num = 0;
+  }
+  // 1000 &lt;&lt; 5 = 32000 is already above the maximum: no shift beyond 4
+  if (retry_num &gt;= 5) {
+    return TB_WIFI_RETRY_MAX_DELAY_MS;
+  }
+  uint32_t delay_ms = (uint32_t)TB_WIFI_RETRY_BASE_DELAY_MS &lt;&lt; retry_num;
+  return (delay_ms &gt; TB_WIFI_RETRY_MAX_DELAY_MS) ? TB_WIFI_RETRY_MAX_DELAY_MS : delay_ms;
+}</code></pre>
+<h3 id="mqtt-deliberately-simple">MQTT, deliberately simple</h3>
+<p>The prop's MQTT client does few things, but does them predictably: QoS 0, exact topics (no wildcards), at most 10 callbacks, messages up to 1 KB. A task watched by the watchdog checks the connection every 5 s and resubscribes on every reconnect.</p>
+<p>A few design decisions:</p>
+<ul>
+<li><strong>A new board has no broker.</strong> Initialization succeeds anyway, and the client starts as soon as a broker is saved from the web page, with no reboot.</li>
+<li><strong>The subscription topic can change live.</strong> The client unsubscribes from the old one and moves every callback to the new one.</li>
+<li><strong>Callbacks run in the MQTT task.</strong> That's pitfall number one, documented in bold: while a callback runs, no other message is read. Store the command there (a variable, a FreeRTOS queue) and let one of the prop's own tasks act on it.</li>
+</ul>
+<p>The code review found two tasty bugs on the receive path. The payload buffer wasn't null-terminated, so <code>"30"</code> could be read as <code>"30_lights_on…"</code>, the leftover of the previous message. And topic comparison didn't check lengths: a topic that was a prefix of another one captured it.</p>
+<h3 id="ntp-locally">NTP, locally</h3>
+<p>Logs need real time. The base uses SNTP with a POSIX timezone string; before sync, lines are stamped <code>boot+&lt;ms&gt;ms</code>. Rooms without Internet need a local NTP server, and to measure durations you use <code>esp_timer_get_time()</code>, never wall-clock time.</p>
+<h2 id="inputs-and-outputs-polling-on-purpose">Inputs and outputs: polling, on purpose</h2>
+<h3 id="why-not-interrupts-for-everything">Why not interrupts for everything?</h3>
+<p>The <code>tb_gpio</code> component reads every declared input from a task that runs every 10 ms, then applies a filter: debounce (50 ms by default, configurable per pin) or an exponential moving average for analog inputs. The question "why not interrupts?" comes up regularly. The answer is written in the roadmap, and it's entirely dictated by the field:</p>
+<blockquote>
+<p>Escape-room wiring is long and sits next to switching relays and electromagnets. Polling plus debounce ignores glitches; an interrupt fires on each one, and a floating or noisy line can flood the CPU until the interrupt watchdog resets the board.</p>
+</blockquote>
+<p>On top of that, mechanical contacts bounce (you'd need a timed debounce behind the interrupt anyway), expanders and analog inputs would stay polled regardless, and props in production were validated that way. Interrupts do exist, but as an option, for pulses too short for polling: a ball crossing an infrared beam in about 15 ms. In that case the ISR pushes timestamped edges into a queue and keeps a per-pin edge counter.</p>
+<p>For the wiring diversity mentioned earlier, an <code>invert_logic</code> option really inverts a pin's reads, callbacks and writes. A sensor mounted upside down at one site becomes a line of configuration, not a code branch.</p>
+<h3 id="the-relay-that-clicked">The relay that clicked</h3>
+<p>Kincony boards drive their relays through PCF8574s, 8-bit I2C expanders. The PCF8574 has no direction register: you write the whole port byte every time. The on-board review found two defects that were annoying in a room:</p>
+<ul>
+<li><strong>A relay clicked on every write.</strong> The write function switched the pin back to output, which sent the bit as 0, <em>then</em> the real value.</li>
+<li><strong>Every relay pulsed at boot.</strong> The local copy of the port started at <code>0x00</code>: the first write briefly pulled every output low.</li>
+</ul>
+<p>The fix is short: a local <em>shadow</em> copy initialized to <code>0xFF</code>, and <strong>one transmission per write</strong>, changing only the targeted bit.</p>
+<pre><code class="cpp">esp_err_t tb_pcf8574_port_write(uint8_t *port, uint8_t io, int32_t value,
+                                tb_pcf8574_tx_t tx, void *ctx) {
+  if (port == NULL || tx == NULL || io &gt;= PCF8574_LOGIC_NB_PINS) {
+    return ESP_ERR_INVALID_ARG;
+  }
+  uint8_t next;
+  if (value) {
+    next = *port | (uint8_t)(1U &lt;&lt; io);
+  } else {
+    next = *port &amp; (uint8_t)~(1U &lt;&lt; io);
+  }
+  esp_err_t err = tx(ctx, next);
+  if (err == ESP_OK) {
+    *port = next;
+  }
+  return err;
+}</code></pre>
+<p>The shadow copy is only updated after a successful transmission. This logic is tested exhaustively: 256 port states, 8 pins and 2 values.</p>
+<h3 id="the-unplugged-expander-that-rebooted-the-board">The unplugged expander that rebooted the board</h3>
+<p>Another find: unplugging an I2C expander rebooted the board. I2C transactions used a timeout of <code>-1</code> (wait forever) inside a task watched by the 10 s watchdog. The component documentation now says it bluntly: "A <code>-1</code> timeout blocks forever… that reboots the board." Timeouts are now 50 ms, a failed read returns <code>-1</code> (unknown value), and an expander that stops answering produces <em>one</em> log line when it goes and one when it comes back, not one per tick.</p>
+<h3 id="rfid-a-silent-reader-is-not-a-missing-object">RFID: a silent reader is not a missing object</h3>
+<p>The RFID component handles PN532 readers (up to 8 on one SPI bus), with an automatic reset after 20 failed reads that re-applies the gain and RF level. Two choices are worth pointing out:</p>
+<ul>
+<li>the PN532's passive retries are limited to 1, because the default behaviour (retry forever) "makes an empty reader look like a dead one";</li>
+<li>in the API, <strong>"no tag" is not an error</strong>: <code>ESP_OK</code> with a zero-length UID. An error means <em>the reader</em> isn't answering. That's what lets a prop report a broken reader instead of waiting forever for an object.</li>
+</ul>
+<p>Expected UIDs are stored as strings in the configuration. The canopic jars in our Egyptian room (four RFID readers) work this way: replacing a lost statuette is a configuration change, not a new firmware.</p>
+<h3 id="and-light">And light</h3>
+<p>The NeoPixel component drives WS2812 strips in RGB, hex or HSV, with FastLED's 8-bit math library ported to C for animations. Brightness is capped at 50/255 by default. That's not just aesthetics: at 60 mA per LED in full white, a strip switching on all at once can make a power supply shared with an electromagnet sag.</p>
+<h2 id="a-web-page-in-every-prop">A web page in every prop</h2>
+<p>Every prop serves a web page from its LittleFS partition, reachable by its mDNS name (<code>http://&lt;hostname&gt;.local/</code>):</p>
+<ul>
+<li><strong>live state</strong> of the I/O over SSE (at most 10 clients per stream, a keepalive every 25 s);</li>
+<li>the <strong>configuration editor</strong>, with forms generated from the schemas;</li>
+<li><strong>logs</strong>, a file browser, reboot, safe mode, factory reset;</li>
+<li><strong>OTA update</strong> of the firmware, and a separate update of the web UI (<code>www_update.tar</code>).</li>
+</ul>
+<p>It's the first-line diagnostic tool: on the room network (or over the VPN), a browser is enough to see what the prop sees.</p>
+<h2 id="signed-ota-and-reproducible-releases">Signed OTA and reproducible releases</h2>
+<p>The partition table is the same for every prop: two 1.25 MB app slots (<code>ota_0</code>, <code>ota_1</code>), 1.4 MB of LittleFS for configuration, logs and the web page, and 64 KB for the core dump.</p>
+<p>CI builds the firmware on every tag, with a pinned ESP-IDF, and publishes the full set of artifacts: application, bootloader, partition table, storage image, web UI archive and a complete flash package. It also produces a <strong>manifest</strong> (version, commit, size and SHA-256 of each artifact), <strong>signed with RSA-3072</strong>. The public key is injected at build time into a generated header, and the prop checks the signature with mbedTLS, then the artifact's size and hash, before accepting an update. Builds are reproducible (<code>CONFIG_APP_REPRODUCIBLE_BUILD=y</code>, no build date in the bootloader).</p>
+<p>In the field, updates go through the web page: the firmware is written to the inactive slot, and the configuration is kept. One rule from our maintenance knowledge base is worth quoting: <strong>never reflash the canopic jars over serial</strong>. <code>idf.py flash</code> also rewrites the storage partition, and so erases the learned statuettes. Use OTA, or <code>idf.py app-flash</code>, which only touches the application.</p>
+<p>What's still missing: automatic rollback to the previous slot if the new firmware fails to boot. It's on the roadmap.</p>
+<h2 id="plugging-a-prop-into-maestro">Plugging a prop into Maestro</h2>
+<p>On the room engine side, an ESP32 prop is just one more <strong>electronics provider</strong>, with its message format (<code>tb_esp32</code>) and its topics:</p>
+<pre><code class="json">{
+  "key": "esp32_digicode",
+  "message_format": "tb_esp32",
+  "input_topics": [ "/games/chocolaterie/rooms/iceroom/digicode/state" ],
+  "output_topic": "/games/chocolaterie/rooms/iceroom/digicode"
+}</code></pre>
+<p>When the keypad publishes <code>{"module":"in2","pin":0,"value":"off"}</code>, Maestro's electronic agent derives the key <code>esp|min2|p0|voff</code>, matches it against the proxies declared in the gameflow, and publishes a business notification (<code>digicode_unlocked</code>) to the room orchestrator. In the other direction, the <code>trappe_unlock</code> command becomes <code>{"command":"set","data":[{"module":"out1","pin":0,"value":"on"}]}</code>. The same room happily combines third-party I/O panels and ESP32 props: each provider has its own broker, topics and format.</p>
+<p>The Kincony board protocol is deliberately minimal:</p>
+<pre><code class="json">{"command":"set","data":[{"module":"out1","pin":2,"value":"on"},{"module":"out2","pin":3,"value":"off"}]}
+{"command":"get","data":[{"module":"in1","pin":3}]}
+{"command":"get_all_infos"}</code></pre>
+<p><code>get_all_infos</code> returns the board's full state: platform (SDK version, free memory, uptime), network, MQTT, storage, and each GPIO with its filter, type and value. On the Maestro side, the technical page of the GM console uses <code>get</code> to read pin states back on demand.</p>
+<h2 id="testing-firmware-without-a-board">Testing firmware without a board</h2>
+<p>A good part of the base's logic is tested <strong>without an ESP32</strong>. ESP-IDF can build for a <code>linux</code> target, and we take advantage of it: 9 test apps, <strong>124 Unity tests</strong>, built and run on a PC by CI.</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>tb_config</code></td>
+<td>49</td>
+</tr>
+<tr class="even">
+<td><code>tb_gpio</code></td>
+<td>21</td>
+</tr>
+<tr class="odd">
+<td><code>tb_recovery</code></td>
+<td>13</td>
+</tr>
+<tr class="even">
+<td><code>tb_mqtt</code></td>
+<td>12</td>
+</tr>
+<tr class="odd">
+<td><code>tb_pcf8574</code></td>
+<td>8 (including one exhaustive test)</td>
+</tr>
+<tr class="even">
+<td><code>tb_neopixel</code></td>
+<td>7</td>
+</tr>
+<tr class="odd">
+<td><code>tb_log</code></td>
+<td>6</td>
+</tr>
+<tr class="even">
+<td><code>tb_http_server</code></td>
+<td>5</td>
+</tr>
+<tr class="odd">
+<td><code>tb_wifi</code></td>
+<td>3</td>
+</tr>
+</tbody>
+</table></div>
+<p>The method is always the same: rather than stubbing a whole component, <strong>isolate the decision logic in a pure file</strong> (<code>tb_wifi_logic.c</code>, <code>tb_recovery_decision.c</code>, <code>tb_pcf8574_logic.c</code>, <code>tb_config_source.c</code>) and test it directly. Test names cite the acceptance criteria of the specs (<code>test_crit10_safe_mode_at_two_failures</code>, <code>test_crit37_retry_delay_never_zero</code>).</p>
+<p>CI also builds a firmware that uses <em>every</em> component, with ESP-IDF 5.5.2 <strong>and</strong> 6.0.2, checks schema discovery (including adding and removing a schema between two builds), and watches the flash budget: the Kincony board firmware must keep at least a 3.5% margin.</p>
+<h2 id="a-review-on-real-hardware-and-a-priority-rule">A review on real hardware, and a priority rule</h2>
+<p>In October we put the base through a full review: documentation, code reading and bench tests on a development board. The outcome was a list of defects, some of which are described above. Two more are worth telling:</p>
+<ul>
+<li><strong>A truncated configuration took the board off the network.</strong> Uploaded from the web page, it made every component fall back to hard-coded values. Worse: a save right after overwrote the last known-good configuration with <code>{}</code>. Hence the fallback chain described above, and the rule of never writing the last known-good configuration from a configuration that wasn't loaded.</li>
+<li><strong>"MQTT reconnected successfully" was logged too early</strong>, when the reconnection request was accepted rather than when the connection was established. A log that lies is worse than no log.</li>
+</ul>
+<p>Fixes were grouped into batches, with an ordering rule that sums up our trade pretty well:</p>
+<blockquote>
+<p>Ordering rule: what stops a prop in the middle of a session comes first, then what fails silently on props already in production (MQTT, network), then what breaks a build or a new project, then hardware drivers, then comfort and diagnostics.</p>
+</blockquote>
+<p>The roadmap has 45 items: 31 done, 2 in progress, 12 to do (including OTA rollback and integration tests).</p>
+<h2 id="for-comparison-the-arduino-that-answered-ping">For comparison: the Arduino that answered ping</h2>
+<p>Not all our props are on this base. The Chocolaterie elevator's hatches run on an Arduino Uno with a W5500 Ethernet shield, and they taught me a lesson I tell in the <a href="https://adrientorris.github.io/projects/team-break/team-break-architecture.html">first article</a>: the board froze now and then, yet still answered ping, because the W5500 handles ICMP on its own. The Ethernet library waited on the controller in loops with no timeout, and noise from an electromagnet was enough to hang it.</p>
+<p>The fix looks, in miniature, like what the ESP32 base does: a 4 s hardware watchdog, short network timeouts, no more blocking loops, the electromagnet energized at the very start of <code>setup()</code>. And a breadcrumb that survives the reset:</p>
+<pre><code class="cpp">struct Persist { uint16_t magic; uint16_t bootCount; uint8_t step; };
+Persist persist __attribute__((section(".noinit")));  // survives a reset, not a power-off
+// setup(): MCUSR = 0; wdt_disable(); warmBoot = (persist.magic == 0xC0C1);
+// loop():  wdt_reset(); persist.step = STEP_MQTT_LOOP; client.loop(); ...</code></pre>
+<p>On every connection, the board publishes a retained diagnostics message with the boot count, the type of the last reset and the step the code was at just before it (<code>reset_step</code>). All of it fits in 829 bytes of RAM out of the 2,048 available, thanks to <code>F()</code> strings and dropping <code>String</code>.</p>
+<h2 id="what-i-take-away-from-it">What I take away from it</h2>
+<ol type="1">
+<li><strong>Hardware first.</strong> An actuator must be in a safe state before the board knows it has an IP address.</li>
+<li><strong>An unstable prop leaves the game.</strong> Safe mode keeps the board reachable but cuts MQTT: a silent prop is better than one that sends phantom events.</li>
+<li><strong>Decisions are pure functions.</strong> Reconnection, recovery, configuration choice, port writes: everything that decides is tested on a PC, case by case.</li>
+<li><strong>Configuration is data, with a plan B and a plan C.</strong> It's validated, described by schemas, and must never be able to make a board unreachable.</li>
+<li><strong>The field decides.</strong> Polling over interrupts, Ethernet over Wi-Fi, debounce, logic inversion by configuration: every choice comes from a real room.</li>
+<li><strong>Updating the base breaks no prop.</strong> It's a rule written into every spec, and CI checks it.</li>
+<li><strong>Firmware ships like software.</strong> Signed, reproducible, published by CI, updated remotely without touching the configuration.</li>
+</ol>
+<p>A good prop is one nobody talks about: the chest opens when it should, the statuette is recognized first time, and the day something goes wrong, the board says so instead of going quiet.</p>
+				<div id="crdny">November 10, 2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>ESP32</li>
+						<li>ESP-IDF</li>
+						<li>Firmware</li>
+						<li>C</li>
+						<li>FreeRTOS</li>
+						<li>MQTT</li>
+						<li>OTA</li>
+						<li>Electronics</li>
+						<li>Escape room</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>

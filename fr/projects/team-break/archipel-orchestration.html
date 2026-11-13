@@ -1,0 +1,364 @@
+<!DOCTYPE html><html lang="fr-FR" xml:lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+	<head><meta charset="utf-8" /><script async src="https://www.googletagmanager.com/gtag/js?id=G-F924P8Y6HC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-F924P8Y6HC');
+</script><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<title>Archipel : orchestrer les orchestrateurs</title>
+		<link rel="shortcut icon" href="/wwwroot/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="language" content="fr" />
+		<meta name="keywords" content="Team Break,Archipel,Maestro,Orchestration,MQTT,SSE,.NET,Escape game,Architecture" />
+		<meta name="description" content="Dans l'article précédent, j'ai décrit comment Maestro orchestre une salle d'escape game : des notifications entrent, des commandes sortent, des jalons s'accumulent, un chrono s'écoule. Mais une salle ne vit pas seule." />
+		<meta name="author" content="Adrien Torris" />
+		<meta name="robots" content="index,follow" />
+		<link rel="alternate" href="https://adrientorris.github.io/fr/projects/team-break/archipel-orchestration.html" hreflang="fr" />
+		<link rel="alternate" href="https://adrientorris.github.io/projects/team-break/archipel-orchestration.html" hreflang="en" />
+		<link href="/wwwroot/css/style.css" rel="stylesheet" />
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	</head>
+	<body>
+		<div id="main_ctn" class="post_ctn">
+			<header>
+				<div id="header-content">
+					<h2>Blog</h2><ul id="social_links">
+						<li id="twitter_link">
+							<a href="https://twitter.com/AdrienTorris" target="_Blank" rel="nofollow" title="Adrien Torris sur Twitter">
+								<i class="fab fa-twitter fa-2x"></i>
+							</a>
+						</li>
+						<li id="github_link" title="Adrien Torris sur GitHub">
+							<a href="https://github.com/AdrienTorris" target="_Blank" rel="nofollow">
+								<i class="fab fa-github fa-2x"></i>
+							</a>
+						</li>
+						<li id="so_link">
+							<a href="https://stackoverflow.com/users/story/4428633" target="_Blank" rel="nofollow" title="Adrien Torris sur StackOverflow">
+								<i class="fab fa-stack-overflow fa-2x"></i>
+							</a>
+						</li>
+						<li id="linkedin_link">
+							<a href="https://www.linkedin.com/in/adrientorris/" target="_Blank" rel="nofollow" title="Adrien Torris sur LinkedIn">
+								<i class="fab fa-linkedin fa-2x"></i>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</header>
+			<div id="arianne_wrapper">
+				<ul>
+					<li><a href="https://adrientorris.github.io/fr/index.html" title="">Accueil</a></li>
+					<li>Projets</li>
+					<li>Team Break</li>
+					<li class="active"><a href="https://adrientorris.github.io/fr/projects/team-break/archipel-orchestration.html" title="Archipel : orchestrer les orchestrateurs">Archipel : orchestrer les orchestrateurs</a></li>
+				</ul>
+			</div>
+			<div id="post_ctn" class="md_post">
+				<h1>Archipel : orchestrer les orchestrateurs</h1>
+<p>Dans l'<a href="https://adrientorris.github.io/fr/projects/team-break/maestro-orchestration.html">article précédent</a>, j'ai décrit comment Maestro orchestre une salle d'escape game : des notifications entrent, des commandes sortent, des jalons s'accumulent, un chrono s'écoule. Mais une salle ne vit pas seule. À Aéroville, l'un de nos sites, une dizaine de salles tournent côte à côte : jusqu'à neuf instances Maestro, plus un Donut Quiz qui n'utilise pas Maestro du tout.</p>
+<p>Il faut donc un niveau au-dessus, qui réponde à des questions qu'aucune salle ne peut trancher seule :</p>
+<ul>
+<li>quelle équipe joue où, à quelle heure, dans quelle langue, à combien ?</li>
+<li>quand peut-on ouvrir la tablette d'une salle à des joueurs ?</li>
+<li>quand faut-il envoyer l'ordre de démarrage, et à quelle instance ?</li>
+<li>quelle variante de la salle (le scénario) préparer pour la session suivante ?</li>
+<li>que doivent afficher les téléviseurs de l'accueil ?</li>
+</ul>
+<p>C'est le rôle d'<strong>Archipel</strong>, notre plateforme d'exploitation de site. Si Maestro est le chef d'orchestre d'une salle, Archipel est le régisseur du théâtre : il ne joue pas, il ne dirige pas l'orchestre, mais rien ne commence sans lui.</p>
+<h2 id="deux-niveaux-dorchestration-une-frontière-nette">Deux niveaux d'orchestration, une frontière nette</h2>
+<p>Le point le plus important de la conception tient en un tableau : <strong>qui fait autorité sur quoi</strong>.</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Archipel fait autorité sur…</th>
+<th>Maestro fait autorité sur…</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Réservations, créneaux, sessions</td>
+<td>L'état réel de la salle</td>
+</tr>
+<tr class="even">
+<td>L'équipe : nombre de joueurs, langue, nom</td>
+<td>Le temps : début, durée, temps restant</td>
+</tr>
+<tr class="odd">
+<td>Le scénario de la <em>prochaine</em> session</td>
+<td>Le gameflow et son exécution</td>
+</tr>
+<tr class="even">
+<td>Les mots de lancement, l'accès aux tablettes</td>
+<td>Le matériel, les agents, la sécurité</td>
+</tr>
+<tr class="odd">
+<td>Ce qu'affichent les écrans d'accueil</td>
+<td>Les jalons, les indices, la fin de partie</td>
+</tr>
+</tbody>
+</table></div>
+<p>De ce partage découlent trois règles que l'on retrouve partout dans le code :</p>
+<ol type="1">
+<li><strong>Archipel demande, Maestro confirme.</strong> Archipel n'écrit jamais lui-même l'état d'une salle pilotée par Maestro : il envoie une demande, puis attend la confirmation.</li>
+<li><strong>Pour Maestro, Archipel est un observateur optionnel.</strong> Le broker MQTT local de la salle est critique ; celui d'Archipel ne l'est pas. Une salle doit pouvoir jouer, se préparer et s'arrêter si Archipel est en panne, en maintenance ou sur un autre sous-réseau. Côté Maestro, la connexion à Archipel ne bloque jamais le démarrage et la publication vers Archipel est en <em>best effort</em> : « a lost notification must not turn an already persisted state change into a 500 ».</li>
+<li><strong>Les tablettes ne parlent qu'à Archipel, jamais au système de jeu.</strong> Le commentaire dans les endpoints de check-in le dit explicitement : un futur système (Heroes Academy) « se branchera ici sans nouveau chemin côté UI ». Aujourd'hui déjà, Archipel pilote deux systèmes : Maestro via MQTT, et Donut Quiz via HTTP.</li>
+</ol>
+<p>Côté technique, Archipel est une application .NET 10 (EF Core et PostgreSQL 16, MQTTnet 5) qui tourne sur un mini-PC par site, dans Docker Compose. Le code applicatif suit un découpage commande/requête avec un médiateur maison minimal, et le front est en JavaScript vanilla (modules ES, sans npm ni bundler). Plusieurs services d'arrière-plan cadencent le site :</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>Service</th>
+<th>Cadence</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Synchronisation des salles</td>
+<td>24 h</td>
+<td>Ouvre une « porte » que les autres synchronisations attendent</td>
+</tr>
+<tr class="even">
+<td>Synchronisation des réservations</td>
+<td>5 min</td>
+<td>Import des réservations de l'outil de réservation en ligne</td>
+</tr>
+<tr class="odd">
+<td>Synchronisation des créneaux</td>
+<td>1 h, sur 14 jours</td>
+<td>Import des créneaux</td>
+</tr>
+<tr class="even">
+<td>Passage en « attente des joueurs »</td>
+<td>30 s</td>
+<td>Ouvre les salles prêtes dont le créneau approche, publie les scénarios</td>
+</tr>
+<tr class="odd">
+<td>Annulation des retards</td>
+<td>30 s</td>
+<td>Annule les équipes qui ne se présentent pas</td>
+</tr>
+<tr class="even">
+<td>Surveillance des prochaines missions</td>
+<td>10 s</td>
+<td>Alimente les téléviseurs de l'accueil</td>
+</tr>
+<tr class="odd">
+<td>Relais MQTT</td>
+<td>événementiel</td>
+<td>Traduit les notifications de Maestro en état Archipel</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="la-vie-dune-session-de-la-réservation-à-la-sortie-de-salle">La vie d'une session, de la réservation à la sortie de salle</h2>
+<p>Voici le parcours complet d'une équipe, vu par le régisseur :</p>
+<pre><code class="nohighlight"> Outil de        Borne        Archipel           Tablette        Maestro                 Maestro
+ réservation     d'accueil    (site)             de salle        Game Orchestrator       Room Orchestrator
+     │ réservations (5 min)      │
+     ├──────────────────────────►│ session, créneau
+     │             │ identify ──►│
+     │             │ confirm ───►│ langue, joueurs,
+     │             │◄── mot ─────│ mot de lancement
+     │                           │ ◄─────────── RoomStateChanged(Prepared) ──────────────────┐
+     │                           │ Ready → WaitingForPlayers (créneau proche)                │
+     │                           │◄── start {mot} ──┤                                        │
+     │                           │ onboarding ─────►│ (étapes de récit)                      │
+     │                           │── ChangeRoomState(StartAsked) + équipe ──►│               │
+     │                           │                  │                        │ session Maestro
+     │                           │                  │                        ├─ start_room ─►│
+     │                           │◄──────── RoomStateChanged(Started) ───────┤               │
+     │                           │◄──────── SessionProgressionInit/Update ───┤◄──────────────┤
+     │                           │── SSE (1 s) ────►│ compte à rebours interpolé             │
+     │                           │◄──────── RoomStateChanged(Ended) ─────────┤◄──────────────┤
+     │                           │ scénario de la session suivante ─────────►│</code></pre>
+<p>Étape par étape :</p>
+<ol type="1">
+<li><strong>Import.</strong> Toutes les 5 minutes, Archipel récupère les réservations et les rattache à un créneau et à une salle. Un produit « scénario » (par exemple <em>Dark Magic School</em>, la version Halloween de notre école de magie) est résolu vers la salle physique <em>et</em> sa variante.</li>
+<li><strong>Check-in à la borne.</strong> L'équipe s'identifie (e-mail, numéro de commande, nom, téléphone…), confirme sa session, choisit la langue et le nombre de joueurs. Archipel lui attribue un <strong>mot de lancement</strong> : le premier mot de la liste de la salle, dans la langue choisie, qu'aucune session voisine ne détient, en partant d'un indice dérivé de l'identifiant de session. Si l'équipe revient à la borne, elle retrouve le même mot. Si elle déclare plus de joueurs que réservé, elle est envoyée à l'accueil et la session est bloquée 5 minutes, pour qu'elle ne puisse pas simplement recommencer avec le bon nombre.</li>
+<li><strong>La salle devient jouable.</strong> Quand le GM a fini de préparer la salle, Maestro confirme l'état <em>Prepared</em>, qu'Archipel traduit en <em>Ready</em>. Toutes les 30 s, un balayage fait passer les salles prêtes dont le créneau approche en « attente des joueurs ».</li>
+<li><strong>Connexion à la tablette.</strong> La tablette de la salle affiche une grille de 8 mots : les mots de lancement des sessions qui peuvent démarrer maintenant, complétés par des leurres, et jamais le mot d'une équipe déjà lancée. La grille est construite de façon déterministe à partir de l'identifiant de session, pour rester stable alors que la tablette reçoit un état chaque seconde (la déduplication côté client en dépend). L'équipe a deux essais ; ensuite, la tablette se bloque 10 s. Le commentaire précise le choix : « Short cooldown, not a hard lock: a team that picked the wrong tablet must not leave it stuck ».</li>
+<li><strong>Récit puis lancement.</strong> Si la salle a des étapes d'introduction, la tablette les déroule d'abord, et l'ordre de démarrage ne part qu'à la dernière, « so the mission clock does not run while players read the instructions ».</li>
+<li><strong>Démarrage côté Maestro.</strong> L'orchestrateur de jeu reçoit l'ordre, crée la session Maestro avec le nom de l'équipe, le nombre de joueurs, la langue et le scénario, puis transmet l'instruction de démarrage à l'orchestrateur de salle, en indiquant qu'elle vient d'Archipel.</li>
+<li><strong>Retour d'état.</strong> Maestro publie le changement d'état puis la progression (initiale, puis toutes les 30 s environ). Archipel les relaie à la tablette, qui affiche un compte à rebours.</li>
+<li><strong>Fin de partie.</strong> À la fin, Archipel enregistre la fin, efface la progression, et envoie <em>immédiatement</em> à Maestro le scénario de la session suivante. Le GM prépare la salle, et le cycle recommence.</li>
+</ol>
+<p>Pendant ce temps, les téléviseurs de l'accueil affichent les prochaines missions ; une ligne disparaît dès que la salle passe en jeu.</p>
+<h2 id="le-contrat-entre-les-deux-mondes">Le contrat entre les deux mondes</h2>
+<p>Archipel et Maestro se parlent via deux topics MQTT :</p>
+<ul>
+<li><code>/archipel/games/&lt;salle&gt;/commands</code> : instructions d'Archipel vers Maestro ;</li>
+<li><code>/archipel/notifs</code> : notifications de Maestro vers Archipel.</li>
+</ul>
+<p>Le contrat est minimal. Deux types d'instructions : <strong>changer l'état d'une salle</strong> (<code>ChangeRoomState</code>) et <strong>jouer un élément du gameflow</strong> (<code>PublishRoomGameflowCommand</code> : une commande, un bundle, une notification ou une option). Trois types de notifications : <strong>état changé</strong>, <strong>progression initiale</strong>, <strong>progression mise à jour</strong>. Voici un ordre de démarrage :</p>
+<pre><code class="json">{
+  "kind": 2,
+  "room": "&lt;clé Maestro de la salle&gt;",
+  "command": null,
+  "data": [
+    { "key": "language",      "value": "fr" },
+    { "key": "players_count", "value": "4" },
+    { "key": "team_name",     "value": "Les Explorateurs" },
+    { "key": "scenario",      "value": "halloween" }
+  ],
+  "session_id": 123,
+  "room_state": 5
+}</code></pre>
+<p><code>kind: 2</code> signifie <em>ChangeRoomState</em>, <code>room_state: 5</code> signifie <em>StartAsked</em>. Ce sont des entiers, comme partout chez nous, et donc soumis à la même règle : on ajoute, on ne renumérote jamais.</p>
+<h3 id="deux-clés-pour-une-salle">Deux clés pour une salle</h3>
+<p>Une même salle a deux identités : son code côté Archipel (par exemple <code>jr</code>), qui sert de topic, et sa clé côté Maestro (<code>jurassikroom</code>), qui voyage dans le message. Les confondre a coûté cher. Le relais résolvait la salle à partir du code Archipel seul, et le commentaire raconte la suite : utiliser cette clé « silently dropped every state confirmation for such rooms ». Pas d'erreur, pas d'exception : une salle dont les deux clés diffèrent ne remontait simplement jamais son état. Le relais lit désormais la clé Maestro dans le message, et ne retombe sur le code Archipel que pour les déploiements à clé unique.</p>
+<h3 id="un-format-figé-par-des-tests">Un format figé par des tests</h3>
+<p>Les deux côtés n'évoluent pas au même rythme : une salle Maestro peut tourner longtemps sur une vieille version de paquet. Le format est donc figé par une suite de tests (<code>WireFormatTests</code>) : noms et ordre des champs, énumérations sérialisées en nombres, clés de données, nombres indépendants de la culture, tolérance aux champs inconnus. L'en-tête du fichier explique l'enjeu mieux que moi :</p>
+<blockquote>
+<p>a changed field name or type (an enum serialized as text, a renamed data key) makes one side silently ignore the other's messages: the room no longer starts from the tablet, or the tablet no longer sees the game.</p>
+</blockquote>
+<p>Quand nous avons ajouté les scénarios, nous n'avons pas créé de nouveau type de message. Le scénario passe par l'instruction existante « jouer un élément du gameflow », avec le type <code>gameflow_option</code> : pas de nouveau contrat, donc pas de nouvelle version de la bibliothèque partagée à déployer en même temps des deux côtés.</p>
+<h2 id="demander-puis-observer">Demander, puis observer</h2>
+<p>Archipel a sa propre machine à états pour chaque salle (prête, attente des joueurs, onboarding, en jeu, terminée, arrêtée, indisponible, mode GM…), mais quand la salle est pilotée par Maestro, cet état est <strong>dérivé</strong> des confirmations de Maestro :</p>
+<div class="table_wrapper"><table>
+<thead>
+<tr class="header">
+<th>État Maestro</th>
+<th>État Archipel</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Préparation demandée, en préparation</td>
+<td>En préparation</td>
+</tr>
+<tr class="even">
+<td>Préparée</td>
+<td>Prête</td>
+</tr>
+<tr class="odd">
+<td>Démarrage demandé, démarrée</td>
+<td>En jeu</td>
+</tr>
+<tr class="even">
+<td>Terminée</td>
+<td>Terminée</td>
+</tr>
+<tr class="odd">
+<td>Arrêt demandé, au repos</td>
+<td>Arrêtée</td>
+</tr>
+<tr class="even">
+<td>Fin de préparation <em>demandée</em></td>
+<td>ignoré</td>
+</tr>
+</tbody>
+</table></div>
+<p>La dernière ligne est la plus intéressante. « Fin de préparation demandée » n'est qu'une demande, et le commentaire le rappelle : « only the request: Maestro can still refuse it ». Archipel attend « Préparée » pour ouvrir la salle aux joueurs.</p>
+<p>Même logique pour le panneau GM caché dans la tablette : quand le GM y demande de préparer ou d'arrêter la salle, Archipel envoie l'ordre mais n'écrit pas l'état. Selon le code, « the real state is driven by the RoomStateChanged confirmations Maestro sends back », pour que le panneau reflète toujours l'état réel de Maestro.</p>
+<p>Dernier garde-fou : une salle pilotée par Maestro qui n'a encore jamais remonté d'état est considérée comme <strong>arrêtée</strong>, pas comme prête. Sans cette règle, une tablette pourrait s'ouvrir à des joueurs dans une salle que personne n'a préparée.</p>
+<h2 id="lancer-une-salle--lordre-qui-doit-partir-et-celui-quon-défait">Lancer une salle : l'ordre qui doit partir, et celui qu'on défait</h2>
+<p>Le démarrage est le seul moment où Archipel déclenche quelque chose d'irréversible : la mission commence, le chrono tourne, la musique part. Trois détails d'implémentation montrent ce que cela implique.</p>
+<p><strong>L'ordre part, même si la tablette abandonne.</strong> Une tablette peut recharger sa page, perdre le Wi-Fi ou subir le timeout d'un proxy au milieu de la requête. L'envoi utilise donc <code>CancellationToken.None</code> :</p>
+<pre><code class="csharp">// CancellationToken.None : la tablette a pu abandonner la requete (rechargement), l'ordre
+// doit partir quand meme -- sinon la salle passe en « demarrage demande » sans que rien ne
+// demarre.
+ArchipelInstructionMessage startInstruction = ArchipelInstructionMessage.BuildStartRoomInstruction(maestroRoomKey, sessionId)
+    with { Data = await BuildMaestroLaunchDataAsync(sessionId, sessionRepository, logger) };
+
+bool published = await brokerClient.PublishInstructionAsync(startInstruction, CancellationToken.None,
+    topicRoomKey: key);</code></pre>
+<p><strong>QoS 1, parce que QoS 0 mentait.</strong> Le commentaire explique pourquoi l'envoi est passé en <em>at least once</em> : « At most once (the builder's default) only meant "written to the socket", so a half-open connection lost the instruction while the API still answered OK. » Avec QoS 1, le broker accuse réception (PUBACK).</p>
+<p><strong>Si l'ordre n'est pas parti, on défait le lancement.</strong> La salle revient en attente des joueurs, les horodatages de lancement sont effacés, et la tablette reçoit une erreur <code>launch_failed</code> plutôt qu'un « mission démarrée » mensonger. L'équipe peut réessayer, ou appeler le GM.</p>
+<p>Il faut être honnête sur la limite : le PUBACK vient du broker, pas de Maestro. Si l'instance Maestro de la salle est hors ligne, l'ordre est accepté et la salle reste en « démarrage demandé ». La procédure documentée est alors un repli manuel depuis la console GM de Maestro. C'est une limite connue : un accusé de réception de bout en bout demanderait un nouveau contrat et une attente supplémentaire côté tablette.</p>
+<h2 id="le-temps-appartient-à-maestro">Le temps appartient à Maestro</h2>
+<p>Le compte à rebours sur la tablette illustre bien le partage d'autorité. Maestro fait autorité sur le temps : il envoie une progression initiale (durée totale, heure de départ) puis une mise à jour toutes les 30 s environ. Archipel l'enrichit avec ce que Maestro ne sait pas : le nombre de joueurs et la langue, issus de la session qui a lancé la salle.</p>
+<p>Entre deux messages, trois mécanismes évitent que l'affichage ne mente :</p>
+<ul>
+<li><p><strong>Le serveur vieillit la donnée.</strong> La progression stockée date du <em>dernier</em> message de Maestro ; Archipel la ramène à l'instant présent avant de l'envoyer :</p>
+<pre><code class="csharp">// The snapshot holds the timing of Maestro's LAST message: age it to now. Sent as is, a
+// tablet re-anchored on it kept showing the same value until the next Maestro update, and
+// the countdown stopped altogether if Maestro went quiet.
+int age = (int)Math.Max(0, Math.Floor((now - snapshot.UpdatedAt).TotalSeconds));
+int remainingSeconds = Math.Max(0, snapshot.RemainingSeconds - age);</code></pre></li>
+<li><p><strong>La tablette interpole.</strong> Elle construit une ancre (temps restant à un instant donné de l'horloge murale) et décompte localement, minute par minute puis seconde par seconde à la fin, même si plus rien n'arrive.</p></li>
+<li><p><strong>Une progression trop vieille expire.</strong> Au-delà de 10 minutes sans nouvelles, elle est oubliée : c'est le filet de sécurité contre une barre de progression figée.</p></li>
+</ul>
+<h2 id="les-scénarios--préparer-la-session-suivante">Les scénarios : préparer la session suivante</h2>
+<p>Un <strong>scénario</strong> est une variante d'une salle physique : même salle, même tablette, même instance Maestro, mais un autre produit à la réservation et une autre option dans le gameflow. Notre école de magie devient <em>Dark Magic School</em> pour Halloween ; Prison Break devient <em>Prison Break Asylum</em>.</p>
+<p>Pourquoi ne pas déclarer une deuxième salle dans Archipel ? Parce qu'une instance Maestro n'écoute qu'une clé, et qu'il n'y a qu'un état de tablette par salle physique. Le scénario est donc un attribut de la session, et Archipel orchestre son application avec une règle simple : <strong>hors partie, le scénario sélectionné dans Maestro est celui de la prochaine session.</strong></p>
+<p>Il est envoyé :</p>
+<ul>
+<li><strong>immédiatement</strong> quand une partie se termine ou que la salle est arrêtée, même s'il n'a pas changé (le GM a pu le modifier pendant la partie) ;</li>
+<li><strong>par le balayage de 30 s</strong>, seulement si la valeur a changé (une session réservée entre-temps, par exemple) ;</li>
+<li><strong>juste avant</strong> une préparation demandée depuis la tablette ;</li>
+<li><strong>dans l'ordre de démarrage</strong>, comme filet de sécurité ;</li>
+<li><strong>jamais pendant une partie</strong>, ni pendant une préparation (« l'ambiance changerait en cours de route ») : le GM garde la main.</li>
+</ul>
+<p>Côté Maestro, cette option n'est jamais relayée à la salle en cours : elle est appliquée à la configuration du gameflow, que la prochaine session reprendra à son démarrage.</p>
+<h2 id="diffuser--de-mqtt-aux-écrans">Diffuser : de MQTT aux écrans</h2>
+<p>Une notification de Maestro atteint l'écran concerné en quelques secondes au plus (moins de deux pour une tablette de salle), par deux chemins différents.</p>
+<p><strong>Vers la tablette de salle.</strong> Le relais MQTT met à jour l'état en base (et la progression en mémoire). Une boucle SSE par tablette lit chaque seconde un instantané de la salle, partagé entre tous les lecteurs (une seule requête en base par salle), et ne l'envoie que s'il a changé. La définition de « changé » a son histoire :</p>
+<blockquote>
+<p>Comparing the raw payload never deduplicated anything (serverTime alone changes every second): each tablet got the full payload every second, and since it re-anchors its countdown on each payload, the countdown froze between two Maestro updates.</p>
+</blockquote>
+<p>La signature exclut désormais les champs qui bougent chaque seconde. Côté tablette, un garde rejette tout message dont le <code>serverTime</code> est plus ancien que le dernier appliqué, pour qu'un message en retard ne fasse jamais revenir l'écran en arrière.</p>
+<p><strong>Vers les téléviseurs de l'accueil.</strong> Les tableaux de bord (prochaines missions, disponibilités) reçoivent des <strong>événements</strong> plutôt que des instantanés :</p>
+<ul>
+<li>chaque événement porte un identifiant <code>epoch-séquence</code>, où l'<em>epoch</em> est tiré au hasard à chaque démarrage du serveur ;</li>
+<li>les 512 derniers événements sont gardés dans un tampon circulaire ;</li>
+<li>à la reconnexion, le navigateur renvoie <code>Last-Event-ID</code> et le serveur rejoue ce qui manque ;</li>
+<li>si l'écart est trop grand, ou si l'epoch a changé (le serveur a redémarré), le serveur envoie un événement <code>resync</code>, et le client recharge tout.</li>
+</ul>
+<p>Côté client, un gestionnaire de synchronisation commun à toutes les vues gère le repli en polling, la reconnexion avec backoff, et sérialise tous les rechargements complets pour que deux chargements ne reconstruisent jamais une vue en même temps. Un <code>resync</code> déclenche un rechargement différé de 2 s, avec 0 à 2 s d'aléa supplémentaire contre l'effet de troupeau quand dix écrans reçoivent le même signal. Les téléviseurs, qui tournent des jours entiers, font aussi un rechargement complet toutes les 5 minutes, et toutes les vues se rechargent d'elles-mêmes après une mise à jour de l'interface.</p>
+<p>Enfin, côté serveur, les événements de disponibilité sont publiés par un intercepteur EF Core, <em>après</em> la validation de la transaction, quel que soit le chemin d'écriture : aucun endpoint ne peut oublier de prévenir les écrans.</p>
+<h2 id="intégrer-le-monde-extérieur-sans-sy-faire-bloquer">Intégrer le monde extérieur sans s'y faire bloquer</h2>
+<p>Un orchestrateur de site dépend de services qu'il ne maîtrise pas : l'outil de réservation en ligne, le broker MQTT, les instances Maestro. La règle est qu'aucun d'eux ne doit pouvoir bloquer le reste.</p>
+<p><strong>Une réservation invalide ne bloque jamais les suivantes.</strong> Début novembre, une réservation sans identifiant de créneau a fait échouer toute la passe de synchronisation. Comme l'outil renvoie la même liste à chaque passe, toutes les réservations listées après elle sont restées figées : plus de nouvelles réservations, plus d'annulations, et des équipes introuvables à la borne. La correction isole chaque réservation :</p>
+<pre><code class="csharp">foreach (var incoming in reservations)
+{
+    try { await UpsertReservationAsync(incoming, ct); }
+    catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+    {
+        _logger.LogError(ex, "… reservation {ReservationId} could not be synced, skipped until the next sync",
+            incoming.ReservationId);
+        _db.ChangeTracker.Clear();   // sinon chaque SaveChanges suivant les retenterait
+    }
+}</code></pre>
+<p><strong>Le broker peut être absent.</strong> L'API démarre même sans broker, car le check-in, les tableaux de bord et l'administration n'en ont pas besoin. Une seule boucle gère la reconnexion, avec un backoff de 2 à 60 s et un réabonnement à chaque reconnexion. « Une seule » est important : une ancienne version se reconnectait aussi depuis le gestionnaire de déconnexion, ce qui « raced with it […] and turned a broker outage into a log line every 2 seconds ».</p>
+<p><strong>Les données du site sont versionnées.</strong> Les textes, les salles, les commandes GM, les scénarios d'un site vivent dans un dépôt Git dédié, sous forme de patchs numérotés. Archipel retient la position du dernier patch appliqué dans un volume Docker dédié. Avant ce volume, la position vivait dans le conteneur, et chaque mise à jour remettait tous les patchs « en attente ». Un patch qui échoue est quand même marqué appliqué, et on le corrige par un nouveau patch : l'historique ne se réécrit pas.</p>
+<h2 id="déploiement">Déploiement</h2>
+<p>Archipel tient sur un mini-PC par site, sous Debian 12 avec Docker : PostgreSQL, Mosquitto, un migrateur qui doit avoir terminé avant que l'API ne démarre, l'API, l'interface et une passerelle nginx. Les images sont publiées par la CI à chaque fusion, avec un tag <code>vAAAA.MM.JJ-&lt;sha&gt;</code>. La production épingle un tag ; revenir en arrière, c'est remettre le précédent (en restaurant la base si une migration est passée). Une sauvegarde part chaque nuit.</p>
+<p>Les tablettes et les écrans d'accueil sont des mini-PC sous Debian 12 avec Ubuntu Frame, Chromium et le clavier à l'écran en snaps, ce qui empêche de quitter l'application. Les mises à jour des snaps sont cantonnées entre 3 h et 5 h du matin.</p>
+<h2 id="ce-que-jen-retiens">Ce que j'en retiens</h2>
+<ol type="1">
+<li><strong>Chaque niveau a son autorité, et elle est écrite.</strong> Archipel possède la session ; Maestro possède la salle et le temps. Tant que ce tableau est clair, les conflits se règlent d'eux-mêmes.</li>
+<li><strong>Demander, observer, ne jamais présumer.</strong> Un orchestrateur de niveau supérieur dérive l'état des confirmations qu'il reçoit ; il ne l'écrit pas à la place de celui qui exécute.</li>
+<li><strong>Celui qui est orchestré doit pouvoir s'en passer.</strong> Une salle Maestro joue sans Archipel ; Archipel accueille des équipes sans broker. Chaque dépendance est optionnelle pour celui qui la subit.</li>
+<li><strong>Un ordre irréversible part quoi qu'il arrive, ou se défait proprement.</strong> Pas de « mission démarrée » affiché alors que rien n'est parti.</li>
+<li><strong>Le contrat est figé par des tests</strong>, parce que les deux côtés ne se mettent jamais à jour en même temps.</li>
+<li><strong>Une donnée invalide ne bloque jamais les suivantes.</strong> C'est évident, et pourtant c'est la cause de notre dernier incident de synchronisation.</li>
+<li><strong>Les écrans ne doivent jamais mentir.</strong> Vieillir la donnée, interpoler, dédupliquer, rejeter ce qui arrive dans le désordre : l'équipe devant la tablette ne voit que le chrono, et le chrono doit être juste.</li>
+</ol>
+<p>Maestro fait vivre une salle. Archipel fait vivre un site : il amène la bonne équipe devant la bonne porte, au bon moment, dans la bonne langue, avec la bonne variante de l'histoire. Ensuite, il s'efface et laisse Maestro jouer.</p>
+				<div id="crdny">posté le 09/11/2026</div>
+				<div id="tags_wrapper">
+					<ul>
+						<li>Team Break</li>
+						<li>Archipel</li>
+						<li>Maestro</li>
+						<li>Orchestration</li>
+						<li>MQTT</li>
+						<li>SSE</li>
+						<li>.NET</li>
+						<li>Escape game</li>
+						<li>Architecture</li>
+					</ul>
+				</div>
+			</div>
+			<footer>
+			</footer>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/wwwroot/js/Infra.js" type="text/javascript"></script>
+		<link type="text/css" rel="stylesheet" href="/wwwroot/lib/highlight/styles/vs.css" />
+		<script type="text/javascript" src="/wwwroot/lib/highlight/highlight.pack.js"></script>
+		<script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+	</body>
+</html>
